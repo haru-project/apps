@@ -1,0 +1,32 @@
+name: haru-simulator
+
+services:
+
+  unity-app:
+    image: ghcr.io/haru-project/haru-simulator:ros2-fastdds
+    command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
+    env_file: ../envs/simulator.env
+    network_mode: host
+    ipc: host
+    devices:
+      - /dev/snd
+      - /dev/bus/usb
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    runtime: nvidia
+  
+  haru-web-server:
+    image: ghcr.io/haru-project/haru-simulator:ros2-fastdds
+    working_dir: /app/haru2_web/
+    command: ["/bin/bash", "-c", "cd haru_web && \
+      ../.venv/bin/python3 -m streamlit run Home.py \
+        --server.port 7000 \
+        --server.address 0.0.0.0 \
+        --server.headless true \
+        --server.baseUrlPath '/haru_web'",
+    ]
+    env_file: ../envs/simulator.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
