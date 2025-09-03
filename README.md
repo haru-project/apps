@@ -384,7 +384,14 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     - Find the **Haru audio device** setting.
     - Try changing its value (common options are `-1`, `0`, `1`, …) until audio works.
 
-3. View Logs for More Information
+3. LLMs Don't Connect
+
+    If you cannot access the LLMs:
+    - If you are using LLMs that need an API key, make sure to provide it in the env file.
+    - Make sure you can chat with the LLMs you want to use. You can use the WebUI running at `http://0.0.0.0:8080`.
+    - For each LLM agent, you can set its LLM model by setting the following env variable `{AGENT_NAME}_MODEL_ID`.
+
+4. View Logs for More Information
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
