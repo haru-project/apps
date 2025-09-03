@@ -314,14 +314,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-hca.yaml --env-file envs/llm.env up \
-        llm \  
+        llm llm-server llm-webui \  
         --force-recreate -d
     ```
 
     **Expected output**:
-    - Container logs confirm:
+    - Container logs on the `llm` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
+    - LLM server is running at: http://0.0.0.0:4000
+    - LLM Web UI is running at: http://0.0.0.0:8080
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm)
 
