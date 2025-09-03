@@ -141,24 +141,44 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+    depends_on:
+      - llm-server
 
   llm-server:
-    image: ghcr.io/berriai/litellm:main-latest
+    build:
+      context: .
+      args:
+        target: runtime
+    image: ghcr.io/berriai/litellm:main-stable
+    command:
+      - "--config=/app/config.yaml"
     env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
+    ports:
+      - "4000:4000" # Map the container port to the host, change the host port if necessary
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ../configs/litellm_server.yaml:/app/config.yaml
+    healthcheck:  # Defines the health check configuration for the container
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
+      interval: 30s  # Perform health check every 30 seconds
+      timeout: 10s   # Health check command times out after 10 seconds
+      retries: 3     # Retry up to 3 times if health check fails
+      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
 
   llm-webui:
+    build:
+      context: .
+      args:
+        target: runtime
     image: ghcr.io/open-webui/open-webui:main
     env_file: ../envs/llm.env
     network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data:/app/backend/data
+      - ../open-webui:/app/backend/data
+    depends_on:
+      - llm-server
+    restart: unless-stopped
 
   bt-forest:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
