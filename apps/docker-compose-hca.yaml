@@ -142,6 +142,24 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
 
+  llm-server:
+    image: ghcr.io/berriai/litellm:main-latest
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../configs/litellm_server.yaml:/app/config.yaml
+
+  llm-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../data:/app/backend/data
+
   bt-forest:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
     command: [
