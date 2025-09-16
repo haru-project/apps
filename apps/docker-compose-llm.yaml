@@ -1,0 +1,59 @@
+name: haru-llm
+
+services:
+
+  node:
+    image: ghcr.io/haru-project/haru-llm:ros2-fastdds
+    command: [
+      "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
+      "context_topic:=/haru_context/simple_context",
+      "goal_agent_config:=/ros2_ws/src/haru-llm/agents/goals.yaml",
+      "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
+      "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
+      "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
+      "express_focus_secs:=3",
+      "express_timeout_secs:=15",
+    ]
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: ghcr.io/berriai/litellm:main-stable
+    command:
+      - "--config=/app/config.yaml"
+    env_file: ../envs/llm.env
+    ports:
+      - "4000:4000" # Map the container port to the host, change the host port if necessary
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../configs/litellm_server.yaml:/app/config.yaml
+    healthcheck:  # Defines the health check configuration for the container
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
+      interval: 30s  # Perform health check every 30 seconds
+      timeout: 10s   # Health check command times out after 10 seconds
+      retries: 3     # Retry up to 3 times if health check fails
+      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
+
+  webui:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: ghcr.io/open-webui/open-webui:main
+    env_file: ../envs/llm.env
+    network_mode: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../open-webui:/app/backend/data
+    depends_on:
+      - server
+    restart: unless-stopped

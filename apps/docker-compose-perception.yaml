@@ -1,8 +1,8 @@
-name: haru-communication-app
+name: haru-perception
 
 services:
 
-  perception-azure-kinect:
+  azure-kinect:
     image: ghcr.io/haru-project/perception-azure-kinect:ros2-fastdds
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/ros2_entrypoint.sh"]
@@ -23,7 +23,7 @@ services:
               count: all
               capabilities: [gpu]
 
-  perception-faces:
+  faces:
     image: ghcr.io/haru-project/perception-faces:ros2-fastdds
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/ros2_entrypoint.sh"]
@@ -48,7 +48,7 @@ services:
               count: all
               capabilities: [gpu]
   
-  perception-hands:
+  hands:
     image: ghcr.io/haru-project/perception-hands:ros2-fastdds
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/ros2_entrypoint.sh"]
@@ -68,7 +68,7 @@ services:
               count: all
               capabilities: [gpu]
 
-  perception-people:
+  people:
     image: ghcr.io/haru-project/perception-people:ros2-fastdds
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/ros2_entrypoint.sh"]
@@ -88,7 +88,7 @@ services:
               count: all
               capabilities: [gpu]
 
-  perception-visualization:
+  visualization:
     image: ghcr.io/haru-project/perception-visualization:ros2-fastdds
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/ros2_entrypoint.sh"]
@@ -100,138 +100,3 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /tmp/.docker.xauth:/tmp/.docker.xauth
       - /dev:/dev:rw
-  
-  speech:
-    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_speech_ros", "haru_speech.launch.py",
-      "device:=${MIC_DEVICE}",
-      "channels_mode:=mix",
-      "asr_model:=whisper",
-      "enable_verif:=true",
-      "enable_regis:=true",
-      "voices_dir:=/shared/db/voices",
-      "enable_localiz:=false",
-    ]
-    env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
-    devices:
-      - /dev/snd
-      - /dev/bus/usb
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data/voices:/shared/db/voices
-    runtime: nvidia
-
-  llm:
-    image: ghcr.io/haru-project/haru-llm:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
-      "context_topic:=/haru_context/simple_context",
-      "goal_agent_config:=/ros2_ws/src/haru-llm/agents/goals.yaml",
-      "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
-      "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
-      "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
-      "express_focus_secs:=3",
-      "express_timeout_secs:=15",
-    ]
-    env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-    depends_on:
-      - llm-server
-
-  llm-server:
-    build:
-      context: .
-      args:
-        target: runtime
-    image: ghcr.io/berriai/litellm:main-stable
-    command:
-      - "--config=/app/config.yaml"
-    env_file: ../envs/llm.env
-    ports:
-      - "4000:4000" # Map the container port to the host, change the host port if necessary
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../configs/litellm_server.yaml:/app/config.yaml
-    healthcheck:  # Defines the health check configuration for the container
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
-      interval: 30s  # Perform health check every 30 seconds
-      timeout: 10s   # Health check command times out after 10 seconds
-      retries: 3     # Retry up to 3 times if health check fails
-      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
-
-  llm-webui:
-    build:
-      context: .
-      args:
-        target: runtime
-    image: ghcr.io/open-webui/open-webui:main
-    env_file: ../envs/llm.env
-    network_mode: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../open-webui:/app/backend/data
-    depends_on:
-      - llm-server
-    restart: unless-stopped
-
-  bt-forest:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
-      "expressivity_controller_enabled:=true",
-      "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
-      "start_bt_forest_server:=true",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  
-  context-manager:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
-      "start_perception_postprocessors:=true",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-
-  reasoner:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
-      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=true",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  
-  execute-task:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/TaskTestBond.json', task_type: 1}",
-      "-f",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw

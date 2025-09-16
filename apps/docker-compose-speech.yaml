@@ -1,0 +1,75 @@
+name: haru-speech
+
+services:
+  audio:
+    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    command: [
+      "ros2", "launch", "haru_speech_ros", "audio.launch.py",
+      "device:=${MIC_DEVICE}",
+      "topic_id:=0",
+    ]
+    env_file: ../envs/speech.env
+    network_mode: host
+    ipc: host
+    devices:
+      - /dev/snd
+      - /dev/bus/usb
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+  process:
+    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    command: [
+      "ros2", "launch", "haru_speech_ros", "process.launch.py",
+      "topic_id:=0",
+    ]
+    env_file: ../envs/speech.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+  
+  speech-recognition:
+    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    command: [
+      "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
+      "topic_id:=0",
+      "channels_mode:=mix",
+      "min_segment_silent_ms:=1000",
+      "asr_model:=whisper",
+      "enable_verif:=true",
+      "enable_regis:=true",
+    ]
+    env_file: ../envs/speech.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+  speaker-verification:
+    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    command: [
+      "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
+      "voices_dir:=/shared/db/voices",
+      "intent_model:=hri-self-intro-setfit-ft-balanced",
+    ]
+    env_file: ../envs/speech.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../data/voices:/shared/db/voices
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

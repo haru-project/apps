@@ -183,14 +183,14 @@ This gives Docker permission to display graphical applications on your desktop.
 To start the Haru Simulator, run the following command in your terminal:
 
 ```bash
-docker compose -f apps/docker-compose-hs.yaml --env-file envs/simulator.env up --force-recreate -d
+docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env up --force-recreate -d
 ```
 
 This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
 
 To stop the simulator and shut down all related containers, run:
 ```bash
-docker compose -f apps/docker-compose-hs.yaml down
+docker compose -f apps/docker-compose-simulator.yaml down
 ```
 
 Once the software is launched, follow these steps:
@@ -277,8 +277,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/perception.env up \
-        perception-azure-kinect perception-faces perception-hands perception-people \  
+    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up \
+        azure-kinect faces hands people \  
         --force-recreate -d
     ```
 
@@ -295,8 +295,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/speech.env up \
-        speech \  
+    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up \
+        audio process speech-recognition speaker-verification \  
         --force-recreate -d
     ```
 
@@ -313,8 +313,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/llm.env up \
-        llm llm-server llm-webui \  
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up \
+        node server webui \  
         --force-recreate -d
     ```
 
@@ -333,7 +333,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/reasoner.env up \
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
         bt-forest context-manager reasoner \  
         --force-recreate -d
     ```
@@ -347,7 +347,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-hca.yaml --env-file envs/reasoner.env up \
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
     execute-task \  
     --force-recreate
 ```
@@ -356,7 +356,10 @@ In the simulator or on the real robot, Haru begins carrying out the assigned tas
 
 To shut down **all layers and running task**, run:
 ```bash
-docker compose -f apps/docker-compose-hs.yaml down
+docker compose -f apps/docker-compose-perception.yaml down
+docker compose -f apps/docker-compose-speech.yaml down
+docker compose -f apps/docker-compose-llm.yaml down
+docker compose -f apps/docker-compose-reasoner.yaml down
 ```
 
 ## Troubleshooting Tips:
