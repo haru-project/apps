@@ -1,7 +1,6 @@
 name: haru-simulator
 
 services:
-
   unity-app:
     image: ghcr.io/haru-project/haru-simulator:ros2-fastdds
     command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
@@ -10,7 +9,6 @@ services:
     ipc: host
     devices:
       - /dev/snd
-      - /dev/bus/usb
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
     deploy:

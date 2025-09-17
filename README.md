@@ -220,10 +220,9 @@ Once the software is launched, follow these steps:
 6. Adjust Robot Configuration
 
     In the "**Haru Configuration**" tab:
-    - Set "**TTS Language**" to **English**.
+    - Set "**TTS Language**" to your preferred language.
     - **Enable** the "**Publish Haru TFs**" checkbox.
     - (Optional) You can also:
-        - Change the audio output device using the "**Haru audio device**" option.
         - Adjust the robot’s position in space via the "**Haru Base Pose**" settings.
 
 7. Apply and Restart
@@ -239,10 +238,6 @@ Once the software is launched, follow these steps:
     You should now see the **robot’s eyes and mouth appear**. Additionally, a new window named **RViz** should open.
 
 10. Visualize Robot in RViz
-
-    In the **RViz window**:
-    - On the left side, find the "**Display**" panel and open the "**RobotModel**" section.
-    - Set the "**Description Topic**" to `/robot_description`.
     
     You should now see a 3D model of the robot appear in the main view.
 
@@ -374,18 +369,17 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
         env | grep DISPLAY
         ```
     - Compare the values. They must be identical.
-    - If they are different, edit the file envs/simulator.env and replace:
+    - If they are different, edit the file `envs/simulator.env` and replace:
         ```bash
         DISPLAY=${DISPLAY:-=:0}
         ```
         with the actual value from your host system.
 
-2. No Sound in Robot Simulation
+2. No Sound in Simulation
     
-    If you can’t hear Haru in the simulation:
-    - Open "**Options**" > "**Haru Configuration**" in the simulator.
-    - Find the **Haru audio device** setting.
-    - Try changing its value (common options are `-1`, `0`, `1`, …) until audio works.
+    If you can’t hear the sound of clicks or the robot in the simulation:
+    - Run `cat /proc/asound/cards` on your host machine to see the available audio devices.
+    - Set the `AUDIO_CARD` environment variable in the `envs/simulator.env` file to the device name or ID (e.g., `1`, `2`, ...).
 
 3. LLMs Don't Connect
 
