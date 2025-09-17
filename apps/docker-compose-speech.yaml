@@ -45,6 +45,8 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${HOME}/.cache/torch:/root/.cache/torch
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
     deploy:
       resources:
         reservations:
@@ -65,6 +67,8 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${HOME}/.cache/torch:/root/.cache/torch
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
       - ../data/voices:/shared/db/voices
     deploy:
       resources:
