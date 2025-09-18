@@ -34,19 +34,17 @@ services:
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
       "topic_id:=0",
-      "channels_mode:=mix",
-      "min_segment_silent_ms:=1000",
-      "asr_model:=whisper",
-      "enable_verif:=true",
-      "enable_regis:=true",
+      "channels_mode:=${CHANNELS_MODE}",
+      "min_segment_silent_ms:=${MIN_SEGMENT_SILENCE_MS}",
+      "asr_model:=${ASR_MODEL}",
+      "enable_verif:=${ENABLE_SPEAKER_VERIFICATION}",
+      "enable_regis:=${ENABLE_SPEAKER_REGISTRATION}",
     ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ${HOME}/.cache/torch:/root/.cache/torch
-      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
     deploy:
       resources:
         reservations:
@@ -67,8 +65,6 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ${HOME}/.cache/torch:/root/.cache/torch
-      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
       - ../data/voices:/shared/db/voices
     deploy:
       resources:
