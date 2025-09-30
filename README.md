@@ -70,8 +70,8 @@ Most applications require access to GPU resources, so ensure that your system ha
     # Configure the production repository
     curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
     && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-        sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 
     # Update the packages list from the repository
     sudo apt-get update
@@ -79,10 +79,10 @@ Most applications require access to GPU resources, so ensure that your system ha
     # Install the NVIDIA Container Toolkit packages
     export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.8-1
     sudo apt-get install -y \
-        nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
+    nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
 
     # Configure the container runtime by using the nvidia-ctk command
     sudo nvidia-ctk runtime configure --runtime=docker
@@ -117,7 +117,7 @@ With Docker and the NVIDIA Container Toolkit installed, you're ready to start do
     Pull the base image used by all Haru applications:
 
     ```bash
-    docker pull ghcr.io/haru-project/haru-os:ros2-cyclonedds
+    docker pull ghcr.io/haru-project/haru-os:latest
     ```
 
 3. Confirm the Image Download
@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/haru-simulator:ros2-fastdds
+docker pull ghcr.io/haru-project/haru-simulator:latest
 ```
 
 ### Haru Communication App (HCA)
@@ -343,8 +343,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 Once all layers are running, start a task with:
 ```bash
 docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
-    execute-task \  
-    --force-recreate
+execute-task \  
+--force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.

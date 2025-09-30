@@ -2,7 +2,7 @@ name: haru-simulator
 
 services:
   unity-app:
-    image: ghcr.io/haru-project/haru-simulator:ros2-fastdds
+    image: ghcr.io/haru-project/haru-simulator:latest
     command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
     env_file: ../envs/simulator.env
     network_mode: host
@@ -20,7 +20,7 @@ services:
               capabilities: [gpu]
   
   web-server:
-    image: ghcr.io/haru-project/haru-simulator:ros2-fastdds
+    image: ghcr.io/haru-project/haru-simulator:latest
     working_dir: /app/haru2_web/
     command: ["/bin/bash", "-c", "cd haru_web && \
       ../.venv/bin/python3 -m streamlit run Home.py \
