@@ -273,8 +273,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up \
-        azure-kinect faces hands people \  
-        --force-recreate -d
+    azure-kinect faces hands people visualization \  
+    --force-recreate -d
     ```
 
     **Expected output**:
@@ -291,8 +291,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up \
-        audio process speech-recognition speaker-verification \  
-        --force-recreate -d
+    audio process speech-recognition speaker-verification \  
+    --force-recreate -d
     ```
 
     **Expected output**:
@@ -309,8 +309,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up \
-        node server webui \  
-        --force-recreate -d
+    node server webui \  
+    --force-recreate -d
     ```
 
     **Expected output**:
@@ -329,8 +329,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
-        bt-forest context-manager reasoner \  
-        --force-recreate -d
+    bt-forest context-manager reasoner \  
+    --force-recreate -d
     ```
 
     **Expected output**:
@@ -388,7 +388,22 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     - Make sure you can chat with the LLMs you want to use. You can use the WebUI running at `http://0.0.0.0:8080`.
     - For each LLM agent, you can set its LLM model by setting the following env variable `{AGENT_NAME}_MODEL_ID`.
 
-4. View Logs for More Information
+4. Face is Not Recognized
+
+    If your face is not being recognized by the system:
+    - Set the following environment variables in the `envs/perception.env` file:
+        ```bash
+        LEARNING_PERSON_NAME=<Your Name>    # the face will be registered as this name
+        LEARNING_PERSON_ID=<Your ID>        # the person id to register (visible from RVIZ)
+        ```
+    - Run the face registration process:
+        ```bash
+        docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up register-face --force-recreate
+        ```
+    - The system will begin collecting frames of your face for training.
+    - Once training is complete (typically takes about 5 minutes), your face should be recognized correctly.
+
+5. View Logs for More Information
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
