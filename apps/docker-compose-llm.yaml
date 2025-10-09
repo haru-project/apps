@@ -2,7 +2,7 @@ name: haru-llm
 
 services:
 
-  node:
+  ros:
     image: ghcr.io/haru-project/haru-llm:ros2-fastdds
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",

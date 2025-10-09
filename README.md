@@ -309,12 +309,12 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up \
-    node server webui \  
+    server webui ros \  
     --force-recreate -d
     ```
 
     **Expected output**:
-    - Container logs on the `llm` service confirm:
+    - Container logs on the `ros` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
     - LLM server is running at: http://0.0.0.0:4000
@@ -339,6 +339,26 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Current execution status
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner)
+
+5. Expressive TTS layer (optional)
+
+    Enhances Haru with a more expressive and natural-sounding voice
+
+    **Start command**:
+    ```bash
+    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up \
+    api cerevoice-api ros \  
+    --force-recreate -d
+    ```
+
+    **Expected output**:
+    - Container logs on the `ros` service confirm:
+        - Connection to server successful
+        - ROS node initialized successfully
+    - TTS API is running at: http://0.0.0.0:9880
+    - Cerevoice TTS server is running at: http://0.0.0.0:8090
+
+    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
 
 Once all layers are running, start a task with:
 ```bash

@@ -1,0 +1,47 @@
+name: haru-tts
+
+services:
+  api:
+    image: ghcr.io/haru-project/strawberry-tts-api:latest
+    env_file: ../envs/tts.env
+    network_mode: host
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  cerevoice-api:
+    image: ghcr.io/haru-project/strawberry-tts:ros2
+    working_dir: /ros2_ws/src/strawberry_tts/src/cerevoice
+    command: ["/bin/bash", "-c", ". .venv/bin/activate && python cerevoice_api_server.py"]
+    env_file: ../envs/tts.env
+    network_mode: host
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  ros:
+    image: ghcr.io/haru-project/strawberry-tts:ros2
+    command: [
+      "ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_launch.py",
+      "model_ver:=mixed",
+      "abbreviation_handler:=True",
+      "timeout:=3.0",
+    ]
+    env_file: ../envs/tts.env
+    network_mode: host
+    ipc: host
+    depends_on:
+      - api
+      - cerevoice-api
