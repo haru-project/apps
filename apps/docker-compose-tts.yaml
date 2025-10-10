@@ -38,6 +38,8 @@ services:
       "model_ver:=mixed",
       "abbreviation_handler:=True",
       "timeout:=3.0",
+      "num_retries:=0",
+      "genre_weights:=false"
     ]
     env_file: ../envs/tts.env
     network_mode: host
