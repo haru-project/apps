@@ -179,6 +179,27 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+  register-face:
+    image: ghcr.io/haru-project/strawberry_ros_faces_module:latest
+    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
+    command: [
+      "ros2", "service", "call", "/faces/identities/recognitor/learner/lesson", "strawberry_ros_msgs/srv/FaceLessonSRV",
+      "{mode: ${LEARNING_MODE}, person_name: \"${LEARNING_PERSON_NAME}\", person_id: ${LEARNING_PERSON_ID}, number_of_samples: ${LEARNING_NUMBER_OF_SAMPLES}}",
+    ]
+    env_file: ../envs/perception.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth
+      - /dev:/dev:rw
+      - type: bind
+        source: ${ROS_DATA} # Persistent data folder
+        target: /home/haru/.ros
+        bind:
+          create_host_path: false
   
   strawberry-ros-hands:
     image: ghcr.io/haru-project/strawberry_ros_hands:latest
