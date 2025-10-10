@@ -53,7 +53,7 @@ services:
     network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../open-webui:/app/backend/data
+      - ../data/open-webui:/app/backend/data
     depends_on:
       - server
     restart: unless-stopped
