@@ -1,8 +1,9 @@
-DATA_FOLDER=./data
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATA_FOLDER=$DIR/../data/perception
 
-mkdir $DATA_FOLDER
+mkdir -p $DATA_FOLDER
 
-# Download faces
+# Faces data
 docker create --name tmp-faces ghcr.io/haru-project/strawberry_ros_faces_module:latest
 docker cp tmp-faces:/home/haru/.ros/strawberry_ros_faces_module $DATA_FOLDER
 docker rm tmp-faces

@@ -200,6 +200,13 @@ services:
         target: /home/haru/.ros
         bind:
           create_host_path: false
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   
   strawberry-ros-hands:
     image: ghcr.io/haru-project/strawberry_ros_hands:latest
@@ -362,9 +369,10 @@ services:
     user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
     command: ["ros2", "launch", "strawberry_ros_people", "rviz_visualization.launch.py",
-    "launch_rviz:=${VIZ_LAUNCH_RVIZ}",
-    "rviz_config:=${VIZ_RVIZ_CONFIG}",
-    "respawn:=${VIZ_RESPAWN}"]
+      "launch_rviz:=${VIZ_LAUNCH_RVIZ}",
+      "rviz_config:=${VIZ_RVIZ_CONFIG}",
+      "respawn:=${VIZ_RESPAWN}",
+    ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -372,6 +380,13 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /tmp/.docker.xauth:/tmp/.docker.xauth
       - /dev:/dev:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   
   speech:
     image: ghcr.io/haru-project/haru-speech:ros2-fastdds

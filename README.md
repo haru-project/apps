@@ -275,11 +275,14 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Handles Haru’s vision and sensory input.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_perception_data.sh
+    ```
+
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/perception.env up \
-        perception-azure-kinect perception-faces perception-hands perception-people \  
-        --force-recreate -d
+    docker compose -f apps/docker-compose-hca.yaml --env-file envs/perception.env up azure-kinect-ros2-driver strawberry-ros-azure-kinect strawberry-ros-faces-module strawberry-ros-hands strawberry-ros-people strawberry-ros-visualization --force-recreate -d
     ```
 
     **Expected output**:
