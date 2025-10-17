@@ -108,8 +108,8 @@ With Docker and the NVIDIA Container Toolkit installed, you're ready to start do
     Haru applications are hosted in a private registry on GitHub. To authorize your machine to access it, run the following in your terminal:
 
     ```bash
-    export PAT=...
-    echo $PAT | docker login ghcr.io -u AntoineBlanot --password-stdin
+    export PAT=<your-pat>
+    echo $PAT | docker login ghcr.io -u <your-github-username> --password-stdin
     ```
 
 2. Download the Base Image
@@ -163,7 +163,9 @@ docker pull ghcr.io/haru-project/perception-hands:ros2-fastdds
 docker pull ghcr.io/haru-project/perception-people:ros2-fastdds
 docker pull ghcr.io/haru-project/perception-visualization:ros2-fastdds
 docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
-docker pull ghcr.io/haru-project/haru-llm:ros2-fastdds
+docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
+docker pull ghcr.io/haru-project/strawberry-tts-api:latest
+docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/agent-reasoner:ros2-fastdds
 ```
 
@@ -272,9 +274,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up \
-    azure-kinect faces hands people visualization \  
-    --force-recreate -d
+    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
@@ -290,9 +290,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up \
-    audio process speech-recognition speaker-verification \  
-    --force-recreate -d
+    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio process speech-recognition speaker-verification --force-recreate -d
     ```
 
     **Expected output**:
@@ -308,9 +306,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up \
-    server webui ros \  
-    --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up server webui ros --force-recreate -d
     ```
 
     **Expected output**:
@@ -328,9 +324,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
-    bt-forest context-manager reasoner \  
-    --force-recreate -d
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest context-manager reasoner --force-recreate -d
     ```
 
     **Expected output**:
@@ -346,9 +340,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up \
-    api cerevoice-api ros \  
-    --force-recreate -d
+    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up api cerevoice-api ros --force-recreate -d
     ```
 
     **Expected output**:
@@ -373,6 +365,7 @@ To shut down **all layers and running task**, run:
 ```bash
 docker compose -f apps/docker-compose-perception.yaml down
 docker compose -f apps/docker-compose-speech.yaml down
+docker compose -f apps/docker-compose-tts.yaml down
 docker compose -f apps/docker-compose-llm.yaml down
 docker compose -f apps/docker-compose-reasoner.yaml down
 ```
@@ -413,8 +406,8 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     If your face is not being recognized by the system:
     - Set the following environment variables in the `envs/perception.env` file:
         ```bash
-        LEARNING_PERSON_NAME=<Your Name>    # the face will be registered as this name
-        LEARNING_PERSON_ID=<Your ID>        # the person id to register (visible from RVIZ)
+        LEARNING_PERSON_NAME=<your-name>    # the face will be registered as this name
+        LEARNING_PERSON_ID=<your-id>        # the person id to register (visible from RVIZ)
         ```
     - Run the face registration process:
         ```bash
