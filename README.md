@@ -193,7 +193,7 @@ This will launch the simulator in the **background** using the settings from `en
 
 To stop the simulator and shut down all related containers, run:
 ```bash
-docker compose -f apps/docker-compose-simulator.yaml down
+docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env down
 ```
 
 Once the software is launched, follow these steps:
