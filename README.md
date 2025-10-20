@@ -165,9 +165,9 @@ docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
 docker pull ghcr.io/haru-project/haru-llm:ros2-fastdds
+docker pull ghcr.io/haru-project/agent-reasoner:ros2-fastdds
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
-docker pull ghcr.io/haru-project/agent-reasoner:ros2-fastdds
 ```
 
 ## Run Applications
@@ -369,11 +369,11 @@ In the simulator or on the real robot, Haru begins carrying out the assigned tas
 
 To shut down **all layers and running task**, run:
 ```bash
-docker compose -f apps/docker-compose-perception.yaml down
-docker compose -f apps/docker-compose-speech.yaml down
-docker compose -f apps/docker-compose-tts.yaml down
-docker compose -f apps/docker-compose-llm.yaml down
-docker compose -f apps/docker-compose-reasoner.yaml down
+docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env down
+docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env down
+docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env down
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env down
+docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env down
 ```
 
 ## Troubleshooting Tips:
