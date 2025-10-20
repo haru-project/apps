@@ -1,6 +1,7 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/llm
 
+rm -rf $DATA_FOLDER
 mkdir -p $DATA_FOLDER
 
 # LLM data
