@@ -25,6 +25,11 @@ model_list:
       model: hosted_vllm/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
       api_base: http://dgx02:8002/v1
 
+  - model_name: cyberagent-llama-3.1-70b
+    litellm_params:
+      model: hosted_vllm//shared/Llama-3.1-70B-Japanese-Instruct-2407-Q4_K_M.gguf
+      api_base: http://172.24.40.224:8003/v1
+
   - model_name: gpt-oss-120b
     litellm_params:
       model: hosted_vllm/openai/gpt-oss-120b

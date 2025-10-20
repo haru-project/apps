@@ -11,14 +11,18 @@ services:
       "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
       "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
       "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
-      "express_focus_secs:=3",
-      "express_timeout_secs:=15",
+      "express_focus_secs:=10",
+      "express_timeout_secs:=60",
+      "enable_expressive_tts:=false",
+      "enable_synced_routines:=false",
     ]
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - ../data/llm/agents:/ros2_ws/src/haru-llm/agents
+      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs
     depends_on:
       - server
 
