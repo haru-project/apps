@@ -157,13 +157,14 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/perception-azure-kinect:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-faces:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-hands:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-people:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-visualization:ros2-fastdds
+docker pull ghcr.io/haru-project/azure_kinect_ros2_driver:latest
+docker pull ghcr.io/haru-project/strawberry_ros_azure_kinect:latest
+docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
+docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
+docker pull ghcr.io/haru-project/strawberry_ros_people:latest
+docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
-docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
+docker pull ghcr.io/haru-project/haru-llm:ros2-fastdds
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/agent-reasoner:ros2-fastdds
@@ -272,9 +273,14 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Handles Haru’s vision and sensory input.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_perception_data.sh
+    ```
+
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect faces hands people visualization --force-recreate -d
+    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect-driver azure-kinect faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
