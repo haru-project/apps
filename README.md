@@ -310,6 +310,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Provides Haru’s large language model capabilities.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_llm_data.sh
+    ```
+
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up server webui ros --force-recreate -d
