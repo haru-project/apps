@@ -294,6 +294,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Enables Haru’s speech recognition and speech input.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_speech_data.sh
+    ```
+
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio process speech-recognition speaker-verification --force-recreate -d

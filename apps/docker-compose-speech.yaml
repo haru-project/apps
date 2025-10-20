@@ -37,6 +37,7 @@ services:
       "channels_mode:=${CHANNELS_MODE}",
       "min_segment_silent_ms:=${MIN_SEGMENT_SILENCE_MS}",
       "asr_model:=${ASR_MODEL}",
+      "asr_langs:=${ASR_LANGUAGES}",
       "enable_verif:=${ENABLE_SPEAKER_VERIFICATION}",
       "enable_regis:=${ENABLE_SPEAKER_REGISTRATION}",
     ]
@@ -57,7 +58,7 @@ services:
     image: ghcr.io/haru-project/haru-speech:ros2-fastdds
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
-      "voices_dir:=/shared/db/voices",
+      "voices_dir:=/ros2_ws/src/haru-speech/data/voices",
       "intent_model:=hri-self-intro-setfit-ft-balanced",
     ]
     env_file: ../envs/speech.env
@@ -65,7 +66,7 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data/voices:/shared/db/voices
+      - ../data/speech/voices:/ros2_ws/src/haru-speech/data/voices
     deploy:
       resources:
         reservations:
