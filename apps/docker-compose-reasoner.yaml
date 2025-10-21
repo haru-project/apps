@@ -3,7 +3,7 @@ name: haru-reasoner
 services:
 
   bt-forest:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
+    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
@@ -20,7 +20,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
   
   context-manager:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
+    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "start_perception_postprocessors:=true",
@@ -32,7 +32,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
   reasoner:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
+    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
@@ -46,7 +46,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
   
   execute-task:
-    image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
+    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/TaskTestBond.json', task_type: 1}",
