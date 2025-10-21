@@ -2,7 +2,7 @@ name: haru-speech
 
 services:
   audio:
-    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "audio.launch.py",
       "device:=${MIC_DEVICE}",
@@ -18,7 +18,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
 
   process:
-    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "process.launch.py",
       "topic_id:=0",
@@ -30,7 +30,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
   
   speech-recognition:
-    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
       "topic_id:=0",
@@ -55,7 +55,7 @@ services:
               capabilities: [gpu]
     
   speaker-verification:
-    image: ghcr.io/haru-project/haru-speech:ros2-fastdds
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
       "voices_dir:=/ros2_ws/src/haru-speech/data/voices",

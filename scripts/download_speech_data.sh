@@ -5,7 +5,7 @@ rm -rf $DATA_FOLDER
 mkdir -p $DATA_FOLDER
 
 # LLM data
-docker create --name tmp-speech ghcr.io/haru-project/haru-speech:ros2-fastdds
+docker create --name tmp-speech ghcr.io/haru-project/haru-speech:ros2
 docker cp tmp-speech:/ros2_ws/src/haru-speech/data/voices $DATA_FOLDER/voices
 docker rm tmp-speech
 
