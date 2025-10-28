@@ -14,7 +14,7 @@ services:
       "express_focus_secs:=10",
       "express_timeout_secs:=60",
       "enable_expressive_tts:=false",
-      "enable_synced_routines:=false",
+      "enable_synced_routines:=true",
     ]
     env_file: ../envs/llm.env
     network_mode: host
@@ -25,6 +25,17 @@ services:
       - ../data/llm/logs:/ros2_ws/src/haru-llm/logs
     depends_on:
       - server
+    
+  dashboard:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: [
+      "ros2", "launch", "haru_llm_ros", "dashboard.launch.py",
+    ]
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
 
   server:
     build:

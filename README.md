@@ -322,13 +322,14 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up server webui ros --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up ros dashboard server webui --force-recreate -d
     ```
 
     **Expected output**:
     - Container logs on the `ros` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
+    - LLM Dashboard is running at: http://0.0.0.0:5000
     - LLM server is running at: http://0.0.0.0:4000
     - LLM Web UI is running at: http://0.0.0.0:8080
 
@@ -337,6 +338,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 4. Reasoner layer
 
     Manages decision-making and task execution.
+
+    **Download data**:
+    ```bash
+    bash scripts/download_reasoner_data.sh
+    ```
 
     **Start command**:
     ```bash
