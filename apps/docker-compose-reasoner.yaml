@@ -50,7 +50,7 @@ services:
     image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/Interaction.json', task_type: 1}",
+      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
