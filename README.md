@@ -329,9 +329,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Container logs on the `ros` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://0.0.0.0:5000
-    - LLM server is running at: http://0.0.0.0:4000
-    - LLM Web UI is running at: http://0.0.0.0:8080
+    - LLM Dashboard is running at: http://127.0.0.1:5000
+    - LLM server is running at: http://127.0.0.1:4000
+    - LLM Web UI is running at: http://127.0.0.1:8080
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm)
 
@@ -346,7 +346,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest context-manager reasoner --force-recreate -d
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
     ```
 
     **Expected output**:
@@ -376,9 +376,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up \
-execute-task \  
---force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task --force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
@@ -442,7 +440,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
-    docker logs <container_name>
+    docker logs <container_name> -f
     ```
     Replace `<container_name>` with the name of your running container.
     The logs will often include warnings or error messages you can use for troubleshooting.
