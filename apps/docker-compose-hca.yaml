@@ -1,12 +1,12 @@
 name: haru-communication-app
 
 services:
-
   azure-kinect-ros2-driver:
     image: ghcr.io/haru-project/azure_kinect_ros2_driver:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: ["ros2", "launch", "azure_kinect_ros_driver", "sw_driver.launch.py"]
+    command:
+      ["ros2", "launch", "azure_kinect_ros_driver", "sw_driver.launch.py"]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -26,9 +26,15 @@ services:
 
   strawberry-ros-azure-kinect:
     image: ghcr.io/haru-project/strawberry_ros_azure_kinect:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: ["ros2", "launch", "strawberry_ros_azure_kinect", "sw_azure_camera_node.launch.py"]
+    command:
+      [
+        "ros2",
+        "launch",
+        "strawberry_ros_azure_kinect",
+        "sw_azure_camera_node.launch.py",
+      ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -47,119 +53,8 @@ services:
               capabilities: [gpu]
 
   strawberry-ros-faces-module:
-    image: ghcr.io/haru-project/strawberry_ros_faces_module:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: [
-      "ros2", "launch", "strawberry_ros_faces_module", "faces.launch.py",
-      "image_topic:=${FACES_IMAGE_TOPIC}",
-      "launch_cropper:=${FACES_LAUNCH_CROPPER}",
-      "launch_stabilizer:=${FACES_LAUNCH_STABILIZER}",
-      "launch_gender:=${FACES_LAUNCH_GENDER}",
-      "launch_emotion:=${FACES_LAUNCH_EMOTION}",
-      "launch_landmarks:=${FACES_LAUNCH_LANDMARKS}",
-      "launch_identities_recognitor:=${FACES_LAUNCH_IDENTITIES_RECOGNITOR}",
-      "launch_identities_trainer:=${FACES_LAUNCH_IDENTITIES_TRAINER}",
-      "launch_merger:=${FACES_LAUNCH_MERGER}",
-      "launch_merger_api:=${FACES_LAUNCH_MERGER_API}",
-      "respawn:=${FACES_RESPAWN}",
-      "enable_rqt_view:=${FACES_ENABLE_RQT_VIEW}",
-      "log_level:=${FACES_LOG_LEVEL}",
-      "enable_debug_face_cropper_debug_image:=${FACES_ENABLE_DEBUG_FACE_CROPPER_DEBUG_IMAGE}",
-      "base_path:=${FACES_BASE_PATH}",
-      "threshold_yolo:=${FACES_THRESHOLD_YOLO}",
-      "max_number_faces:=${FACES_MAX_NUMBER_FACES}",
-      "enable_faces_cropper:=${FACES_ENABLE_FACES_CROPPER}",
-      "faces_cropper_model:=${FACES_FACES_CROPPER_MODEL}",
-      "insightface_pack_name:=${FACES_INSIGHTFACE_PACK_NAME}",
-      "insightface_det_size:=${FACES_INSIGHTFACE_DET_SIZE}",
-      "insightface_max_size:=${FACES_INSIGHTFACE_MAX_SIZE}",
-      "insightface_device:=${FACES_INSIGHTFACE_DEVICE}",
-      "insightface_det_score_threshold:=${FACES_INSIGHTFACE_DET_SCORE_THRESHOLD}",
-      "enable_faces_tracker:=${FACES_ENABLE_FACES_TRACKER}",
-      "initial_id_tracked:=${FACES_INITIAL_ID_TRACKED}",
-      "timeout_tracker:=${FACES_TIMEOUT_TRACKER}",
-      "embedding_threshold:=${FACES_EMBEDDING_THRESHOLD}",
-      "embedding_weight:=${FACES_EMBEDDING_WEIGHT}",
-      "enable_debug_tracker:=${FACES_ENABLE_DEBUG_TRACKER}",
-      "enable_faces_gender:=${FACES_ENABLE_FACES_GENDER}",
-      "enable_debug_face_gender_image:=${FACES_ENABLE_DEBUG_FACE_GENDER_IMAGE}",
-      "model_file_gender:=${FACES_MODEL_FILE_GENDER}",
-      "model_file_dictionary_gender:=${FACES_MODEL_FILE_DICTIONARY_GENDER}",
-      "gender_stable_prediction_threshold:=${FACES_GENDER_STABLE_PREDICTION_THRESHOLD}",
-      "gender_initial_check_interval:=${FACES_GENDER_INITIAL_CHECK_INTERVAL}",
-      "gender_max_check_interval:=${FACES_GENDER_MAX_CHECK_INTERVAL}",
-      "gender_interval_growth_factor:=${FACES_GENDER_INTERVAL_GROWTH_FACTOR}",
-      "gender_enable_infinite_stable:=${FACES_GENDER_ENABLE_INFINITE_STABLE}",
-      "gender_infinite_stable_threshold:=${FACES_GENDER_INFINITE_STABLE_THRESHOLD}",
-      "enable_faces_emotion:=${FACES_ENABLE_FACES_EMOTION}",
-      "enable_debug_emotions_image:=${FACES_ENABLE_DEBUG_EMOTIONS_IMAGE}",
-      "model_file_emotion:=${FACES_MODEL_FILE_EMOTION}",
-      "model_file_dictionary_emotion:=${FACES_MODEL_FILE_DICTIONARY_EMOTION}",
-      "enable_landmarks:=${FACES_ENABLE_LANDMARKS}",
-      "enable_gaze_estimation:=${FACES_ENABLE_GAZE_ESTIMATION}",
-      "enable_debug_landmarks_image:=${FACES_ENABLE_DEBUG_LANDMARKS_IMAGE}",
-      "min_detection_confidence:=${FACES_MIN_DETECTION_CONFIDENCE}",
-      "max_num_faces:=${FACES_MAX_NUM_FACES}",
-      "static_image_mode:=${FACES_STATIC_IMAGE_MODE}",
-      "refine_landmarks:=${FACES_REFINE_LANDMARKS}",
-      "gaze_threshold:=${FACES_GAZE_THRESHOLD}",
-      "gaze_x_score_multiplier:=${FACES_GAZE_X_SCORE_MULTIPLIER}",
-      "gaze_y_score_multiplier:=${FACES_GAZE_Y_SCORE_MULTIPLIER}",
-      "enable_faces_recognitor:=${FACES_ENABLE_FACES_RECOGNITOR}",
-      "online_training:=${FACES_ONLINE_TRAINING}",
-      "enable_identities_recognitor_debug_image:=${FACES_ENABLE_IDENTITIES_RECOGNITOR_DEBUG_IMAGE}",
-      "model_file_recognition:=${FACES_MODEL_FILE_RECOGNITION}",
-      "recognition_threshold:=${FACES_RECOGNITION_THRESHOLD}",
-      "identify_unknown:=${FACES_IDENTIFY_UNKNOWN}",
-      "activate_auto_improvement:=${FACES_ACTIVATE_AUTO_IMPROVEMENT}",
-      "max_buffer_size:=${FACES_MAX_BUFFER_SIZE}",
-      "distance_threshold_for_auto_improvement:=${FACES_DISTANCE_THRESHOLD_FOR_AUTO_IMPROVEMENT}",
-      "required_consist_frames:=${FACES_REQUIRED_CONSIST_FRAMES}",
-      "interval_autoimp:=${FACES_INTERVAL_AUTOIMP}",
-      "learning_dataset_path_csv:=${FACES_LEARNING_DATASET_PATH_CSV}",
-      "enable_debug_face_learning_debug_image:=${FACES_ENABLE_DEBUG_FACE_LEARNING_DEBUG_IMAGE}",
-      "save_crop_images:=${FACES_SAVE_CROP_IMAGES}",
-      "recognition_stable_prediction_threshold:=${FACES_RECOGNITION_STABLE_PREDICTION_THRESHOLD}",
-      "recognition_initial_check_interval:=${FACES_RECOGNITION_INITIAL_CHECK_INTERVAL}",
-      "recognition_max_check_interval:=${FACES_RECOGNITION_MAX_CHECK_INTERVAL}",
-      "recognition_interval_growth_factor:=${FACES_RECOGNITION_INTERVAL_GROWTH_FACTOR}",
-      "recognition_enable_infinite_stable:=${FACES_RECOGNITION_ENABLE_INFINITE_STABLE}",
-      "recognition_infinite_stable_threshold:=${FACES_RECOGNITION_INFINITE_STABLE_THRESHOLD}",
-      "model_file_hash_recognition:=${FACES_MODEL_FILE_HASH_RECOGNITION}",
-      "dataset_path_recognition_csv:=${FACES_DATASET_PATH_RECOGNITION_CSV}",
-      "single_model:=${FACES_SINGLE_MODEL}",
-      "trainer_dataset_base_folder:=${FACES_TRAINER_DATASET_BASE_FOLDER}",
-      "trainer_recognition_model_type:=${FACES_TRAINER_RECOGNITION_MODEL_TYPE}",
-      "trainer_auto_train_on_startup:=${FACES_TRAINER_AUTO_TRAIN_ON_STARTUP}",
-      "trainer_insightface_pack_name:=${FACES_TRAINER_INSIGHTFACE_PACK_NAME}",
-      "trainer_insightface_device:=${FACES_TRAINER_INSIGHTFACE_DEVICE}",
-      "trainer_insightface_max_images_per_person:=${FACES_TRAINER_INSIGHTFACE_MAX_IMAGES_PER_PERSON}",
-      "trainer_insightface_min_images_per_person:=${FACES_TRAINER_INSIGHTFACE_MIN_IMAGES_PER_PERSON}",
-      "trainer_insightface_recognition_threshold:=${FACES_TRAINER_INSIGHTFACE_RECOGNITION_THRESHOLD}",
-      "trainer_insightface_base_artifacts_dir:=${FACES_TRAINER_INSIGHTFACE_BASE_ARTIFACTS_DIR}",
-      "sync_using_stamp:=${FACES_SYNC_USING_STAMP}",
-      "crops_topic:=${FACES_CROPS_TOPIC}",
-      "identities_topic:=${FACES_IDENTITIES_TOPIC}",
-      "genders_topic:=${FACES_GENDERS_TOPIC}",
-      "emotions_topic:=${FACES_EMOTIONS_TOPIC}",
-      "landmarks_topic:=${FACES_LANDMARKS_TOPIC}",
-      "cropps_cache_duration:=${FACES_CROPPS_CACHE_DURATION}",
-      "cropps_cache_size:=${FACES_CROPPS_CACHE_SIZE}",
-      "identities_cache_duration:=${FACES_IDENTITIES_CACHE_DURATION}",
-      "identities_cache_size:=${FACES_IDENTITIES_CACHE_SIZE}",
-      "genders_cache_duration:=${FACES_GENDERS_CACHE_DURATION}",
-      "gender_cache_size:=${FACES_GENDER_CACHE_SIZE}",
-      "emotions_cache_duration:=${FACES_EMOTIONS_CACHE_DURATION}",
-      "emotions_cache_size:=${FACES_EMOTIONS_CACHE_SIZE}",
-      "landmarks_cache_duration:=${FACES_LANDMARKS_CACHE_DURATION}",
-      "landmarks_cache_size:=${FACES_LANDMARKS_CACHE_SIZE}",
-      "identity_hold_time:=${FACES_IDENTITY_HOLD_TIME}",
-      "gender_hold_time:=${FACES_GENDER_HOLD_TIME}",
-      "emotion_hold_time:=${FACES_EMOTION_HOLD_TIME}",
-      "landmarks_hold_time:=${FACES_LANDMARKS_HOLD_TIME}",
-      "sync_threshold:=${FACES_SYNC_THRESHOLD}"
-    ]
+    image: ghcr.io/haru-project/strawberry-ros-faces-module:develop
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -182,12 +77,17 @@ services:
 
   register-face:
     image: ghcr.io/haru-project/strawberry_ros_faces_module:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: [
-      "ros2", "service", "call", "/faces/identities/recognitor/learner/lesson", "strawberry_ros_msgs/srv/FaceLessonSRV",
-      "{mode: ${LEARNING_MODE}, person_name: \"${LEARNING_PERSON_NAME}\", person_id: ${LEARNING_PERSON_ID}, number_of_samples: ${LEARNING_NUMBER_OF_SAMPLES}}",
-    ]
+    command:
+      [
+        "ros2",
+        "service",
+        "call",
+        "/faces/identities/recognitor/learner/lesson",
+        "strawberry_ros_msgs/srv/FaceLessonSRV",
+        '{mode: ${LEARNING_MODE}, person_name: "${LEARNING_PERSON_NAME}", person_id: ${LEARNING_PERSON_ID}, number_of_samples: ${LEARNING_NUMBER_OF_SAMPLES}}',
+      ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -207,30 +107,34 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-  
+
   strawberry-ros-hands:
     image: ghcr.io/haru-project/strawberry_ros_hands:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: [
-      "ros2", "launch", "strawberry_ros_hands", "hands_gestures_pipeline.launch.py",
-      "max_num_hands:=${HANDS_MAX_NUM_HANDS}",
-      "min_detection_confidence:=${HANDS_MIN_DETECTION_CONFIDENCE}",
-      "min_tracking_confidence:=${HANDS_MIN_TRACKING_CONFIDENCE}",
-      "loop_rate:=${HANDS_LOOP_RATE}",
-      "view_images:=${HANDS_VIEW_IMAGES}",
-      "run_camera:=${HANDS_RUN_CAMERA}",
-      "camera_name:=${HANDS_CAMERA_NAME}",
-      "respawn:=${HANDS_RESPAWN}",
-      "consecutive_predictions_threshold_left:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_LEFT}",
-      "consecutive_predictions_threshold_right:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_RIGHT}",
-      "min_prediction_confidence:=${HANDS_MIN_PREDICTION_CONFIDENCE}",
-      "time_interval_hand_combination:=${HANDS_TIME_INTERVAL_HAND_COMBINATION}",
-      "publish_gesture_debug_image:=${HANDS_PUBLISH_GESTURE_DEBUG_IMAGE}",
-      "publish_original_image:=${HANDS_PUBLISH_ORIGINAL_IMAGE}",
-      "enable_hands_detection:=${HANDS_ENABLE_HANDS_DETECTION}",
-      "enable_debug_hands_image:=${HANDS_ENABLE_DEBUG_HANDS_IMAGE}"
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "strawberry_ros_hands",
+        "hands_gestures_pipeline.launch.py",
+        "max_num_hands:=${HANDS_MAX_NUM_HANDS}",
+        "min_detection_confidence:=${HANDS_MIN_DETECTION_CONFIDENCE}",
+        "min_tracking_confidence:=${HANDS_MIN_TRACKING_CONFIDENCE}",
+        "loop_rate:=${HANDS_LOOP_RATE}",
+        "view_images:=${HANDS_VIEW_IMAGES}",
+        "run_camera:=${HANDS_RUN_CAMERA}",
+        "camera_name:=${HANDS_CAMERA_NAME}",
+        "respawn:=${HANDS_RESPAWN}",
+        "consecutive_predictions_threshold_left:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_LEFT}",
+        "consecutive_predictions_threshold_right:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_RIGHT}",
+        "min_prediction_confidence:=${HANDS_MIN_PREDICTION_CONFIDENCE}",
+        "time_interval_hand_combination:=${HANDS_TIME_INTERVAL_HAND_COMBINATION}",
+        "publish_gesture_debug_image:=${HANDS_PUBLISH_GESTURE_DEBUG_IMAGE}",
+        "publish_original_image:=${HANDS_PUBLISH_ORIGINAL_IMAGE}",
+        "enable_hands_detection:=${HANDS_ENABLE_HANDS_DETECTION}",
+        "enable_debug_hands_image:=${HANDS_ENABLE_DEBUG_HANDS_IMAGE}",
+      ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -248,31 +152,35 @@ services:
 
   strawberry-ros-people:
     image: ghcr.io/haru-project/strawberry_ros_people:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: [
-      "ros2", "launch", "strawberry_ros_people", "people_node.launch.py",
-      "ws_x_max:=${PEOPLE_WS_X_MAX}",
-      "ws_x_min:=${PEOPLE_WS_X_MIN}",
-      "ws_y_max:=${PEOPLE_WS_Y_MAX}",
-      "ws_y_min:=${PEOPLE_WS_Y_MIN}",
-      "ws_z_max:=${PEOPLE_WS_Z_MAX}",
-      "ws_z_min:=${PEOPLE_WS_Z_MIN}",
-      "skeletons_cache_duration:=${PEOPLE_SKELETONS_CACHE_DURATION}",
-      "skeletons_cache_size:=${PEOPLE_SKELETONS_CACHE_SIZE}",
-      "skeletons_min_num_per_id:=${PEOPLE_SKELETONS_MIN_NUM_PER_ID}",
-      "hands_association_factor:=${PEOPLE_HANDS_ASSOCIATION_FACTOR}",
-      "faces_association_factor:=${PEOPLE_FACES_ASSOCIATION_FACTOR}",
-      "sync_using_stamp:=${PEOPLE_SYNC_USING_STAMP}",
-      "skeletons_topic:=${PEOPLE_SKELETONS_TOPIC}",
-      "faces_topic:=${PEOPLE_FACES_TOPIC}",
-      "hands_topic:=${PEOPLE_HANDS_TOPIC}",
-      "sound_topic:=${PEOPLE_SOUND_TOPIC}",
-      "speech_topic:=${PEOPLE_SPEECH_TOPIC}",
-      "vad_topic:=${PEOPLE_VAD_TOPIC}",
-      "vad_hold_time:=${PEOPLE_VAD_HOLD_TIME}",
-      "wuw_topic:=${PEOPLE_WUW_TOPIC}"
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "strawberry_ros_people",
+        "people_node.launch.py",
+        "ws_x_max:=${PEOPLE_WS_X_MAX}",
+        "ws_x_min:=${PEOPLE_WS_X_MIN}",
+        "ws_y_max:=${PEOPLE_WS_Y_MAX}",
+        "ws_y_min:=${PEOPLE_WS_Y_MIN}",
+        "ws_z_max:=${PEOPLE_WS_Z_MAX}",
+        "ws_z_min:=${PEOPLE_WS_Z_MIN}",
+        "skeletons_cache_duration:=${PEOPLE_SKELETONS_CACHE_DURATION}",
+        "skeletons_cache_size:=${PEOPLE_SKELETONS_CACHE_SIZE}",
+        "skeletons_min_num_per_id:=${PEOPLE_SKELETONS_MIN_NUM_PER_ID}",
+        "hands_association_factor:=${PEOPLE_HANDS_ASSOCIATION_FACTOR}",
+        "faces_association_factor:=${PEOPLE_FACES_ASSOCIATION_FACTOR}",
+        "sync_using_stamp:=${PEOPLE_SYNC_USING_STAMP}",
+        "skeletons_topic:=${PEOPLE_SKELETONS_TOPIC}",
+        "faces_topic:=${PEOPLE_FACES_TOPIC}",
+        "hands_topic:=${PEOPLE_HANDS_TOPIC}",
+        "sound_topic:=${PEOPLE_SOUND_TOPIC}",
+        "speech_topic:=${PEOPLE_SPEECH_TOPIC}",
+        "vad_topic:=${PEOPLE_VAD_TOPIC}",
+        "vad_hold_time:=${PEOPLE_VAD_HOLD_TIME}",
+        "wuw_topic:=${PEOPLE_WUW_TOPIC}",
+      ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -290,29 +198,33 @@ services:
 
   strawberry-resource-monitor:
     image: ghcr.io/haru-project/strawberry_resource_monitor:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: [
-      "ros2", "launch", "strawberry_resource_monitor", "monitor.launch.py",
-      "respawn:=${MON_RESPAWN}",
-      "topic_prefix:=${MON_TOPIC_PREFIX}",
-      "log_level:=${MON_LOG_LEVEL}",
-      "cpu_enabled:=${MON_CPU_ENABLED}",
-      "memory_enabled:=${MON_MEMORY_ENABLED}",
-      "gpu_enabled:=${MON_GPU_ENABLED}",
-      "spikes_enabled:=${MON_SPIKES_ENABLED}",
-      "publish_rate_hz:=${MON_PUBLISH_RATE_HZ}",
-      "window_sec:=${MON_WINDOW_SEC}",
-      "enable_gpu_processes:=${MON_ENABLE_GPU_PROCESSES}",
-      "enable_power_metrics:=${MON_ENABLE_POWER_METRICS}",
-      "cpu_total_percent_threshold:=${MON_CPU_TOTAL_PERCENT_THRESHOLD}",
-      "cpu_core_percent_threshold:=${MON_CPU_CORE_PERCENT_THRESHOLD}",
-      "mem_used_percent_threshold:=${MON_MEM_USED_PERCENT_THRESHOLD}",
-      "gpu_util_percent_threshold:=${MON_GPU_UTIL_PERCENT_THRESHOLD}",
-      "gpu_mem_util_percent_threshold:=${MON_GPU_MEM_UTIL_PERCENT_THRESHOLD}",
-      "spike_min_duration_sec:=${MON_SPIKE_MIN_DURATION_SEC}",
-      "spike_clear_hysteresis_percent:=${MON_SPIKE_CLEAR_HYSTERESIS_PERCENT}"
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "strawberry_resource_monitor",
+        "monitor.launch.py",
+        "respawn:=${MON_RESPAWN}",
+        "topic_prefix:=${MON_TOPIC_PREFIX}",
+        "log_level:=${MON_LOG_LEVEL}",
+        "cpu_enabled:=${MON_CPU_ENABLED}",
+        "memory_enabled:=${MON_MEMORY_ENABLED}",
+        "gpu_enabled:=${MON_GPU_ENABLED}",
+        "spikes_enabled:=${MON_SPIKES_ENABLED}",
+        "publish_rate_hz:=${MON_PUBLISH_RATE_HZ}",
+        "window_sec:=${MON_WINDOW_SEC}",
+        "enable_gpu_processes:=${MON_ENABLE_GPU_PROCESSES}",
+        "enable_power_metrics:=${MON_ENABLE_POWER_METRICS}",
+        "cpu_total_percent_threshold:=${MON_CPU_TOTAL_PERCENT_THRESHOLD}",
+        "cpu_core_percent_threshold:=${MON_CPU_CORE_PERCENT_THRESHOLD}",
+        "mem_used_percent_threshold:=${MON_MEM_USED_PERCENT_THRESHOLD}",
+        "gpu_util_percent_threshold:=${MON_GPU_UTIL_PERCENT_THRESHOLD}",
+        "gpu_mem_util_percent_threshold:=${MON_GPU_MEM_UTIL_PERCENT_THRESHOLD}",
+        "spike_min_duration_sec:=${MON_SPIKE_MIN_DURATION_SEC}",
+        "spike_clear_hysteresis_percent:=${MON_SPIKE_CLEAR_HYSTERESIS_PERCENT}",
+      ]
     network_mode: host
     ipc: host
     volumes:
@@ -366,13 +278,18 @@ services:
 
   strawberry-ros-visualization:
     image: ghcr.io/haru-project/strawberry_ros_visualizations:latest
-    user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
+    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
     entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command: ["ros2", "launch", "strawberry_ros_people", "rviz_visualization.launch.py",
-      "launch_rviz:=${VIZ_LAUNCH_RVIZ}",
-      "rviz_config:=${VIZ_RVIZ_CONFIG}",
-      "respawn:=${VIZ_RESPAWN}",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "strawberry_ros_people",
+        "rviz_visualization.launch.py",
+        "launch_rviz:=${VIZ_LAUNCH_RVIZ}",
+        "rviz_config:=${VIZ_RVIZ_CONFIG}",
+        "respawn:=${VIZ_RESPAWN}",
+      ]
     env_file: ../envs/perception.env
     network_mode: host
     ipc: host
@@ -387,19 +304,23 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-  
+
   speech:
     image: ghcr.io/haru-project/haru-speech:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_speech_ros", "haru_speech.launch.py",
-      "device:=${MIC_DEVICE}",
-      "channels_mode:=mix",
-      "asr_model:=whisper",
-      "enable_verif:=true",
-      "enable_regis:=true",
-      "voices_dir:=/shared/db/voices",
-      "enable_localiz:=false",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_speech_ros",
+        "haru_speech.launch.py",
+        "device:=${MIC_DEVICE}",
+        "channels_mode:=mix",
+        "asr_model:=whisper",
+        "enable_verif:=true",
+        "enable_regis:=true",
+        "voices_dir:=/shared/db/voices",
+        "enable_localiz:=false",
+      ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
@@ -413,16 +334,20 @@ services:
 
   llm:
     image: ghcr.io/haru-project/haru-llm:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
-      "context_topic:=/haru_context/simple_context",
-      "goal_agent_config:=/ros2_ws/src/haru-llm/agents/goals.yaml",
-      "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
-      "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
-      "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
-      "express_focus_secs:=3",
-      "express_timeout_secs:=15",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_llm_ros",
+        "action_args.launch.py",
+        "context_topic:=/haru_context/simple_context",
+        "goal_agent_config:=/ros2_ws/src/haru-llm/agents/goals.yaml",
+        "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
+        "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
+        "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
+        "express_focus_secs:=3",
+        "express_timeout_secs:=15",
+      ]
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
@@ -445,12 +370,15 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ../configs/litellm_server.yaml:/app/config.yaml
-    healthcheck:  # Defines the health check configuration for the container
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
-      interval: 30s  # Perform health check every 30 seconds
-      timeout: 10s   # Health check command times out after 10 seconds
-      retries: 3     # Retry up to 3 times if health check fails
-      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
+    healthcheck: # Defines the health check configuration for the container
+      test: [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1",
+        ] # Command to execute for health check
+      interval: 30s # Perform health check every 30 seconds
+      timeout: 10s # Health check command times out after 10 seconds
+      retries: 3 # Retry up to 3 times if health check fails
+      start_period: 40s # Wait 40 seconds after container start before beginning health checks
 
   llm-webui:
     build:
@@ -469,27 +397,35 @@ services:
 
   bt-forest:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
-      "expressivity_controller_enabled:=true",
-      "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
-      "start_bt_forest_server:=true",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_controllers.launch.py",
+        "expressivity_controller_enabled:=true",
+        "gaze_controller_enabled:=true",
+        "ipad_students_controller_enabled:=false",
+        "ipad_teacher_controller_enabled:=false",
+        "unity_controller_enabled:=false",
+        "start_bt_forest_server:=true",
+      ]
     env_file: ../envs/reasoner.env
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  
+
   context-manager:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
-      "start_perception_postprocessors:=true",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_context.launch.py",
+        "start_perception_postprocessors:=true",
+      ]
     env_file: ../envs/reasoner.env
     network_mode: host
     ipc: host
@@ -498,25 +434,34 @@ services:
 
   reasoner:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
-      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=true",
-    ]
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_reasoner.launch.py",
+        "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
+        "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+        "enable_reactive:=true",
+      ]
     env_file: ../envs/reasoner.env
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  
+
   execute-task:
     image: ghcr.io/haru-project/agent-reasoner:ros2-fastdds
-    command: [
-      "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/TaskTestBond.json', task_type: 1}",
-      "-f",
-    ]
+    command:
+      [
+        "ros2",
+        "action",
+        "send_goal",
+        "/haru_agent/new_task_raw",
+        "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
+        "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/TaskTestBond.json', task_type: 1}",
+        "-f",
+      ]
     env_file: ../envs/reasoner.env
     network_mode: host
     ipc: host
