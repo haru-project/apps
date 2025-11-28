@@ -278,6 +278,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_perception_data.sh
     ```
 
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/perception.env`.
+
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect-driver azure-kinect faces hands people visualization --force-recreate -d
@@ -299,6 +302,10 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/speech.env`.  
+    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.  
+
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
@@ -319,6 +326,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     bash scripts/download_llm_data.sh
     ```
+
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/llm.env`.  
+    > You can change the LLM server configuration in the `data/configs/litellm_server.yaml`.  
+    > You can change the ROS nodes configuration in the `data/configs/haru_llm.yaml`.  
 
     **Start command**:
     ```bash
@@ -344,6 +356,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_reasoner_data.sh
     ```
 
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/reasoner.env`.
+
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
@@ -364,6 +379,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
     ```
+
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/tts.env`.
 
     **Expected output**:
     - Container logs on the `ros-node` service confirm:
