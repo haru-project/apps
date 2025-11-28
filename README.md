@@ -301,11 +301,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio process speech-recognition speaker-verification --force-recreate -d
+    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
     ```
 
     **Expected output**:
-    - Container logs display:
+    - Container logs on the `speech-recognition` service display:
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 

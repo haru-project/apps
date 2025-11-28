@@ -5,47 +5,42 @@ services:
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "audio.launch.py",
-      "device:=${MIC_DEVICE}",
-      "topic_id:=0",
+      "config_file:=${AUDIO_CONFIG_FILE}",
     ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
     devices:
       - /dev/snd
-      - /dev/bus/usb
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
 
-  process:
+  configure:
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
-      "ros2", "launch", "haru_speech_ros", "process.launch.py",
-      "topic_id:=0",
+      "ros2", "launch", "haru_speech_ros", "configure.launch.py",
+      "config_file:=${AUDIO_CONFIGURE_CONFIG_FILE}",
     ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
   
   speech-recognition:
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
-      "topic_id:=0",
-      "channels_mode:=${CHANNELS_MODE}",
-      "min_segment_silent_ms:=${MIN_SEGMENT_SILENCE_MS}",
-      "asr_model:=${ASR_MODEL}",
-      "asr_langs:=${ASR_LANGUAGES}",
-      "enable_verif:=${ENABLE_SPEAKER_VERIFICATION}",
-      "enable_regis:=${ENABLE_SPEAKER_REGISTRATION}",
+      "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
     ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
     deploy:
       resources:
         reservations:
@@ -58,15 +53,35 @@ services:
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
-      "voices_dir:=/ros2_ws/src/haru-speech/data/voices",
-      "intent_model:=hri-self-intro-setfit-ft-balanced",
+      "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
     ]
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data/speech/voices:/ros2_ws/src/haru-speech/data/voices
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ../data/speech/voices:/ros2_ws/src/haru-speech/data/voices:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+  sound-localization:
+    image: ghcr.io/haru-project/haru-speech:ros2
+    command: [
+      "ros2", "launch", "haru_speech_ros", "sound_localization.launch.py",
+      "config_file:=${SOUND_LOCALIZATION_CONFIG_FILE}",
+    ]
+    env_file: ../envs/speech.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
     deploy:
       resources:
         reservations:
