@@ -2,27 +2,20 @@ name: haru-llm
 
 services:
 
-  ros:
+  action-args:
     image: ghcr.io/haru-project/haru-llm:ros2
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
-      "context_topic:=/haru_context/simple_context",
-      "goal_agent_config:=/ros2_ws/src/haru-llm/agents/goals.yaml",
-      "express_agent_config:=/ros2_ws/src/haru-llm/agents/haru.yaml",
-      "gaze_agent_config:=/ros2_ws/src/haru-llm/agents/gazing.yaml",
-      "tts_agent_config:=/ros2_ws/src/haru-llm/agents/tts.yaml",
-      "express_focus_secs:=10",
-      "express_timeout_secs:=60",
-      "enable_expressive_tts:=false",
-      "enable_synced_routines:=true",
+      "config_file:=${ACTION_ARGS_CONFIG_FILE}",
     ]
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data/llm/agents:/ros2_ws/src/haru-llm/agents
-      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
+      - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
+      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
     depends_on:
       - server
     
@@ -30,12 +23,14 @@ services:
     image: ghcr.io/haru-project/haru-llm:ros2
     command: [
       "ros2", "launch", "haru_llm_ros", "dashboard.launch.py",
+      "config_file:=${DASHBOARD_CONFIG_FILE}",
     ]
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
 
   server:
     build:
@@ -49,8 +44,9 @@ services:
     ports:
       - "4000:4000" # Map the container port to the host, change the host port if necessary
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../configs/litellm_server.yaml:/app/config.yaml
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
+    restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
       interval: 30s  # Perform health check every 30 seconds
@@ -67,8 +63,29 @@ services:
     env_file: ../envs/llm.env
     network_mode: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - ../data/llm/open-webui:/app/backend/data
-    depends_on:
-      - server
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/open-webui:/app/backend/data:rw
     restart: unless-stopped
+  
+  vllm:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: vllm/vllm-openai:v0.8.5
+    command:
+      - "--model=${VLLM_MODEL_NAME}"
+      - "--gpu-memory-utilization=0.9"
+    env_file: ../envs/llm.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

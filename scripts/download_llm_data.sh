@@ -5,10 +5,10 @@ rm -rf $DATA_FOLDER
 mkdir -p $DATA_FOLDER
 
 # LLM agents and logs
-docker create --name tmp-llm ghcr.io/haru-project/haru-llm:ros2
+docker create --name tmp-llm ghcr.io/haru-project/haru-llm:ros2 > /dev/null
 docker cp tmp-llm:/ros2_ws/src/haru-llm/agents $DATA_FOLDER/agents
-docker cp tmp-llm:/ros2_ws/src/haru-llm/logs $DATA_FOLDER/logs
-docker rm tmp-llm
+docker cp tmp-llm:/ros2_ws/src/haru-llm/configs $DATA_FOLDER/configs
+docker rm tmp-llm > /dev/null
 
 # Give permissions
-sudo chmod -R a+rw $DATA_FOLDER
+chmod -R 770 $DATA_FOLDER

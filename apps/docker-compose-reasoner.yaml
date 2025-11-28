@@ -3,7 +3,7 @@ name: haru-reasoner
 services:
 
   bt-forest:
-    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
@@ -20,7 +20,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
   
   context-manager:
-    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "start_perception_postprocessors:=true",
@@ -32,25 +32,25 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
   reasoner:
-    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
       "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=true",
+      "enable_reactive:=false",
     ]
     env_file: ../envs/reasoner.env
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks
+      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
   
-  execute-task:
-    image: ghcr.io/haru-project/agent-reasoner:test-oct-2025
+  execute-task-scenario:
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_FILE}', task_type: 1}",
+      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/interactions/v1.json', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
@@ -58,3 +58,20 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    depends_on:
+      - reasoner
+
+  execute-task-test:
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    command: [
+      "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
+      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/tests/Express.json', task_type: 1}",
+      "-f",
+    ]
+    env_file: ../envs/reasoner.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    depends_on:
+      - reasoner

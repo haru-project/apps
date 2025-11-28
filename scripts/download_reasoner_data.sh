@@ -5,9 +5,9 @@ rm -rf $DATA_FOLDER
 mkdir -p $DATA_FOLDER
 
 # Reasoner tasks
-docker create --name tmp-reasoner ghcr.io/haru-project/agent-reasoner:test-oct-2025
+docker create --name tmp-reasoner ghcr.io/haru-project/agent_reasoner:jazzy > /dev/null
 docker cp tmp-reasoner:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks $DATA_FOLDER/tasks
-docker rm tmp-reasoner
+docker rm tmp-reasoner > /dev/null
 
 # Give permissions
-sudo chmod -R a+rw $DATA_FOLDER
+chmod -R 770 $DATA_FOLDER
