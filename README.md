@@ -322,11 +322,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up ros dashboard server webui --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
     ```
 
     **Expected output**:
-    - Container logs on the `ros` service confirm:
+    - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:5000
