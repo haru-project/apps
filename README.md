@@ -362,21 +362,22 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up api cerevoice-api ros --force-recreate -d
+    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
     ```
 
     **Expected output**:
-    - Container logs on the `ros` service confirm:
+    - Container logs on the `ros-node` service confirm:
         - Connection to server successful
         - ROS node initialized successfully
-    - TTS API is running at: http://0.0.0.0:9880
-    - Cerevoice TTS server is running at: http://0.0.0.0:8090
+    - GPT Sovits API is running at: http://127.0.0.1:9880
+    - Cerevoice API is running at: http://127.0.0.1:8015
+    - TTS API is running at: http://127.0.0.1:8022
 
     **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
 
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task --force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task-scenario --force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
