@@ -163,8 +163,8 @@ docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
 docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
-docker pull ghcr.io/haru-project/haru-speech:ros2
-docker pull ghcr.io/haru-project/haru-llm:ros2
+docker pull ghcr.io/haru-project/haru-speech:feature/lifecycle
+docker pull ghcr.io/haru-project/haru-llm:feature/lifecycle
 docker pull ghcr.io/haru-project/agent_reasoner:jazzy
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
@@ -311,6 +311,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
     ```
 
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
+        ```
+
     **Expected output**:
     - Container logs on the `speech-recognition` service display:
         - VAD (Voice Activity Detection) status
@@ -336,6 +346,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
+        ```
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
