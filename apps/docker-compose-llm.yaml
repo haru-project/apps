@@ -18,6 +18,7 @@ services:
       - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
     depends_on:
       - server
+    restart: unless-stopped
     
   dashboard:
     image: ghcr.io/haru-project/haru-llm:ros2
@@ -31,6 +32,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
+    restart: unless-stopped
 
   server:
     build:
@@ -81,7 +83,6 @@ services:
       - "8000:8000"
     volumes:
       - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
-    restart: unless-stopped
     deploy:
       resources:
         reservations:
@@ -89,3 +90,4 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    restart: unless-stopped

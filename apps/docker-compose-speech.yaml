@@ -15,6 +15,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+    restart: unless-stopped
 
   configure:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -28,6 +29,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+    restart: unless-stopped
   
   speech-recognition:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -48,6 +50,7 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    restart: unless-stopped
     
   speaker-verification:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -69,6 +72,7 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    restart: unless-stopped
     
   sound-localization:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -89,3 +93,4 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    restart: unless-stopped

@@ -1,0 +1,31 @@
+name: haru-llm-lifecycle
+
+services:
+
+  action-args-start:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: bash -c "ros2 lifecycle set /action_args configure && ros2 lifecycle set /action_args activate"
+    env_file: .env.example
+    network_mode: host
+    ipc: host
+
+  action-args-stop:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: bash -c "ros2 lifecycle set /action_args deactivate && ros2 lifecycle set /action_args cleanup"
+    env_file: .env.example
+    network_mode: host
+    ipc: host
+
+  dashboard-start:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: bash -c "ros2 lifecycle set /dashboard configure && ros2 lifecycle set /dashboard activate"
+    env_file: .env.example
+    network_mode: host
+    ipc: host
+
+  dashboard-stop:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: bash -c "ros2 lifecycle set /dashboard deactivate && ros2 lifecycle set /dashboard cleanup"
+    env_file: .env.example
+    network_mode: host
+    ipc: host
