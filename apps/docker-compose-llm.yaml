@@ -1,0 +1,93 @@
+name: haru-llm
+
+services:
+
+  action-args:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: [
+      "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
+      "config_file:=${ACTION_ARGS_CONFIG_FILE}",
+    ]
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
+      - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
+      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
+    depends_on:
+      - server
+    restart: unless-stopped
+    
+  dashboard:
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: [
+      "ros2", "launch", "haru_llm_ros", "dashboard.launch.py",
+      "config_file:=${DASHBOARD_CONFIG_FILE}",
+    ]
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: ghcr.io/berriai/litellm:main-stable
+    command:
+      - "--config=/app/config.yaml"
+    env_file: ../envs/llm.env
+    ports:
+      - "4000:4000" # Map the container port to the host, change the host port if necessary
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
+    restart: unless-stopped
+    healthcheck:  # Defines the health check configuration for the container
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
+      interval: 30s  # Perform health check every 30 seconds
+      timeout: 10s   # Health check command times out after 10 seconds
+      retries: 3     # Retry up to 3 times if health check fails
+      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
+
+  webui:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: ghcr.io/open-webui/open-webui:main
+    env_file: ../envs/llm.env
+    network_mode: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/open-webui:/app/backend/data:rw
+    restart: unless-stopped
+  
+  vllm:
+    build:
+      context: .
+      args:
+        target: runtime
+    image: vllm/vllm-openai:v0.8.5
+    command:
+      - "--model=${VLLM_MODEL_NAME}"
+      - "--gpu-memory-utilization=0.9"
+    env_file: ../envs/llm.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped

@@ -70,8 +70,8 @@ Most applications require access to GPU resources, so ensure that your system ha
     # Configure the production repository
     curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
     && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-        sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 
     # Update the packages list from the repository
     sudo apt-get update
@@ -79,10 +79,10 @@ Most applications require access to GPU resources, so ensure that your system ha
     # Install the NVIDIA Container Toolkit packages
     export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.8-1
     sudo apt-get install -y \
-        nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
-        libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
+    nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
 
     # Configure the container runtime by using the nvidia-ctk command
     sudo nvidia-ctk runtime configure --runtime=docker
@@ -108,8 +108,8 @@ With Docker and the NVIDIA Container Toolkit installed, you're ready to start do
     Haru applications are hosted in a private registry on GitHub. To authorize your machine to access it, run the following in your terminal:
 
     ```bash
-    export PAT=...
-    echo $PAT | docker login ghcr.io -u AntoineBlanot --password-stdin
+    export PAT=<your-pat>
+    echo $PAT | docker login ghcr.io -u <your-github-username> --password-stdin
     ```
 
 2. Download the Base Image
@@ -117,7 +117,7 @@ With Docker and the NVIDIA Container Toolkit installed, you're ready to start do
     Pull the base image used by all Haru applications:
 
     ```bash
-    docker pull ghcr.io/haru-project/haru-os:ros2-cyclonedds
+    docker pull ghcr.io/haru-project/haru-os:latest
     ```
 
 3. Confirm the Image Download
@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/haru-simulator:ros2-fastdds
+docker pull ghcr.io/haru-project/haru-simulator:latest
 ```
 
 ### Haru Communication App (HCA)
@@ -157,14 +157,17 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/perception-azure-kinect:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-faces:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-hands:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-people:ros2-fastdds
-docker pull ghcr.io/haru-project/perception-visualization:ros2-fastdds
-docker pull ghcr.io/haru-project/haru-speech:ros2-fastdds
-docker pull ghcr.io/haru-project/haru-llm:ros2-fastdds
-docker pull ghcr.io/haru-project/agent-reasoner:ros2-fastdds
+docker pull ghcr.io/haru-project/azure_kinect_ros2_driver:latest
+docker pull ghcr.io/haru-project/strawberry_ros_azure_kinect:latest
+docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
+docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
+docker pull ghcr.io/haru-project/strawberry_ros_people:latest
+docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
+docker pull ghcr.io/haru-project/haru-speech:ros2
+docker pull ghcr.io/haru-project/haru-llm:ros2
+docker pull ghcr.io/haru-project/agent_reasoner:jazzy
+docker pull ghcr.io/haru-project/strawberry-tts-api:latest
+docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
 
 ## Run Applications
@@ -183,14 +186,14 @@ This gives Docker permission to display graphical applications on your desktop.
 To start the Haru Simulator, run the following command in your terminal:
 
 ```bash
-docker compose -f apps/docker-compose-hs.yaml --env-file envs/simulator.env up --force-recreate -d
+docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env up --force-recreate -d
 ```
 
 This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
 
 To stop the simulator and shut down all related containers, run:
 ```bash
-docker compose -f apps/docker-compose-hs.yaml down
+docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env down
 ```
 
 Once the software is launched, follow these steps:
@@ -220,10 +223,9 @@ Once the software is launched, follow these steps:
 6. Adjust Robot Configuration
 
     In the "**Haru Configuration**" tab:
-    - Set "**TTS Language**" to **English**.
+    - Set "**TTS Language**" to your preferred language.
     - **Enable** the "**Publish Haru TFs**" checkbox.
     - (Optional) You can also:
-        - Change the audio output device using the "**Haru audio device**" option.
         - Adjust the robot’s position in space via the "**Haru Base Pose**" settings.
 
 7. Apply and Restart
@@ -239,10 +241,6 @@ Once the software is launched, follow these steps:
     You should now see the **robot’s eyes and mouth appear**. Additionally, a new window named **RViz** should open.
 
 10. Visualize Robot in RViz
-
-    In the **RViz window**:
-    - On the left side, find the "**Display**" panel and open the "**RobotModel**" section.
-    - Set the "**Description Topic**" to `/robot_description`.
     
     You should now see a 3D model of the robot appear in the main view.
 
@@ -275,11 +273,17 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Handles Haru’s vision and sensory input.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_perception_data.sh
+    ```
+
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/perception.env`.
+
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/perception.env up \
-        perception-azure-kinect perception-faces perception-hands perception-people \  
-        --force-recreate -d
+    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect-driver azure-kinect faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
@@ -293,15 +297,32 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Enables Haru’s speech recognition and speech input.
 
-    **Start command**:
+    **Download data**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/speech.env up \
-        speech \  
-        --force-recreate -d
+    bash scripts/download_speech_data.sh
     ```
 
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/speech.env`.  
+    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.  
+
+    **Start command**:
+    ```bash
+    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
+    ```
+
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
+        ```
+
     **Expected output**:
-    - Container logs display:
+    - Container logs on the `speech-recognition` service display:
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 
@@ -311,19 +332,38 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Provides Haru’s large language model capabilities.
 
-    **Start command**:
+    **Download data**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/llm.env up \
-        llm llm-server llm-webui \  
-        --force-recreate -d
+    bash scripts/download_llm_data.sh
     ```
 
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/llm.env`.  
+    > You can change the LLM server configuration in the `data/configs/litellm_server.yaml`.  
+    > You can change the ROS nodes configuration in the `data/configs/haru_llm.yaml`.  
+
+    **Start command**:
+    ```bash
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
+    ```
+
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
+        ```
+
     **Expected output**:
-    - Container logs on the `llm` service confirm:
+    - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM server is running at: http://0.0.0.0:4000
-    - LLM Web UI is running at: http://0.0.0.0:8080
+    - LLM Dashboard is running at: http://127.0.0.1:5000
+    - LLM server is running at: http://127.0.0.1:4000
+    - LLM Web UI is running at: http://127.0.0.1:8080
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm)
 
@@ -331,12 +371,21 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Manages decision-making and task execution.
 
+    **Download data**:
+    ```bash
+    bash scripts/download_reasoner_data.sh
+    ```
+
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/reasoner.env`.
+
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-hca.yaml --env-file envs/reasoner.env up \
-        bt-forest context-manager reasoner \  
-        --force-recreate -d
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
     - Multiple Groot windows open, displaying:
@@ -345,18 +394,42 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner)
 
+5. Expressive TTS layer (optional)
+
+    Enhances Haru with a more expressive and natural-sounding voice
+
+    **Start command**:
+    ```bash
+    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
+    ```
+
+    > **Configuration note:**  
+    > You can change the containers configuration in the `envs/tts.env`.
+
+    **Expected output**:
+    - Container logs on the `ros-node` service confirm:
+        - Connection to server successful
+        - ROS node initialized successfully
+    - GPT Sovits API is running at: http://127.0.0.1:9880
+    - Cerevoice API is running at: http://127.0.0.1:8015
+    - TTS API is running at: http://127.0.0.1:8022
+
+    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
+
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-hca.yaml --env-file envs/reasoner.env up \
-    execute-task \  
-    --force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task-scenario --force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
 
 To shut down **all layers and running task**, run:
 ```bash
-docker compose -f apps/docker-compose-hs.yaml down
+docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env down
+docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env down
+docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env down
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env down
+docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env down
 ```
 
 ## Troubleshooting Tips:
@@ -371,18 +444,17 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
         env | grep DISPLAY
         ```
     - Compare the values. They must be identical.
-    - If they are different, edit the file envs/simulator.env and replace:
+    - If they are different, edit the file `envs/simulator.env` and replace:
         ```bash
         DISPLAY=${DISPLAY:-=:0}
         ```
         with the actual value from your host system.
 
-2. No Sound in Robot Simulation
+2. No Sound in Simulation
     
-    If you can’t hear Haru in the simulation:
-    - Open "**Options**" > "**Haru Configuration**" in the simulator.
-    - Find the **Haru audio device** setting.
-    - Try changing its value (common options are `-1`, `0`, `1`, …) until audio works.
+    If you can’t hear the sound of clicks or the robot in the simulation:
+    - Run `cat /proc/asound/cards` on your host machine to see the available audio devices.
+    - Set the `AUDIO_CARD` environment variable in the `envs/simulator.env` file to the device name or ID (e.g., `1`, `2`, ...).
 
 3. LLMs Don't Connect
 
@@ -391,11 +463,26 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     - Make sure you can chat with the LLMs you want to use. You can use the WebUI running at `http://0.0.0.0:8080`.
     - For each LLM agent, you can set its LLM model by setting the following env variable `{AGENT_NAME}_MODEL_ID`.
 
-4. View Logs for More Information
+4. Face is Not Recognized
+
+    If your face is not being recognized by the system:
+    - Set the following environment variables in the `envs/perception.env` file:
+        ```bash
+        LEARNING_PERSON_NAME=<your-name>    # the face will be registered as this name
+        LEARNING_PERSON_ID=<your-id>        # the person id to register (visible from RVIZ)
+        ```
+    - Run the face registration process:
+        ```bash
+        docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up register-face --force-recreate
+        ```
+    - The system will begin collecting frames of your face for training.
+    - Once training is complete (typically takes about 5 minutes), your face should be recognized correctly.
+
+5. View Logs for More Information
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
-    docker logs <container_name>
+    docker logs <container_name> -f
     ```
     Replace `<container_name>` with the name of your running container.
     The logs will often include warnings or error messages you can use for troubleshooting.
