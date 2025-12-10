@@ -2,7 +2,7 @@ name: haru-speech
 
 services:
   audio:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "audio.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   configure:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "configure.launch.py",
       "config_file:=${AUDIO_CONFIGURE_CONFIG_FILE}",
@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
   
   speech-recognition:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
       "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
     
   speaker-verification:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
       "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
@@ -75,7 +75,7 @@ services:
     restart: unless-stopped
     
   sound-localization:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: [
       "ros2", "launch", "haru_speech_ros", "sound_localization.launch.py",
       "config_file:=${SOUND_LOCALIZATION_CONFIG_FILE}",

@@ -3,70 +3,70 @@ name: haru-speech-lifecycle
 services:
 
   audio-start:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /audio configure && ros2 lifecycle set /audio activate"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   audio-stop:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /audio deactivate && ros2 lifecycle set /audio cleanup"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   configure-start:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /audio_configure configure && ros2 lifecycle set /audio_configure activate"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   configure-stop:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /audio_configure deactivate && ros2 lifecycle set /audio_configure cleanup"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   speech-recognition-start:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /speech_to_text configure && ros2 lifecycle set /speech_to_text activate"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   speech-recognition-stop:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /speech_to_text deactivate && ros2 lifecycle set /speech_to_text cleanup"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   speaker-verification-start:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /speaker_verification configure && ros2 lifecycle set /speaker_verification activate"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   speaker-verification-stop:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /speaker_verification deactivate && ros2 lifecycle set /speaker_verification cleanup"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   sound-localization-start:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /sound_localization configure && ros2 lifecycle set /sound_localization activate"
     env_file: .env.example
     network_mode: host
     ipc: host
 
   sound-localization-stop:
-    image: ghcr.io/haru-project/haru-speech:feature-lifecycle
+    image: ghcr.io/haru-project/haru-speech:ros2
     command: bash -c "ros2 lifecycle set /sound_localization deactivate && ros2 lifecycle set /sound_localization cleanup"
     env_file: .env.example
     network_mode: host
