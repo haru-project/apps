@@ -36,7 +36,6 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
-    restart: unless-stopped
 
   reasoner:
     image: ghcr.io/haru-project/agent_reasoner:jazzy

@@ -400,16 +400,13 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
+    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client --force-recreate -d
     ```
 
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.
 
     **Expected output**:
-    - Container logs on the `ros-node` service confirm:
-        - Connection to server successful
-        - ROS node initialized successfully
     - GPT Sovits API is running at: http://127.0.0.1:9880
     - Cerevoice API is running at: http://127.0.0.1:8015
     - TTS API is running at: http://127.0.0.1:8022
@@ -418,7 +415,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task-scenario --force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-scenario --force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
