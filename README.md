@@ -311,6 +311,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
     ```
 
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
+        ```
+
     **Expected output**:
     - Container logs on the `speech-recognition` service display:
         - VAD (Voice Activity Detection) status
@@ -336,6 +346,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    - Start (configure + activate)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
+        ```
+    - Stop (deactivate + cleanup)
+        ```bash
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
+        ```
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
@@ -363,6 +383,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
     - Multiple Groot windows open, displaying:
@@ -392,7 +415,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager reasoner execute-task-scenario --force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-scenario --force-recreate
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.

@@ -19,6 +19,7 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    restart: unless-stopped
   
   context-manager:
     image: ghcr.io/haru-project/agent_reasoner:jazzy
@@ -51,7 +52,8 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
-  
+    restart: unless-stopped
+
   execute-task-scenario:
     image: ghcr.io/haru-project/agent_reasoner:jazzy
     command: [
