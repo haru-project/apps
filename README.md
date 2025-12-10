@@ -163,8 +163,8 @@ docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
 docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
-docker pull ghcr.io/haru-project/haru-speech:feature-lifecycle
-docker pull ghcr.io/haru-project/haru-llm:feature-lifecycle
+docker pull ghcr.io/haru-project/haru-speech:ros2
+docker pull ghcr.io/haru-project/haru-llm:ros2
 docker pull ghcr.io/haru-project/agent_reasoner:jazzy
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
@@ -383,6 +383,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
     - Multiple Groot windows open, displaying:
