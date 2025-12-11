@@ -5,7 +5,13 @@ services:
   tts-client:
     image: ghcr.io/haru-project/strawberry-tts:ros2
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
-    command: ["python", "/ros2_ws/src/strawberry_tts/src/strawberry_tts/client/fastapi_client_wrapper.py"]
+    command: [
+      "python",
+      "/ros2_ws/src/strawberry_tts/src/strawberry_tts/client/fastapi_client_wrapper.py",
+      "--global_timeout", "9.0",
+      "--timeout", "4.0",
+      "--num_retries", "2"
+    ]
     env_file: ../envs/tts.env
     network_mode: host
     ipc: host

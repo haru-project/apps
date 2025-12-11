@@ -43,7 +43,7 @@ services:
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
       "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=false",
+      "enable_reactive:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
