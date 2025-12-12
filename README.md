@@ -381,7 +381,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest reasoner --force-recreate -d
     ```
 
     **LifeCycle commands**:
@@ -413,9 +413,14 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
 
-Once all layers are running, start a task with:
+Once all layers are running, start a test task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-scenario --force-recreate
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-test
+```
+
+Once all layers are running, start a scenario task with:
+```bash
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-scenario
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
