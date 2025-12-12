@@ -71,8 +71,6 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    depends_on:
-      - reasoner
 
   execute-task-test:
     image: ghcr.io/haru-project/agent_reasoner:jazzy
@@ -86,5 +84,3 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    depends_on:
-      - reasoner
