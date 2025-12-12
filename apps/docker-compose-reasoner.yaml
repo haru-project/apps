@@ -20,6 +20,25 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped
+
+  reasoner:
+    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    command: [
+      "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
+      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
+      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+      "enable_reactive:=true",
+      "dev_autostart:=true",
+    ]
+    env_file: ../envs/reasoner.env
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
+    depends_on:
+      - bt-forest
+    restart: unless-stopped
   
   context-manager:
     image: ghcr.io/haru-project/agent_reasoner:jazzy
@@ -39,23 +58,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
       - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
-
-  reasoner:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
-      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=true",
-      "dev_autostart:=true",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
-    restart: unless-stopped
 
   execute-task-scenario:
     image: ghcr.io/haru-project/agent_reasoner:jazzy

@@ -43,8 +43,7 @@ services:
     command:
       - "--config=/app/config.yaml"
     env_file: ../envs/llm.env
-    ports:
-      - "4000:4000" # Map the container port to the host, change the host port if necessary
+    network_mode: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
