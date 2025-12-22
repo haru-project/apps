@@ -30,8 +30,8 @@ services:
       - HARU_PARAM_AUTO_PREFIXES=FACES
     volumes:
       - type: bind
-        source: ${ROS_DATA:-../data/perception/}
-        target: /var/lib/haru/
+        source: ../data/perception
+        target: /root/.ros/ros/strawberry_ros_faces_module
     deploy:
       resources:
         reservations:
