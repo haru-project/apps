@@ -58,6 +58,8 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
       - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
+    depends_on:
+      - reasoner
 
   execute-task-scenario:
     image: ghcr.io/haru-project/agent_reasoner:jazzy
@@ -84,3 +86,5 @@ services:
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    depends_on:
+      - reasoner
