@@ -39,11 +39,14 @@ services:
       context: .
       args:
         target: runtime
-    image: ghcr.io/berriai/litellm:main-stable
+    image: docker.litellm.ai/berriai/litellm:main-stable
     command:
       - "--config=/app/config.yaml"
     env_file: ../envs/llm.env
-    network_mode: host
+    ports:
+      - 4000:4000
+    extra_hosts:
+      - dgx02:172.24.39.32
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
