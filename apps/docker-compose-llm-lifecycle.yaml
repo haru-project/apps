@@ -6,24 +6,13 @@ services:
     image: ghcr.io/haru-project/haru-llm:ros2
     command: >
       bash -c "
-        echo 'Waiting for lifecycle node /action_args...';
-        until ros2 lifecycle get /action_args >/dev/null 2>&1; do
-          sleep 0.5;
-        done;
-
-        echo 'Configuring...';
+        until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
         ros2 lifecycle set /action_args configure;
-
-        echo 'Waiting for INACTIVE...';
-        until ros2 lifecycle get /action_args | grep -q inactive; do
-          sleep 0.2;
-        done;
-
-        echo 'Activating...';
+        until ros2 lifecycle get /action_args | grep -q inactive; do sleep 0.2; done;
         ros2 lifecycle set /action_args activate;
+        until ros2 lifecycle get /action_args | grep -q active; do sleep 0.2; done;
 
-        echo 'Lifecycle node activated.';
-        tail -f /dev/null
+        echo '/action_args ACTIVE — exiting'
       "
     env_file: ../envs/llm.env
     network_mode: host
@@ -31,7 +20,16 @@ services:
 
   action-args-stop:
     image: ghcr.io/haru-project/haru-llm:ros2
-    command: bash -c "ros2 lifecycle set /action_args deactivate && ros2 lifecycle set /action_args cleanup"
+    command: >
+      bash -c "
+        until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
+        ros2 lifecycle set /action_args deactivate;
+        until ros2 lifecycle get /action_args | grep -q inactive; do sleep 0.2; done;
+        ros2 lifecycle set /action_args cleanup;
+        until ros2 lifecycle get /action_args | grep -q unconfigured; do sleep 0.2; done;
+
+        echo '/action_args UNCONFIGURED — exiting'
+      "
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
@@ -40,24 +38,13 @@ services:
     image: ghcr.io/haru-project/haru-llm:ros2
     command: >
       bash -c "
-        echo 'Waiting for lifecycle node /dashboard...';
-        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do
-          sleep 0.5;
-        done;
-
-        echo 'Configuring...';
+        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do sleep 0.5; done;
         ros2 lifecycle set /dashboard configure;
-
-        echo 'Waiting for INACTIVE...';
-        until ros2 lifecycle get /dashboard | grep -q inactive; do
-          sleep 0.2;
-        done;
-
-        echo 'Activating...';
+        until ros2 lifecycle get /dashboard | grep -q inactive; do sleep 0.2; done;
         ros2 lifecycle set /dashboard activate;
+        until ros2 lifecycle get /dashboard | grep -q active; do sleep 0.2; done;
 
-        echo 'Lifecycle node activated.';
-        tail -f /dev/null
+        echo '/dashboard ACTIVE — exiting'
       "
     env_file: ../envs/llm.env
     network_mode: host
@@ -65,7 +52,16 @@ services:
 
   dashboard-stop:
     image: ghcr.io/haru-project/haru-llm:ros2
-    command: bash -c "ros2 lifecycle set /dashboard deactivate && ros2 lifecycle set /dashboard cleanup"
+    command: >
+      bash -c "
+        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do sleep 0.5; done;
+        ros2 lifecycle set /dashboard deactivate;
+        until ros2 lifecycle get /dashboard | grep -q inactive; do sleep 0.2; done;
+        ros2 lifecycle set /dashboard cleanup;
+        until ros2 lifecycle get /dashboard | grep -q unconfigured; do sleep 0.2; done;
+
+        echo '/dashboard UNCONFIGURED — exiting'
+      "
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
