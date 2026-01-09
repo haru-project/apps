@@ -4,7 +4,27 @@ services:
 
   action-args-start:
     image: ghcr.io/haru-project/haru-llm:ros2
-    command: bash -c "ros2 lifecycle set /action_args configure && ros2 lifecycle set /action_args activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /action_args...';
+        until ros2 lifecycle get /action_args >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /action_args configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /action_args | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /action_args activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
@@ -18,7 +38,27 @@ services:
 
   dashboard-start:
     image: ghcr.io/haru-project/haru-llm:ros2
-    command: bash -c "ros2 lifecycle set /dashboard configure && ros2 lifecycle set /dashboard activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /dashboard...';
+        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /dashboard configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /dashboard | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /dashboard activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/llm.env
     network_mode: host
     ipc: host
