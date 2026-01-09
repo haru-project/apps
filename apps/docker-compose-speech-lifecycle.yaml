@@ -4,7 +4,27 @@ services:
 
   audio-start:
     image: ghcr.io/haru-project/haru-speech:ros2
-    command: bash -c "ros2 lifecycle set /audio configure && ros2 lifecycle set /audio activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /audio...';
+        until ros2 lifecycle get /audio >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /audio configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /audio | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /audio activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
@@ -18,7 +38,27 @@ services:
 
   configure-start:
     image: ghcr.io/haru-project/haru-speech:ros2
-    command: bash -c "ros2 lifecycle set /audio_configure configure && ros2 lifecycle set /audio_configure activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /audio_configure...';
+        until ros2 lifecycle get /audio_configure >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /audio_configure configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /audio_configure | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /audio_configure activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
@@ -32,7 +72,27 @@ services:
 
   speech-recognition-start:
     image: ghcr.io/haru-project/haru-speech:ros2
-    command: bash -c "ros2 lifecycle set /speech_to_text configure && ros2 lifecycle set /speech_to_text activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /speech_to_text...';
+        until ros2 lifecycle get /speech_to_text >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /speech_to_text configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /speech_to_text | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /speech_to_text activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
@@ -46,7 +106,27 @@ services:
 
   speaker-verification-start:
     image: ghcr.io/haru-project/haru-speech:ros2
-    command: bash -c "ros2 lifecycle set /speaker_verification configure && ros2 lifecycle set /speaker_verification activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /speaker_verification...';
+        until ros2 lifecycle get /speaker_verification >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /speaker_verification configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /speaker_verification | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /speaker_verification activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
@@ -60,7 +140,27 @@ services:
 
   sound-localization-start:
     image: ghcr.io/haru-project/haru-speech:ros2
-    command: bash -c "ros2 lifecycle set /sound_localization configure && ros2 lifecycle set /sound_localization activate"
+    command: >
+      bash -c "
+        echo 'Waiting for lifecycle node /sound_localization...';
+        until ros2 lifecycle get /sound_localization >/dev/null 2>&1; do
+          sleep 0.5;
+        done;
+
+        echo 'Configuring...';
+        ros2 lifecycle set /sound_localization configure;
+
+        echo 'Waiting for INACTIVE...';
+        until ros2 lifecycle get /sound_localization | grep -q inactive; do
+          sleep 0.2;
+        done;
+
+        echo 'Activating...';
+        ros2 lifecycle set /sound_localization activate;
+
+        echo 'Lifecycle node activated.';
+        tail -f /dev/null
+      "
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
