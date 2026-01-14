@@ -344,17 +344,17 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
     ```
 
     **LifeCycle commands**:
     - Start (configure + activate)
         ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start --force-recreate
         ```
     - Stop (deactivate + cleanup)
         ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop --force-recreate
         ```
 
     **Expected output**:
