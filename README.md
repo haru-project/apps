@@ -291,7 +291,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Live camera feed
         - Detected skeletons and tracking markers
 
-    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people)
+    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 
 2. Speech layer
 
@@ -326,7 +326,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 
-    **Related repositories for debug**: [haru-speech](https://github.com/haru-project/haru-spech)
+    **Related repositories for debug**: [haru-speech](https://github.com/haru-project/haru-speech/tree/ros2)
 
 3. LLM layer
 
@@ -365,7 +365,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - LLM server is running at: http://127.0.0.1:4000
     - LLM Web UI is running at: http://127.0.0.1:8080
 
-    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm)
+    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/ros2)
 
 4. Reasoner layer
 
@@ -392,7 +392,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Behavior trees
         - Current execution status
 
-    **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner)
+    **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
 5. Expressive TTS layer (optional)
 
@@ -411,7 +411,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Cerevoice API is running at: http://127.0.0.1:8015
     - TTS API is running at: http://127.0.0.1:8022
 
-    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
+    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts/tree/ros2)
 
 Once all layers are running, start a test task with:
 ```bash
