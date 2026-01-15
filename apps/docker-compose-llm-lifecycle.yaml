@@ -3,7 +3,7 @@ name: haru-llm-lifecycle
 services:
 
   action-args-start:
-    image: ghcr.io/haru-project/haru-llm:ros2
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
         until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
@@ -19,7 +19,7 @@ services:
     ipc: host
 
   action-args-stop:
-    image: ghcr.io/haru-project/haru-llm:ros2
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
         until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
