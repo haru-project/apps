@@ -49,6 +49,9 @@ services:
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
+    depends_on:
+      audio-start:
+        condition: service_completed_successfully
 
   configure-stop:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -81,6 +84,9 @@ services:
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
+    depends_on:
+      speaker-verification-start:
+        condition: service_completed_successfully
 
   speech-recognition-stop:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -113,6 +119,9 @@ services:
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
+    depends_on:
+      configure-start:
+        condition: service_completed_successfully
 
   speaker-verification-stop:
     image: ghcr.io/haru-project/haru-speech:ros2
@@ -145,6 +154,9 @@ services:
     env_file: ../envs/speech.env
     network_mode: host
     ipc: host
+    depends_on:
+      configure-start:
+        condition: service_completed_successfully
 
   sound-localization-stop:
     image: ghcr.io/haru-project/haru-speech:ros2
