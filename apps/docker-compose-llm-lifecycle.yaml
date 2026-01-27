@@ -3,7 +3,7 @@ name: haru-llm-lifecycle
 services:
 
   action-args-start:
-    image: ghcr.io/haru-project/haru-llm:ros2
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
         until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
@@ -19,7 +19,7 @@ services:
     ipc: host
 
   action-args-stop:
-    image: ghcr.io/haru-project/haru-llm:ros2
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
         until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
@@ -29,38 +29,6 @@ services:
         until ros2 lifecycle get /action_args | grep -q unconfigured; do sleep 0.2; done;
 
         echo '/action_args UNCONFIGURED — exiting'
-      "
-    env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
-
-  dashboard-start:
-    image: ghcr.io/haru-project/haru-llm:ros2
-    command: >
-      bash -c "
-        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do sleep 0.5; done;
-        ros2 lifecycle set /dashboard configure;
-        until ros2 lifecycle get /dashboard | grep -q inactive; do sleep 0.2; done;
-        ros2 lifecycle set /dashboard activate;
-        until ros2 lifecycle get /dashboard | grep -q active; do sleep 0.2; done;
-
-        echo '/dashboard ACTIVE — exiting'
-      "
-    env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
-
-  dashboard-stop:
-    image: ghcr.io/haru-project/haru-llm:ros2
-    command: >
-      bash -c "
-        until ros2 lifecycle get /dashboard >/dev/null 2>&1; do sleep 0.5; done;
-        ros2 lifecycle set /dashboard deactivate;
-        until ros2 lifecycle get /dashboard | grep -q inactive; do sleep 0.2; done;
-        ros2 lifecycle set /dashboard cleanup;
-        until ros2 lifecycle get /dashboard | grep -q unconfigured; do sleep 0.2; done;
-
-        echo '/dashboard UNCONFIGURED — exiting'
       "
     env_file: ../envs/llm.env
     network_mode: host

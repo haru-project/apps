@@ -2,9 +2,9 @@
 
 This guide is intended for **non-developers** and walks you through installing, setting up, and running the Haru system.
 
-## Pre-requisities
+## Prerequisites
 
-Before you begin, make sure you're installing the system on a machine running either Ubuntu 20.xx or 24.xx.
+Before you begin, make sure you're installing the system on a machine running either Ubuntu 20.04 or 24.04.
 
 Please note that the Haru system has not been tested on macOS or Windows, and we cannot guarantee compatibility with those platforms.
 
@@ -164,7 +164,7 @@ docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
-docker pull ghcr.io/haru-project/haru-llm:ros2
+docker pull ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
 docker pull ghcr.io/haru-project/agent_reasoner:jazzy
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
@@ -257,7 +257,7 @@ Once the software is launched, follow these steps:
 
 ### Haru Communication App (HCA)
 
-The Haru Communication App uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the simulator:
+The Haru Communication App uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the application:
 
 ```bash
 xhost +local:docker
@@ -337,35 +337,35 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_llm_data.sh
     ```
 
-    > **Configuration note:**  
-    > You can change the containers configuration in the `envs/llm.env`.  
-    > You can change the LLM server configuration in the `data/configs/litellm_server.yaml`.  
-    > You can change the ROS nodes configuration in the `data/configs/haru_llm.yaml`.  
+    > **Configuration note:**
+    > You can change the containers configuration in the `envs/llm.env`.
+    > You can change the LLM server configuration in the `data/llm/configs/litellm_server.yaml`.
+    > You can change the ROS nodes configuration in the `data/llm/configs/haru_llm.yaml`.  
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
     ```
 
     **LifeCycle commands**:
     - Start (configure + activate)
         ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start --force-recreate
         ```
     - Stop (deactivate + cleanup)
         ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
+        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop --force-recreate
         ```
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://127.0.0.1:5000
+    - LLM Dashboard is running at: http://127.0.0.1:8501
     - LLM server is running at: http://127.0.0.1:4000
     - LLM Web UI is running at: http://127.0.0.1:8080
 
-    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/ros2)
+    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
 
 4. Reasoner layer
 
