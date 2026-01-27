@@ -40,26 +40,26 @@ services:
       - bt-forest
     restart: unless-stopped
   
-  context-manager:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
-      "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
-      "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
-      "start_perception_postprocessors:=true",
-      "context_backup_active:=true",
-      "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
-      "dev_autostart:=true",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
-      - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
-    depends_on:
-      - reasoner
+  # context-manager:
+  #   image: ghcr.io/haru-project/agent_reasoner:jazzy
+  #   command: [
+  #     "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
+  #     "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
+  #     "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
+  #     "start_perception_postprocessors:=true",
+  #     "context_backup_active:=true",
+  #     "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
+  #     "dev_autostart:=true",
+  #   ]
+  #   env_file: ../envs/reasoner.env
+  #   network_mode: host
+  #   ipc: host
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
+  #     - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
+  #   depends_on:
+  #     - reasoner
 
   execute-task-scenario:
     image: ghcr.io/haru-project/agent_reasoner:jazzy

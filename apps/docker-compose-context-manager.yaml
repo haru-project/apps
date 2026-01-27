@@ -1,0 +1,53 @@
+name: haru-context-manager
+
+services:
+  context_manager:
+    image: ghcr.io/haru-project/context_manager:jazzy
+    network_mode: host
+    ipc: host
+    env_file: ../envs/context_manager.env
+    command: [
+      "ros2", "launch", "context_manager", "context_manager.launch.py",
+      "robot_name:=${ROBOT_NAME}",
+      "robot_trackid:=${ROBOT_TRACKID}",
+      "config_path:=${CONFIG_PATH}",
+      "inference_rules_config_path:=${INFERENCE_RULES_CONFIG_PATH}",
+      "do_publish_legacy_context:=${DO_PUBLISH_LEGACY_CONTEXT}",
+      "legacy_allow_unrecognized_speech:=${LEGACY_ALLOW_UNRECOGNIZED_SPEECH}"
+    ]
+    volumes:
+      - ../data/context_manager/config:/root/ros2_ws/install/context_manager/share/context_manager/config
+    tty: true
+
+  rosbridge:
+    image: ghcr.io/haru-project/context_manager:jazzy
+    network_mode: host
+    ipc: host
+    env_file: ../envs/context_manager.env
+    command: [
+      "ros2", "launch", "rosbridge_server", "rosbridge_websocket_launch.xml", "delay_between_messages:=0.0"
+    ]
+    depends_on:
+      - context_manager
+
+  context_monitor:
+    image: ghcr.io/haru-project/context_monitor:latest
+    ports:
+      - "5173:5173"
+    depends_on:
+      - context_manager
+    environment:
+      - VITE_ROS_URL=ws://localhost:9090
+
+  scenario_player:
+    image: ghcr.io/haru-project/context_manager:jazzy
+    network_mode: host
+    ipc: host
+    env_file: ../envs/context_manager.env
+    working_dir: /root/ros2_ws/src/context_manager/testbed
+    command: [
+      "python3", "scenario_player.py", "scenarios/legacy_parity_scenario.yaml"
+    ]
+    depends_on:
+      - context_manager
+

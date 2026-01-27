@@ -166,6 +166,8 @@ docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:ros2
 docker pull ghcr.io/haru-project/agent_reasoner:jazzy
+docker pull ghcr.io/haru-project/context_manager:jazzy
+docker pull ghcr.io/haru-project/context_monitor:latest
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
@@ -367,7 +369,37 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/ros2)
 
-4. Reasoner layer
+4. Context Manager layer
+
+    Manages the Scene Graph and situational awareness.
+
+    **Download data**:
+    ```bash
+    bash scripts/download_context_manager_data.sh
+    ```
+
+    >**Configuration note:**  
+    >You can change the containers configuration in the `envs/context_manager.env`.
+    >You can modify the context config in the `data/context_manager/config` directory.
+    >The mapping of configuration parameters between the agent reasoner context layer and the new context_manager has been documented in this file: [context_manager_configuration_mapping.](https://github.com/haru-project/knowledge-manager/blob/master/context_manager/docs/context_manager_configuration_mapping.md)
+
+    **Start command**:
+    ```bash
+    docker compose -f apps/docker-compose-context-manager.yaml --env-file envs/context_manager.env up context_manager rosbridge context_monitor --force-recreate -d
+    ```
+
+    **Expected output**:
+    - Context Manager UI is accessible at: http://localhost:5173
+
+    **Test Scenarios**:
+    To play a test scenario (simulating perception inputs) to verify the context manager is working without the full perception pipeline:
+    ```bash
+    docker compose -f apps/docker-compose-context-manager.yaml --env-file envs/context_manager.env up scenario_player
+    ```
+
+    **Related repositories for debug**: [knowledge-manager](https://github.com/haru-project/knowledge-manager/tree/master)
+
+5. Reasoner layer
 
     Manages decision-making and task execution.
 
@@ -394,7 +426,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
-5. Expressive TTS layer (optional)
+6. Expressive TTS layer (optional)
 
     Enhances Haru with a more expressive and natural-sounding voice
 
@@ -415,12 +447,12 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a test task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-test
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner execute-task-test
 ```
 
 Once all layers are running, start a scenario task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner execute-task-scenario
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
