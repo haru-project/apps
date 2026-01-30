@@ -3,19 +3,20 @@ name: haru-llm
 services:
 
   action-args:
-    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
+    image: haru/haru-llm:local
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
     ]
     env_file: ../envs/llm.env
+    environment:
+      - REDIS_HOST=0.0.0.0
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
       - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
-      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
     depends_on:
       - server
     restart: unless-stopped
@@ -23,7 +24,7 @@ services:
   dashboard:
     image: haru/haru-llm:local
     working_dir: /ros2_ws/src/haru-llm
-    command: ["uv", "run", "--group", "dashboard", "haru-dashboard"]
+    command: ["/root/.local/bin/uv", "run", "--group", "dashboard", "haru-dashboard"]
     env_file: ../envs/llm.env
     ports:
       - 8501:8501
