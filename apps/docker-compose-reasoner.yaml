@@ -3,7 +3,7 @@ name: haru-reasoner
 services:
 
   bt-forest:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
@@ -22,12 +22,12 @@ services:
     restart: unless-stopped
 
   reasoner:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
       "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=false",
+      "enable_reactive:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
   
   context-manager:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
@@ -58,7 +58,7 @@ services:
       - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
 
   execute-task-scenario:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    image: haru/agent-reasoner:local
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
@@ -73,7 +73,7 @@ services:
       - reasoner
 
   execute-task-test:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    image: haru/agent-reasoner:local
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_TEST_FILE}', task_type: 1}",
