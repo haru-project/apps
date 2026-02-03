@@ -2,9 +2,9 @@
 
 This guide is intended for **non-developers** and walks you through installing, setting up, and running the Haru system.
 
-## Pre-requisities
+## Prerequisites
 
-Before you begin, make sure you're installing the system on a machine running either Ubuntu 20.xx or 24.xx.
+Before you begin, make sure you're installing the system on a machine running either Ubuntu 20.04 or 24.04.
 
 Please note that the Haru system has not been tested on macOS or Windows, and we cannot guarantee compatibility with those platforms.
 
@@ -164,8 +164,8 @@ docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
-docker pull ghcr.io/haru-project/haru-llm:ros2
-docker pull ghcr.io/haru-project/agent_reasoner:jazzy
+docker pull haru/haru-llm:local
+docker pull haru/agent-reasoner:local
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
@@ -257,7 +257,7 @@ Once the software is launched, follow these steps:
 
 ### Haru Communication App (HCA)
 
-The Haru Communication App uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the simulator:
+The Haru Communication App uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the application:
 
 ```bash
 xhost +local:docker
@@ -291,7 +291,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Live camera feed
         - Detected skeletons and tracking markers
 
-    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people)
+    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 
 2. Speech layer
 
@@ -326,7 +326,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 
-    **Related repositories for debug**: [haru-speech](https://github.com/haru-project/haru-spech)
+    **Related repositories for debug**: [haru-speech](https://github.com/haru-project/haru-speech/tree/ros2)
 
 3. LLM layer
 
@@ -337,35 +337,25 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_llm_data.sh
     ```
 
-    > **Configuration note:**  
-    > You can change the containers configuration in the `envs/llm.env`.  
-    > You can change the LLM server configuration in the `data/configs/litellm_server.yaml`.  
-    > You can change the ROS nodes configuration in the `data/configs/haru_llm.yaml`.  
+    > **Configuration note:**
+    > You can change the containers configuration in the `envs/llm.env`.
+    > You can change the LLM server configuration in the `data/llm/configs/litellm_server.yaml`.
+    > You can change the ROS nodes configuration in the `data/llm/configs/haru_llm.yaml`.  
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard server webui --force-recreate -d
+    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
     ```
-
-    **LifeCycle commands**:
-    - Start (configure + activate)
-        ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-start dashboard-start --force-recreate
-        ```
-    - Stop (deactivate + cleanup)
-        ```bash
-        docker compose -f apps/docker-compose-llm-lifecycle.yaml --env-file envs/llm.env up action-args-stop dashboard-stop --force-recreate
-        ```
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://127.0.0.1:5000
+    - LLM Dashboard is running at: http://127.0.0.1:8501
     - LLM server is running at: http://127.0.0.1:4000
     - LLM Web UI is running at: http://127.0.0.1:8080
 
-    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm)
+    **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
 
 4. Reasoner layer
 
@@ -381,7 +371,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest reasoner --force-recreate -d
+    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
     ```
 
     **LifeCycle commands**:
@@ -392,7 +382,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Behavior trees
         - Current execution status
 
-    **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner)
+    **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
 5. Expressive TTS layer (optional)
 
@@ -411,16 +401,16 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Cerevoice API is running at: http://127.0.0.1:8015
     - TTS API is running at: http://127.0.0.1:8022
 
-    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts)
+    **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts/tree/ros2)
 
 Once all layers are running, start a test task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-test
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-test
 ```
 
 Once all layers are running, start a scenario task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up context-manager execute-task-scenario
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
