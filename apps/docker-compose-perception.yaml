@@ -1,254 +1,127 @@
+# Project name used when docker compose creates the project
 name: haru-perception
 
+# Top-level extension fields to deduplicate repeated blocks
+x-nvidia-device: &nvidia-device
+  driver: nvidia
+  count: all
+  capabilities: [gpu]
+
+x-gpu-reservations: &gpu-reservations
+  resources:
+    reservations:
+      devices:
+        - <<: *nvidia-device
+
+x-common-x11: &common-x11 "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+
+x-common-docker-xauth: &common-docker-xauth "/tmp/.docker.xauth:/tmp/.docker.xauth"
+
+x-common-dev: &common-dev "/dev:/dev:rw"
+
+# Centralized network mode — can be overridden with COMPOSE_NETWORK_MODE env var (e.g. bridge)
+x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
+
 services:
+  # Azure Kinect bridge - supplies depth + color and is relied on by several modules
   azure-kinect:
     image: ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
-    env_file: ../envs/perception.env
+    env_file:
+      - ../envs/perception.env
     environment:
-      - DISPLAY=${DISPLAY} # Something in the BT tracking requires DISPLAY env variable to be set even if no display is used
-      - HARU_PARAM_AUTO_PREFIXES=AZURE_KINECT
-    network_mode: host
-    ipc: host
+      DISPLAY: ${DISPLAY} # Required by some BT tracking code even when no display is used
+      HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
+      AZURE_KINECT_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
     privileged: true
+    restart: unless-stopped
     volumes:
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro # Something in the BT tracking requires Xauthority even if no display is used
-      - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro # Some BT tracking requires Xauthority even without a display
+      - *common-dev
+    deploy: *gpu-reservations
 
+  # Faces (InsightFace + fusion node)
   faces:
-    network_mode: host
-    ipc: host
     image: ghcr.io/haru-project/strawberry-ros-faces-module:latest
-    env_file: ../envs/perception.env
+    env_file:
+      - ../envs/perception.env
     environment:
-      - HARU_PARAM_AUTO_PREFIXES=FACES
+      HARU_PARAM_AUTO_PREFIXES: FACES
+      FACES_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
     volumes:
       - type: bind
         source: ../data/perception
-        target: /root/.ros/ros/strawberry_ros_faces_module
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+        target: /ros/strawberry_ros_faces_module
+    deploy: *gpu-reservations
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
 
-  register-face:
-    image: ghcr.io/haru-project/strawberry-ros-faces-module:latest
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command:
-      [
-        "ros2",
-        "service",
-        "call",
-        "/faces/identities/recognitor/learner/lesson",
-        "strawberry_ros_msgs/srv/FaceLessonSRV",
-        '{mode: ${LEARNING_MODE}, person_name: "${LEARNING_PERSON_NAME}", person_id: ${LEARNING_PERSON_ID}, number_of_samples: ${LEARNING_NUMBER_OF_SAMPLES}}',
-      ]
-    env_file: ../envs/perception.env
-    network_mode: host
-    ipc: host
-
+  # Hands module
   hands:
-    image: ghcr.io/haru-project/strawberry_ros_hands:latest
-    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command:
-      [
-        "ros2",
-        "launch",
-        "strawberry_ros_hands",
-        "hands_gestures_pipeline.launch.py",
-        "max_num_hands:=${HANDS_MAX_NUM_HANDS}",
-        "min_detection_confidence:=${HANDS_MIN_DETECTION_CONFIDENCE}",
-        "min_tracking_confidence:=${HANDS_MIN_TRACKING_CONFIDENCE}",
-        "loop_rate:=${HANDS_LOOP_RATE}",
-        "view_images:=${HANDS_VIEW_IMAGES}",
-        "run_camera:=${HANDS_RUN_CAMERA}",
-        "camera_name:=${HANDS_CAMERA_NAME}",
-        "respawn:=${HANDS_RESPAWN}",
-        "consecutive_predictions_threshold_left:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_LEFT}",
-        "consecutive_predictions_threshold_right:=${HANDS_CONSECUTIVE_PREDICTIONS_THRESHOLD_RIGHT}",
-        "min_prediction_confidence:=${HANDS_MIN_PREDICTION_CONFIDENCE}",
-        "time_interval_hand_combination:=${HANDS_TIME_INTERVAL_HAND_COMBINATION}",
-        "publish_gesture_debug_image:=${HANDS_PUBLISH_GESTURE_DEBUG_IMAGE}",
-        "publish_original_image:=${HANDS_PUBLISH_ORIGINAL_IMAGE}",
-        "enable_hands_detection:=${HANDS_ENABLE_HANDS_DETECTION}",
-        "enable_debug_hands_image:=${HANDS_ENABLE_DEBUG_HANDS_IMAGE}",
-      ]
-    env_file: ../envs/perception.env
-    network_mode: host
-    ipc: host
+    image: ghcr.io/haru-project/strawberry-ros-hands:latest
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_PARAM_AUTO_PREFIXES: HANDS
+      HANDS_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /tmp/.docker.xauth:/tmp/.docker.xauth
-      - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - *common-x11
+      - *common-docker-xauth
+      - *common-dev
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
+    deploy: *gpu-reservations
 
+  # People module
   people:
-    image: ghcr.io/haru-project/strawberry_ros_people:latest
-    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command:
-      [
-        "ros2",
-        "launch",
-        "strawberry_ros_people",
-        "people_node.launch.py",
-        "ws_x_max:=${PEOPLE_WS_X_MAX}",
-        "ws_x_min:=${PEOPLE_WS_X_MIN}",
-        "ws_y_max:=${PEOPLE_WS_Y_MAX}",
-        "ws_y_min:=${PEOPLE_WS_Y_MIN}",
-        "ws_z_max:=${PEOPLE_WS_Z_MAX}",
-        "ws_z_min:=${PEOPLE_WS_Z_MIN}",
-        "skeletons_cache_duration:=${PEOPLE_SKELETONS_CACHE_DURATION}",
-        "skeletons_cache_size:=${PEOPLE_SKELETONS_CACHE_SIZE}",
-        "skeletons_min_num_per_id:=${PEOPLE_SKELETONS_MIN_NUM_PER_ID}",
-        "hands_association_factor:=${PEOPLE_HANDS_ASSOCIATION_FACTOR}",
-        "faces_association_factor:=${PEOPLE_FACES_ASSOCIATION_FACTOR}",
-        "sync_using_stamp:=${PEOPLE_SYNC_USING_STAMP}",
-        "skeletons_topic:=${PEOPLE_SKELETONS_TOPIC}",
-        "faces_topic:=${PEOPLE_FACES_TOPIC}",
-        "hands_topic:=${PEOPLE_HANDS_TOPIC}",
-        "sound_topic:=${PEOPLE_SOUND_TOPIC}",
-        "speech_topic:=${PEOPLE_SPEECH_TOPIC}",
-        "vad_topic:=${PEOPLE_VAD_TOPIC}",
-        "vad_hold_time:=${PEOPLE_VAD_HOLD_TIME}",
-        "wuw_topic:=${PEOPLE_WUW_TOPIC}",
-      ]
-    env_file: ../envs/perception.env
-    network_mode: host
-    ipc: host
+    image: ghcr.io/haru-project/strawberry-ros-people:latest
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_PARAM_AUTO_PREFIXES: PEOPLE
+      PEOPLE_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /tmp/.docker.xauth:/tmp/.docker.xauth
-      - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - *common-x11
+      - *common-docker-xauth
+      - *common-dev
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
+    deploy: *gpu-reservations
 
+  # Visualization nodes (RViz, GUI helpers)
   visualization:
-    image: ghcr.io/haru-project/strawberry_ros_visualizations:latest
-    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command:
-      [
-        "ros2",
-        "launch",
-        "strawberry_ros_people",
-        "rviz_visualization.launch.py",
-        "launch_rviz:=${VIZ_LAUNCH_RVIZ}",
-        "rviz_config:=${VIZ_RVIZ_CONFIG}",
-        "respawn:=${VIZ_RESPAWN}",
-      ]
-    env_file: ../envs/perception.env
-    network_mode: host
-    ipc: host
+    image: ghcr.io/haru-project/strawberry-ros-visualization:latest
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_PARAM_AUTO_PREFIXES: VIZ
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
+      VIZ_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /tmp/.docker.xauth:/tmp/.docker.xauth
-      - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - *common-x11
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
+      - *common-dev
+    deploy: *gpu-reservations
 
+  # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:
-    image: ghcr.io/haru-project/strawberry_resource_monitor:latest
-    user: "${UID:-1000}:${GID:-1000}" # Uses environment variables or defaults to 1000:1000
-    entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-    command:
-      [
-        "ros2",
-        "launch",
-        "strawberry_resource_monitor",
-        "monitor.launch.py",
-        "respawn:=${MON_RESPAWN}",
-        "topic_prefix:=${MON_TOPIC_PREFIX}",
-        "log_level:=${MON_LOG_LEVEL}",
-        "cpu_enabled:=${MON_CPU_ENABLED}",
-        "memory_enabled:=${MON_MEMORY_ENABLED}",
-        "gpu_enabled:=${MON_GPU_ENABLED}",
-        "spikes_enabled:=${MON_SPIKES_ENABLED}",
-        "publish_rate_hz:=${MON_PUBLISH_RATE_HZ}",
-        "window_sec:=${MON_WINDOW_SEC}",
-        "enable_gpu_processes:=${MON_ENABLE_GPU_PROCESSES}",
-        "enable_power_metrics:=${MON_ENABLE_POWER_METRICS}",
-        "cpu_total_percent_threshold:=${MON_CPU_TOTAL_PERCENT_THRESHOLD}",
-        "cpu_core_percent_threshold:=${MON_CPU_CORE_PERCENT_THRESHOLD}",
-        "mem_used_percent_threshold:=${MON_MEM_USED_PERCENT_THRESHOLD}",
-        "gpu_util_percent_threshold:=${MON_GPU_UTIL_PERCENT_THRESHOLD}",
-        "gpu_mem_util_percent_threshold:=${MON_GPU_MEM_UTIL_PERCENT_THRESHOLD}",
-        "spike_min_duration_sec:=${MON_SPIKE_MIN_DURATION_SEC}",
-        "spike_clear_hysteresis_percent:=${MON_SPIKE_CLEAR_HYSTERESIS_PERCENT}",
-      ]
-    network_mode: host
-    ipc: host
+    image: ghcr.io/haru-project/strawberry-resource-monitor:latest
+    network_mode: *network-mode
+    restart: unless-stopped
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /tmp/.docker.xauth:/tmp/.docker.xauth
-      - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  # resource-monitor-stresstest:
-  #   image: ghcr.io/haru-project/strawberry_resource_monitor:latest
-  #   user: "${UID:-1000}:${GID:-1000}"  # Uses environment variables or defaults to 1000:1000
-  #   entrypoint: ["bash", "/home/haru/entrypoint.sh"]
-  #   command: [
-  #       "ros2", "launch", "strawberry_resource_monitor", "stresstest.launch.py \
-  #       venv_path:=${STRESS_VENV_PATH} \
-  #       duration:=${STRESS_DURATION} \
-  #       run_cpu:=${STRESS_RUN_CPU} \
-  #       run_memory:=${STRESS_RUN_MEMORY} \
-  #       run_gpu:=${STRESS_RUN_GPU} \
-  #       cpu_workers:=${STRESS_CPU_WORKERS} \
-  #       cpu_duty:=${STRESS_CPU_DUTY} \
-  #       mem_target_percent:=${STRESS_MEM_TARGET_PERCENT} \
-  #       mem_target_gb:=${STRESS_MEM_TARGET_GB} \
-  #       mem_ramp_sec:=${STRESS_MEM_RAMP_SEC} \
-  #       mem_chunk_mb:=${STRESS_MEM_CHUNK_MB} \
-  #       gpu_backend:=${STRESS_GPU_BACKEND} \
-  #       gpu_target_percent:=${STRESS_GPU_TARGET_PERCENT} \
-  #       gpu_target_gb:=${STRESS_GPU_TARGET_GB} \
-  #       gpu_chunk_mb:=${STRESS_GPU_CHUNK_MB} \
-  #       gpu_device:=${STRESS_GPU_DEVICE}"
-  #   ]
-  #   network_mode: host
-  #   ipc: host
-  #   volumes:
-  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  #     - /tmp/.docker.xauth:/tmp/.docker.xauth
-  #     - /dev:/dev:rw
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: all
-  #             capabilities: [gpu]
+      - *common-x11
+      - *common-docker-xauth
+      - *common-dev
+    deploy: *gpu-reservations
