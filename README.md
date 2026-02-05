@@ -338,10 +338,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```
 
     > **Configuration note:**
-    > You can change the containers configuration in the `envs/llm.env`.
+    > `envs/llm.env` is the non-secret source of truth for config.
+    > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
     > You can change the LLM server configuration in the `data/llm/configs/litellm_server.yaml`.
     > You can change the ROS nodes configuration in the `data/llm/configs/haru_llm.yaml`.  
-
+    
     **Start command**:
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
