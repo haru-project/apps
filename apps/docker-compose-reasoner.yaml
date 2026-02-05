@@ -3,6 +3,9 @@ name: haru-reasoner
 services:
 
   bt-forest:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
@@ -15,13 +18,14 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped
 
   reasoner:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
@@ -31,14 +35,15 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
     restart: unless-stopped
   
   context-manager:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: haru/agent-reasoner:local
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
@@ -50,14 +55,15 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
       - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
 
   execute-task-scenario:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: haru/agent-reasoner:local
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
@@ -65,14 +71,16 @@ services:
       "-f",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - reasoner
+    restart: "no"
 
   execute-task-test:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: haru/agent-reasoner:local
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
@@ -80,9 +88,8 @@ services:
       "-f",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - reasoner
+    restart: "no"

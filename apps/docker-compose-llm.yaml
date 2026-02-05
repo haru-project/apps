@@ -3,29 +3,40 @@ name: haru-llm
 services:
 
   action-args:
-    image: haru/haru-llm:local
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: haru/haru-llm:test
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
     ]
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     environment:
-      - REDIS_HOST=0.0.0.0
-    network_mode: host
-    ipc: host
+      - REDIS_HOST=127.0.0.1
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
       - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
     depends_on:
-      - server
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_healthy
     restart: unless-stopped
     
   dashboard:
-    image: haru/haru-llm:local
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: haru/haru-llm:test
     working_dir: /ros2_ws/src/haru-llm
     command: ["/root/.local/bin/uv", "run", "--group", "dashboard", "haru-dashboard"]
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     ports:
       - 8501:8501
     depends_on:
@@ -34,10 +45,9 @@ services:
     restart: unless-stopped
   
   redis:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: redis:latest
     ports:
       - 6379:6379
@@ -49,14 +59,15 @@ services:
       retries: 3
 
   server:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: docker.litellm.ai/berriai/litellm:main-stable
     command:
       - "--config=/app/config.yaml"
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     ports:
       - 4000:4000
     extra_hosts:
@@ -66,44 +77,40 @@ services:
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)
       interval: 30s  # Perform health check every 30 seconds
       timeout: 10s   # Health check command times out after 10 seconds
       retries: 3     # Retry up to 3 times if health check fails
       start_period: 40s  # Wait 40 seconds after container start before beginning health checks
 
   webui:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: ghcr.io/open-webui/open-webui:main
-    env_file: ../envs/llm.env
-    network_mode: host
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/open-webui:/app/backend/data:rw
     restart: unless-stopped
+    profiles: ["webui"]
   
   vllm:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
     image: vllm/vllm-openai:latest
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     ports:
       - "8000:8000"
     volumes:
       - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     restart: unless-stopped
+    profiles: ["vllm"]

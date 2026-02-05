@@ -172,6 +172,24 @@ docker pull ghcr.io/haru-project/strawberry-tts:ros2
 
 ## Run Applications
 
+We recommend using the helper script `scripts/compose.sh` for all stacks. It automatically includes the shared `apps/compose.common.yaml` file and the correct `envs/*.env`.
+To quickly validate all compose files, run:
+```bash
+bash scripts/validate_compose.sh
+```
+
+### All-in-one compose (single file)
+
+If you want to launch all layers from a single compose file, use:
+```bash
+bash scripts/compose.sh all up --force-recreate -d
+```
+
+This uses `envs/all.env` for compose-time variables. Optional services still respect profiles:
+```bash
+bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
+```
+
 ### Haru Simulator (HS)
 
 The Haru Simulator uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the simulator:
@@ -186,14 +204,14 @@ This gives Docker permission to display graphical applications on your desktop.
 To start the Haru Simulator, run the following command in your terminal:
 
 ```bash
-docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env up --force-recreate -d
+bash scripts/compose.sh simulator up --force-recreate -d
 ```
 
 This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
 
 To stop the simulator and shut down all related containers, run:
 ```bash
-docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env down
+bash scripts/compose.sh simulator down
 ```
 
 Once the software is launched, follow these steps:
@@ -283,7 +301,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect-driver azure-kinect faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
@@ -308,17 +326,17 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
+    bash scripts/compose.sh speech up audio configure speech-recognition speaker-verification --force-recreate -d
     ```
 
     **LifeCycle commands**:
     - Start (configure + activate)
         ```bash
-        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
+        bash scripts/compose.sh speech-lifecycle up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
         ```
     - Stop (deactivate + cleanup)
         ```bash
-        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
+        bash scripts/compose.sh speech-lifecycle up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
         ```
 
     **Expected output**:
@@ -345,8 +363,18 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
+    bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
     ```
+
+    **Optional profiles**:
+    - Web UI:
+      ```bash
+      bash scripts/compose.sh llm --profile webui up webui --force-recreate -d
+      ```
+    - vLLM:
+      ```bash
+      bash scripts/compose.sh llm --profile vllm up vllm --force-recreate -d
+      ```
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
@@ -354,7 +382,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:8501
     - LLM server is running at: http://127.0.0.1:4000
-    - LLM Web UI is running at: http://127.0.0.1:8080
+    - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
 
@@ -372,7 +400,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
+    bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
     ```
 
     **LifeCycle commands**:
@@ -391,7 +419,12 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client --force-recreate -d
+    bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
+    ```
+
+    **Optional ROS bridge**:
+    ```bash
+    bash scripts/compose.sh tts --profile tts --profile ros up ros-node --force-recreate -d
     ```
 
     > **Configuration note:**  
@@ -406,23 +439,23 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a test task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-test
+bash scripts/compose.sh reasoner up reasoner context-manager execute-task-test
 ```
 
 Once all layers are running, start a scenario task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
+bash scripts/compose.sh reasoner up reasoner context-manager execute-task-scenario
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
 
 To shut down **all layers and running task**, run:
 ```bash
-docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env down
-docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env down
-docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env down
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env down
-docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env down
+bash scripts/compose.sh perception down
+bash scripts/compose.sh speech down
+bash scripts/compose.sh llm down
+bash scripts/compose.sh reasoner down
+bash scripts/compose.sh tts down
 ```
 
 ## Troubleshooting Tips:
@@ -466,7 +499,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
         ```
     - Run the face registration process:
         ```bash
-        docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up register-face --force-recreate
+        bash scripts/compose.sh perception up register-face --force-recreate
         ```
     - The system will begin collecting frames of your face for training.
     - Once training is complete (typically takes about 5 minutes), your face should be recognized correctly.

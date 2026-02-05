@@ -1,0 +1,39 @@
+name: haru-common
+
+services:
+  common-service:
+    image: scratch
+    network_mode: ${COMPOSE_NETWORK_MODE:-host}
+    init: true
+    restart: unless-stopped
+
+  common-ros:
+    image: scratch
+    extends:
+      service: common-service
+    ipc: host
+    stop_grace_period: 10s
+
+  common-gpu:
+    image: scratch
+    extends:
+      service: common-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  common-ros-gpu:
+    image: scratch
+    extends:
+      service: common-ros
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

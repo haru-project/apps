@@ -3,6 +3,9 @@ name: haru-llm-lifecycle
 services:
 
   action-args-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
@@ -15,10 +18,12 @@ services:
         echo '/action_args ACTIVE — exiting'
       "
     env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   action-args-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     command: >
       bash -c "
@@ -31,5 +36,4 @@ services:
         echo '/action_args UNCONFIGURED — exiting'
       "
     env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
+    restart: "no"

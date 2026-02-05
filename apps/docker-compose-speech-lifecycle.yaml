@@ -3,6 +3,9 @@ name: haru-speech-lifecycle
 services:
 
   audio-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -15,10 +18,12 @@ services:
         echo '/audio ACTIVE — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   audio-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -31,10 +36,12 @@ services:
         echo '/audio UNCONFIGURED — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   configure-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -47,13 +54,15 @@ services:
         echo '/audio_configure ACTIVE — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
     depends_on:
       audio-start:
         condition: service_completed_successfully
+    restart: "no"
 
   configure-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -66,10 +75,12 @@ services:
         echo '/audio_configure UNCONFIGURED — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   speech-recognition-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -82,13 +93,15 @@ services:
         echo '/speech_to_text ACTIVE — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
     depends_on:
       speaker-verification-start:
         condition: service_completed_successfully
+    restart: "no"
 
   speech-recognition-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -101,10 +114,12 @@ services:
         echo '/speech_to_text UNCONFIGURED — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   speaker-verification-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -117,13 +132,15 @@ services:
         echo '/speaker_verification ACTIVE — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
     depends_on:
       configure-start:
         condition: service_completed_successfully
+    restart: "no"
 
   speaker-verification-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -136,10 +153,12 @@ services:
         echo '/speaker_verification UNCONFIGURED — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"
 
   sound-localization-start:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -152,13 +171,15 @@ services:
         echo '/sound_localization ACTIVE — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
     depends_on:
       configure-start:
         condition: service_completed_successfully
+    restart: "no"
 
   sound-localization-stop:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: >
       bash -c "
@@ -171,5 +192,4 @@ services:
         echo '/sound_localization UNCONFIGURED — exiting'
       "
     env_file: ../envs/speech.env
-    network_mode: host
-    ipc: host
+    restart: "no"

@@ -2,24 +2,21 @@ name: haru-simulator
 
 services:
   unity-app:
+    extends:
+      file: compose.common.yaml
+      service: common-ros-gpu
     image: ghcr.io/haru-project/haru-simulator:latest
     command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
     env_file: ../envs/simulator.env
-    network_mode: host
-    ipc: host
     devices:
       - /dev/snd
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
   
   web-server:
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: ghcr.io/haru-project/haru-simulator:latest
     working_dir: /app/haru2_web/
     command: ["/bin/bash", "-c", "cd haru_web && \
@@ -30,7 +27,5 @@ services:
         --server.baseUrlPath '/haru_web'",
     ]
     env_file: ../envs/simulator.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
