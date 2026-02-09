@@ -163,7 +163,7 @@ docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
 docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
-docker pull ghcr.io/haru-project/haru-speech:ros2
+docker pull haru/haru-speech:local
 docker pull haru/haru-llm:local
 docker pull haru/agent-reasoner:local
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
@@ -312,14 +312,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```
 
     **LifeCycle commands**:
-    - Start (configure + activate)
-        ```bash
-        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-start configure-start speech-recognition-start speaker-verification-start --force-recreate
-        ```
-    - Stop (deactivate + cleanup)
-        ```bash
-        docker compose -f apps/docker-compose-speech-lifecycle.yaml --env-file envs/speech.env up audio-stop configure-stop speech-recognition-stop speaker-verification-stop --force-recreate
-        ```
+    Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
     - Container logs on the `speech-recognition` service display:
@@ -346,6 +339,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
     ```
+
+    **LifeCycle commands**:
+    Currently, the LLM layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
     - Container logs on the `action-args` service confirm:
