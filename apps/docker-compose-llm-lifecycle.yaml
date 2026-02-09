@@ -1,0 +1,35 @@
+name: haru-llm-lifecycle
+
+services:
+
+  action-args-start:
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
+    command: >
+      bash -c "
+        until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
+        ros2 lifecycle set /action_args configure;
+        until ros2 lifecycle get /action_args | grep -q inactive; do sleep 0.2; done;
+        ros2 lifecycle set /action_args activate;
+        until ros2 lifecycle get /action_args | grep -q active; do sleep 0.2; done;
+
+        echo '/action_args ACTIVE — exiting'
+      "
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
+
+  action-args-stop:
+    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
+    command: >
+      bash -c "
+        until ros2 lifecycle get /action_args >/dev/null 2>&1; do sleep 0.5; done;
+        ros2 lifecycle set /action_args deactivate;
+        until ros2 lifecycle get /action_args | grep -q inactive; do sleep 0.2; done;
+        ros2 lifecycle set /action_args cleanup;
+        until ros2 lifecycle get /action_args | grep -q unconfigured; do sleep 0.2; done;
+
+        echo '/action_args UNCONFIGURED — exiting'
+      "
+    env_file: ../envs/llm.env
+    network_mode: host
+    ipc: host
