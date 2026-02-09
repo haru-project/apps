@@ -163,9 +163,9 @@ docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
 docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
 docker pull ghcr.io/haru-project/strawberry_ros_people:latest
 docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
-docker pull haru/haru-speech:local
-docker pull haru/haru-llm:local
-docker pull haru/agent-reasoner:local
+docker pull ghcr.io/haru-project/haru-speech:ros2
+docker pull ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
+docker pull ghcr.io/haru-project/agent-reasoner/feature-gaze-feedback
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
