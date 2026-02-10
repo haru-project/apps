@@ -25,7 +25,7 @@ services:
   dashboard:
     image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
     working_dir: /ros2_ws/src/haru-llm
-    command: ["/root/.local/bin/uv", "run", "--group", "dashboard", "haru-dashboard"]
+    command: ["uv", "run", "--no-sync", "haru-dashboard"]
     env_file: ../envs/llm.env
     ports:
       - 8501:8501
@@ -35,11 +35,8 @@ services:
     restart: unless-stopped
   
   redis:
-    build:
-      context: .
-      args:
-        target: runtime
     image: redis:latest
+    pull_policy: always
     ports:
       - 6379:6379
     restart: unless-stopped
@@ -50,11 +47,8 @@ services:
       retries: 3
 
   server:
-    build:
-      context: .
-      args:
-        target: runtime
     image: docker.litellm.ai/berriai/litellm:main-stable
+    pull_policy: always
     command:
       - "--config=/app/config.yaml"
     env_file: ../envs/llm.env
@@ -74,11 +68,8 @@ services:
       start_period: 40s  # Wait 40 seconds after container start before beginning health checks
 
   webui:
-    build:
-      context: .
-      args:
-        target: runtime
     image: ghcr.io/open-webui/open-webui:main
+    pull_policy: always
     env_file: ../envs/llm.env
     network_mode: host
     volumes:
@@ -87,11 +78,8 @@ services:
     restart: unless-stopped
   
   vllm:
-    build:
-      context: .
-      args:
-        target: runtime
     image: vllm/vllm-openai:latest
+    pull_policy: always
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"

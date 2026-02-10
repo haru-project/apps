@@ -1,6 +1,22 @@
 name: haru-speech
 
 services:
+  download-models:
+    image: ghcr.io/haru-project/haru-speech:ros2
+    working_dir: /ros2_ws/src/haru-speech
+    command: ["uv", "run", "download-models"]
+    volumes:
+      - ~/haru-speech-cache/models:/shared/models
+    profiles: ["setup"]
+  
+  clear-models:
+    image: ghcr.io/haru-project/haru-speech:ros2
+    working_dir: /ros2_ws/src/haru-speech
+    command: ["uv", "run", "clear-models"]
+    volumes:
+      - ~/haru-speech-cache/models:/shared/models
+    profiles: ["setup"]
+
   audio:
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
@@ -46,6 +62,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
     deploy:
       resources:
         reservations:
@@ -68,7 +85,8 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
-      - ../data/speech/voices:/ros2_ws/src/haru-speech/data/voices:rw
+      - ~/haru-speech-cache/voices:/shared/voices:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
     deploy:
       resources:
         reservations:
@@ -91,6 +109,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
     deploy:
       resources:
         reservations:
