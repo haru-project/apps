@@ -313,13 +313,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /tmp/.docker.xauth:/tmp/.docker.xauth
       - /dev:/dev:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
   
   resource-monitor:
     image: ghcr.io/haru-project/strawberry_resource_monitor:latest
