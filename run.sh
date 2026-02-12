@@ -1,0 +1,1 @@
+docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
