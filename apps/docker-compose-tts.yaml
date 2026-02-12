@@ -49,7 +49,10 @@ services:
 
   cerevoice-api:
     image: ghcr.io/haru-project/strawberry-tts:ros2
-    command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
+    entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/src/cerevoice/.venv/bin/activate && exec \"$@\""]
+    command:
+      - python3.10
+      - /ros2_ws/src/strawberry_tts/src/cerevoice/cerevoice_api_server.py
     env_file: ../envs/tts.env
     network_mode: host
     ipc: host
