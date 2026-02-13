@@ -157,12 +157,12 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/azure_kinect_ros2_driver:latest
-docker pull ghcr.io/haru-project/strawberry_ros_azure_kinect:latest
-docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
-docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
-docker pull ghcr.io/haru-project/strawberry_ros_people:latest
-docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
+docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
+docker pull ghcr.io/haru-project/strawberry-ros-people:latest
+docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
+docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
 docker pull ghcr.io/haru-project/agent_reasoner:feature-gaze-feedback
