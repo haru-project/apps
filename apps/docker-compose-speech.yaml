@@ -1,6 +1,22 @@
 name: haru-speech
 
 services:
+  download-models:
+    image: ghcr.io/haru-project/haru-speech:ros2
+    working_dir: /ros2_ws/src/haru-speech
+    command: ["uv", "run", "download-models"]
+    volumes:
+      - ~/haru-speech-cache/models:/shared/models
+    profiles: ["setup"]
+  
+  clear-models:
+    image: ghcr.io/haru-project/haru-speech:ros2
+    working_dir: /ros2_ws/src/haru-speech
+    command: ["uv", "run", "clear-models"]
+    volumes:
+      - ~/haru-speech-cache/models:/shared/models
+    profiles: ["setup"]
+
   audio:
     extends:
       file: compose.common.yaml
@@ -9,6 +25,7 @@ services:
     command: [
       "ros2", "launch", "haru_speech_ros", "audio.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
     devices:
@@ -26,6 +43,7 @@ services:
     command: [
       "ros2", "launch", "haru_speech_ros", "configure.launch.py",
       "config_file:=${AUDIO_CONFIGURE_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
     volumes:
@@ -41,11 +59,13 @@ services:
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
       "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
     restart: unless-stopped
     
   speaker-verification:
@@ -56,12 +76,14 @@ services:
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
       "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
-      - ../data/speech/voices:/ros2_ws/src/haru-speech/data/voices:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
+      - ~/haru-speech-cache/voices:/shared/voices:rw
     restart: unless-stopped
     
   sound-localization:
@@ -77,4 +99,5 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ~/haru-speech-cache/models:/shared/models:rw
     restart: unless-stopped
