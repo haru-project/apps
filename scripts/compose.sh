@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
-COMMON_FILE="${APPS_DIR}/compose.common.yaml"
 
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
@@ -57,7 +56,6 @@ case "${stack}" in
 esac
 
 exec docker compose \
-  -f "${COMMON_FILE}" \
   -f "${stack_file}" \
   --env-file "${env_file}" \
   "$@"
