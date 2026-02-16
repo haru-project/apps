@@ -3,7 +3,6 @@ name: haru-common
 services:
   common-service:
     image: scratch
-    network_mode: ${COMPOSE_NETWORK_MODE:-host}
     init: true
     restart: unless-stopped
 
@@ -11,6 +10,7 @@ services:
     image: scratch
     extends:
       service: common-service
+    network_mode: host
     ipc: host
     stop_grace_period: 10s
 
