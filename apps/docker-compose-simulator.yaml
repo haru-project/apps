@@ -5,27 +5,24 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-simulator:latest
+    image: ghcr.io/haru-project/hve-simulator:feature-ci
     command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
     env_file: ../envs/simulator.env
     devices:
       - /dev/snd
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-  
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/simulator/playerprefs:/root/.config/unity3d/Miraitec/HaruVirtualEnvironments:rw
+
   web-server:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/haru-simulator:latest
+    image: ghcr.io/haru-project/hve-simulator:feature-ci
     working_dir: /app/haru2_web/
-    command: ["/bin/bash", "-c", "cd haru_web && \
-      ../.venv/bin/python3 -m streamlit run Home.py \
-        --server.port 7000 \
-        --server.address 0.0.0.0 \
-        --server.headless true \
-        --server.baseUrlPath '/haru_web'",
-    ]
+    command: ["/bin/bash", "-c", "bash run_web.sh"]
     env_file: ../envs/simulator.env
+    ports:
+      - 7000:7000
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw

@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/haru-simulator:latest
+docker pull ghcr.io/haru-project/hve-simulator:feature-ci
 ```
 
 ### Haru Communication App (HCA)
@@ -223,6 +223,8 @@ Once the software is launched, follow these steps:
 2. Select the Scene: "Haru Virtual Avatar"
 
     Use the green or yellow buttons next to the scene preview to browse and select "**Haru Virtual Avatar**".
+    
+    Tick the "Set as default" box on the bottom left to set the scene selection as default.
 
 3. Start the Scene
 
@@ -235,6 +237,7 @@ Once the software is launched, follow these steps:
 5. Adjust Scene Configuration
 
     In the "**Scene Configuration**" tab:
+    - **Enable** the "**Autoplay scene**" checkbox (make sure it is checked).
     - **Disable** the "**Enable py_env**" checkbox (make sure it is unchecked).
     - **Enable** the "**Launch RVIZ**" checkbox (make sure it is checked).
 
@@ -242,7 +245,7 @@ Once the software is launched, follow these steps:
 
     In the "**Haru Configuration**" tab:
     - Set "**TTS Language**" to your preferred language.
-    - **Enable** the "**Publish Haru TFs**" checkbox.
+    - **Enable** the "**Publish Haru TFs**" checkbox (make sure it is checked).
     - (Optional) You can also:
         - Adjust the robot’s position in space via the "**Haru Base Pose**" settings.
 
@@ -252,7 +255,7 @@ Once the software is launched, follow these steps:
 
 8. Play the Scene
 
-    Once the scene reloads, click the green "**Play**" button.
+    Once the scene reloads, click the green "**Play**" button (if "**Autoplay scene**" was checked it starts automatically).
 
 9. Confirm Scene is Active
 
@@ -260,7 +263,7 @@ Once the software is launched, follow these steps:
 
 10. Visualize Robot in RViz
     
-    You should now see a 3D model of the robot appear in the main view.
+    You should now see a 3D model of the robot appear in the RViz window.
 
 11. Use the Haru Web Interface
 
@@ -475,7 +478,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 2. No Sound in Simulation
     
     If you can’t hear the sound of clicks or the robot in the simulation:
-    - Run `cat /proc/asound/cards` on your host machine to see the available audio devices.
+    - Run `aplay -l` on your host machine to see the available audio devices.
     - Set the `AUDIO_CARD` environment variable in the `envs/simulator.env` file to the device name or ID (e.g., `1`, `2`, ...).
 
 3. LLMs Don't Connect
@@ -506,5 +509,5 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```bash
     docker logs <container_name> -f
     ```
-    Replace `<container_name>` with the name of your running container.
+    Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
