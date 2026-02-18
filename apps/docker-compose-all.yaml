@@ -49,26 +49,26 @@ services:
       audio:
         condition: service_started
 
-  speech-recognition:
+  recognition:
     extends:
       file: docker-compose-speech.yaml
-      service: speech-recognition
+      service: recognition
     depends_on:
       configure:
         condition: service_started
 
-  speaker-verification:
+  verification:
     extends:
       file: docker-compose-speech.yaml
-      service: speaker-verification
+      service: verification
     depends_on:
       configure:
         condition: service_started
 
-  sound-localization:
+  localization:
     extends:
       file: docker-compose-speech.yaml
-      service: sound-localization
+      service: localization
     depends_on:
       configure:
         condition: service_started
@@ -98,7 +98,7 @@ services:
         condition: service_healthy
       server:
         condition: service_healthy
-      speech-recognition:
+      recognition:
         condition: service_started
 
   webui:
@@ -178,64 +178,3 @@ services:
     extends:
       file: docker-compose-simulator.yaml
       service: web-server
-
-  # Lifecycle helpers (optional)
-  action-args-start:
-    extends:
-      file: docker-compose-llm-lifecycle.yaml
-      service: action-args-start
-
-  action-args-stop:
-    extends:
-      file: docker-compose-llm-lifecycle.yaml
-      service: action-args-stop
-
-  audio-start:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: audio-start
-
-  audio-stop:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: audio-stop
-
-  configure-start:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: configure-start
-
-  configure-stop:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: configure-stop
-
-  speech-recognition-start:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: speech-recognition-start
-
-  speech-recognition-stop:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: speech-recognition-stop
-
-  speaker-verification-start:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: speaker-verification-start
-
-  speaker-verification-stop:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: speaker-verification-stop
-
-  sound-localization-start:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: sound-localization-start
-
-  sound-localization-stop:
-    extends:
-      file: docker-compose-speech-lifecycle.yaml
-      service: sound-localization-stop

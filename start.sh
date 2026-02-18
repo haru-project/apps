@@ -61,7 +61,7 @@ bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client
 bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
 
 # Speech services
-bash scripts/compose.sh speech up audio configure speech-recognition speaker-verification --force-recreate -d
+bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
 
 # LLM services
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d

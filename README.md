@@ -323,20 +323,26 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
+    **Download/Clear models**:
+    ```bash
+    bash scripts/compose.sh speech --profile setup up download-models --force-recreate
+    # bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
+    ```
+
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/speech.env`.  
     > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.  
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh speech up audio configure speech-recognition speaker-verification --force-recreate -d
+    bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
     ```
 
     **LifeCycle commands**:
     Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
-    - Container logs on the `speech-recognition` service display:
+    - Container logs on the `recognition` service display:
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 
@@ -507,7 +513,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
-    docker logs <container_name> -f
+    docker logs -f <container_name>
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.

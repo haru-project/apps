@@ -4,17 +4,19 @@ services:
   download-models:
     image: ghcr.io/haru-project/haru-speech:ros2
     working_dir: /ros2_ws/src/haru-speech
-    command: ["uv", "run", "download-models"]
+    command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.download"]
+    env_file: ../envs/speech.env
     volumes:
-      - ~/haru-speech-cache/models:/shared/models
+      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     profiles: ["setup"]
   
   clear-models:
     image: ghcr.io/haru-project/haru-speech:ros2
     working_dir: /ros2_ws/src/haru-speech
-    command: ["uv", "run", "clear-models"]
+    command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.clear"]
+    env_file: ../envs/speech.env
     volumes:
-      - ~/haru-speech-cache/models:/shared/models
+      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     profiles: ["setup"]
 
   audio:
@@ -32,7 +34,7 @@ services:
       - /dev/snd
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
 
   configure:
@@ -48,10 +50,10 @@ services:
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
+      - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
   
-  speech-recognition:
+  recognition:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
@@ -64,11 +66,11 @@ services:
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
-      - ~/haru-speech-cache/models:/shared/models:rw
+      - ../data/speech/configs:/shared/configs:rw
+      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     restart: unless-stopped
     
-  speaker-verification:
+  verification:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
@@ -81,12 +83,12 @@ services:
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
-      - ~/haru-speech-cache/models:/shared/models:rw
-      - ~/haru-speech-cache/voices:/shared/voices:rw
+      - ../data/speech/configs:/shared/configs:rw
+      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
+      - ~/haru-speech-cache/voices:${HARU_SPEECH_VOICES_DIR}:rw
     restart: unless-stopped
     
-  sound-localization:
+  localization:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
@@ -98,6 +100,6 @@ services:
     env_file: ../envs/speech.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/speech/configs:/ros2_ws/src/haru-speech/configs:rw
-      - ~/haru-speech-cache/models:/shared/models:rw
+      - ../data/speech/configs:/shared/configs:rw
+      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     restart: unless-stopped
