@@ -1,0 +1,180 @@
+name: haru-all
+
+services:
+  # Perception layer
+  azure-kinect:
+    extends:
+      file: docker-compose-perception.yaml
+      service: azure-kinect
+
+  faces:
+    extends:
+      file: docker-compose-perception.yaml
+      service: faces
+
+  hands:
+    extends:
+      file: docker-compose-perception.yaml
+      service: hands
+
+  people:
+    extends:
+      file: docker-compose-perception.yaml
+      service: people
+
+  visualization:
+    extends:
+      file: docker-compose-perception.yaml
+      service: visualization
+
+  resource-monitor:
+    extends:
+      file: docker-compose-perception.yaml
+      service: resource-monitor
+
+  # Speech layer
+  audio:
+    extends:
+      file: docker-compose-speech.yaml
+      service: audio
+    depends_on:
+      azure-kinect:
+        condition: service_started
+
+  configure:
+    extends:
+      file: docker-compose-speech.yaml
+      service: configure
+    depends_on:
+      audio:
+        condition: service_started
+
+  recognition:
+    extends:
+      file: docker-compose-speech.yaml
+      service: recognition
+    depends_on:
+      configure:
+        condition: service_started
+
+  verification:
+    extends:
+      file: docker-compose-speech.yaml
+      service: verification
+    depends_on:
+      configure:
+        condition: service_started
+
+  localization:
+    extends:
+      file: docker-compose-speech.yaml
+      service: localization
+    depends_on:
+      configure:
+        condition: service_started
+
+  # LLM layer
+  redis:
+    extends:
+      file: docker-compose-llm.yaml
+      service: redis
+
+  server:
+    extends:
+      file: docker-compose-llm.yaml
+      service: server
+
+  dashboard:
+    extends:
+      file: docker-compose-llm.yaml
+      service: dashboard
+
+  action-args:
+    extends:
+      file: docker-compose-llm.yaml
+      service: action-args
+    depends_on:
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+      recognition:
+        condition: service_started
+
+  webui:
+    extends:
+      file: docker-compose-llm.yaml
+      service: webui
+
+  vllm:
+    extends:
+      file: docker-compose-llm.yaml
+      service: vllm
+
+  # Reasoner layer
+  bt-forest:
+    extends:
+      file: docker-compose-reasoner.yaml
+      service: bt-forest
+    depends_on:
+      action-args:
+        condition: service_started
+
+  reasoner:
+    extends:
+      file: docker-compose-reasoner.yaml
+      service: reasoner
+
+  context-manager:
+    extends:
+      file: docker-compose-reasoner.yaml
+      service: context-manager
+
+  execute-task-scenario:
+    extends:
+      file: docker-compose-reasoner.yaml
+      service: execute-task-scenario
+
+  execute-task-test:
+    extends:
+      file: docker-compose-reasoner.yaml
+      service: execute-task-test
+
+  # TTS layer (optional)
+  gpt-sovits:
+    extends:
+      file: docker-compose-tts.yaml
+      service: gpt-sovits
+
+  cerevoice-api:
+    extends:
+      file: docker-compose-tts.yaml
+      service: cerevoice-api
+
+  tts-client:
+    extends:
+      file: docker-compose-tts.yaml
+      service: tts-client
+    depends_on:
+      gpt-sovits:
+        condition: service_healthy
+      cerevoice-api:
+        condition: service_healthy
+      action-args:
+        condition: service_started
+
+  ros-node:
+    extends:
+      file: docker-compose-tts.yaml
+      service: ros-node
+
+  # Simulator (optional)
+  unity-app:
+    extends:
+      file: docker-compose-simulator.yaml
+      service: unity-app
+
+  web-server:
+    extends:
+      file: docker-compose-simulator.yaml
+      service: web-server

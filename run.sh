@@ -1,1 +1,4 @@
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
+#!/usr/bin/env bash
+set -euo pipefail
+
+bash scripts/compose.sh reasoner up reasoner context-manager execute-task-scenario

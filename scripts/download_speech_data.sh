@@ -6,7 +6,7 @@ mkdir -p $DATA_FOLDER
 
 # Voices data
 docker create --name tmp-speech ghcr.io/haru-project/haru-speech:ros2 > /dev/null
-docker cp tmp-speech:/ros2_ws/src/haru-speech/configs $DATA_FOLDER/configs
+docker cp tmp-speech:/opt/ros/jazzy/workspace/install/share/haru_speech_ros/configs $DATA_FOLDER/configs
 docker rm tmp-speech > /dev/null
 
 # Give permissions

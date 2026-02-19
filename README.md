@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/haru-simulator:latest
+docker pull ghcr.io/haru-project/hve-simulator:feature-ci
 ```
 
 ### Haru Communication App (HCA)
@@ -157,20 +157,38 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/azure_kinect_ros2_driver:latest
-docker pull ghcr.io/haru-project/strawberry_ros_azure_kinect:latest
-docker pull ghcr.io/haru-project/strawberry_ros_faces_module:latest
-docker pull ghcr.io/haru-project/strawberry_ros_hands:latest
-docker pull ghcr.io/haru-project/strawberry_ros_people:latest
-docker pull ghcr.io/haru-project/strawberry_ros_visualizations:latest
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
+docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
+docker pull ghcr.io/haru-project/strawberry-ros-people:latest
+docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
+docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
-docker pull ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
-docker pull ghcr.io/haru-project/agent_reasoner:feature-gaze-feedback
+docker pull ghcr.io/haru-project/haru-llm:feature-ci
+docker pull ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
 
 ## Run Applications
+
+We recommend using the helper script `scripts/compose.sh` for all stacks. It automatically includes the shared `apps/compose.common.yaml` file and the correct `envs/*.env`.
+To quickly validate all compose files, run:
+```bash
+bash scripts/validate_compose.sh
+```
+
+### All-in-one compose (single file)
+
+If you want to launch all layers from a single compose file, use:
+```bash
+bash scripts/compose.sh all up --force-recreate -d
+```
+
+This uses `envs/all.env` for compose-time variables. Optional services still respect profiles:
+```bash
+bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
+```
 
 ### Haru Simulator (HS)
 
@@ -186,14 +204,14 @@ This gives Docker permission to display graphical applications on your desktop.
 To start the Haru Simulator, run the following command in your terminal:
 
 ```bash
-docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env up --force-recreate -d
+bash scripts/compose.sh simulator up --force-recreate -d
 ```
 
 This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
 
 To stop the simulator and shut down all related containers, run:
 ```bash
-docker compose -f apps/docker-compose-simulator.yaml --env-file envs/simulator.env down
+bash scripts/compose.sh simulator down
 ```
 
 Once the software is launched, follow these steps:
@@ -205,6 +223,8 @@ Once the software is launched, follow these steps:
 2. Select the Scene: "Haru Virtual Avatar"
 
     Use the green or yellow buttons next to the scene preview to browse and select "**Haru Virtual Avatar**".
+    
+    Tick the "Set as default" box on the bottom left to set the scene selection as default.
 
 3. Start the Scene
 
@@ -217,6 +237,7 @@ Once the software is launched, follow these steps:
 5. Adjust Scene Configuration
 
     In the "**Scene Configuration**" tab:
+    - **Enable** the "**Autoplay scene**" checkbox (make sure it is checked).
     - **Disable** the "**Enable py_env**" checkbox (make sure it is unchecked).
     - **Enable** the "**Launch RVIZ**" checkbox (make sure it is checked).
 
@@ -224,7 +245,7 @@ Once the software is launched, follow these steps:
 
     In the "**Haru Configuration**" tab:
     - Set "**TTS Language**" to your preferred language.
-    - **Enable** the "**Publish Haru TFs**" checkbox.
+    - **Enable** the "**Publish Haru TFs**" checkbox (make sure it is checked).
     - (Optional) You can also:
         - Adjust the robot’s position in space via the "**Haru Base Pose**" settings.
 
@@ -234,7 +255,7 @@ Once the software is launched, follow these steps:
 
 8. Play the Scene
 
-    Once the scene reloads, click the green "**Play**" button.
+    Once the scene reloads, click the green "**Play**" button (if "**Autoplay scene**" was checked it starts automatically).
 
 9. Confirm Scene is Active
 
@@ -242,7 +263,7 @@ Once the software is launched, follow these steps:
 
 10. Visualize Robot in RViz
     
-    You should now see a 3D model of the robot appear in the main view.
+    You should now see a 3D model of the robot appear in the RViz window.
 
 11. Use the Haru Web Interface
 
@@ -283,7 +304,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up azure-kinect-driver azure-kinect faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
@@ -302,20 +323,26 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
+    **Download/Clear models**:
+    ```bash
+    bash scripts/compose.sh speech --profile setup up download-models --force-recreate
+    # bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
+    ```
+
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/speech.env`.  
     > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.  
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env up audio configure speech-recognition speaker-verification --force-recreate -d
+    bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
     ```
 
     **LifeCycle commands**:
     Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
-    - Container logs on the `speech-recognition` service display:
+    - Container logs on the `recognition` service display:
         - VAD (Voice Activity Detection) status
         - ASR (Automatic Speech Recognition) results for detected speech
 
@@ -331,14 +358,25 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```
 
     > **Configuration note:**
-    > You can change the containers configuration in the `envs/llm.env`.
+    > `envs/llm.env` is the non-secret source of truth for config.
+    > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
     > You can change the LLM server configuration in the `data/llm/configs/litellm_server.yaml`.
     > You can change the ROS nodes configuration in the `data/llm/configs/haru_llm.yaml`.  
-
+    
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env up action-args dashboard --force-recreate -d
+    bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
     ```
+
+    **Optional profiles**:
+    - Web UI:
+      ```bash
+      bash scripts/compose.sh llm --profile webui up webui --force-recreate -d
+      ```
+    - vLLM:
+      ```bash
+      bash scripts/compose.sh llm --profile vllm up vllm --force-recreate -d
+      ```
 
     **LifeCycle commands**:
     Currently, the LLM layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
@@ -349,7 +387,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:8501
     - LLM server is running at: http://127.0.0.1:4000
-    - LLM Web UI is running at: http://127.0.0.1:8080
+    - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
 
@@ -367,7 +405,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up bt-forest --force-recreate -d
+    bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
     ```
 
     **LifeCycle commands**:
@@ -386,7 +424,12 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env up gpt-sovits cerevoice-api tts-client --force-recreate -d
+    bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
+    ```
+
+    **Optional ROS bridge**:
+    ```bash
+    bash scripts/compose.sh tts --profile tts --profile ros up ros-node --force-recreate -d
     ```
 
     > **Configuration note:**  
@@ -401,23 +444,23 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
 Once all layers are running, start a test task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-test
+bash scripts/compose.sh reasoner up reasoner context-manager execute-task-test
 ```
 
 Once all layers are running, start a scenario task with:
 ```bash
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env up reasoner context-manager execute-task-scenario
+bash scripts/compose.sh reasoner up reasoner context-manager execute-task-scenario
 ```
 
 In the simulator or on the real robot, Haru begins carrying out the assigned task.
 
 To shut down **all layers and running task**, run:
 ```bash
-docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env down
-docker compose -f apps/docker-compose-speech.yaml --env-file envs/speech.env down
-docker compose -f apps/docker-compose-llm.yaml --env-file envs/llm.env down
-docker compose -f apps/docker-compose-reasoner.yaml --env-file envs/reasoner.env down
-docker compose -f apps/docker-compose-tts.yaml --env-file envs/tts.env down
+bash scripts/compose.sh perception down
+bash scripts/compose.sh speech down
+bash scripts/compose.sh llm down
+bash scripts/compose.sh reasoner down
+bash scripts/compose.sh tts down
 ```
 
 ## Troubleshooting Tips:
@@ -441,7 +484,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 2. No Sound in Simulation
     
     If you can’t hear the sound of clicks or the robot in the simulation:
-    - Run `cat /proc/asound/cards` on your host machine to see the available audio devices.
+    - Run `aplay -l` on your host machine to see the available audio devices.
     - Set the `AUDIO_CARD` environment variable in the `envs/simulator.env` file to the device name or ID (e.g., `1`, `2`, ...).
 
 3. LLMs Don't Connect
@@ -461,7 +504,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
         ```
     - Run the face registration process:
         ```bash
-        docker compose -f apps/docker-compose-perception.yaml --env-file envs/perception.env up register-face --force-recreate
+        bash scripts/compose.sh perception up register-face --force-recreate
         ```
     - The system will begin collecting frames of your face for training.
     - Once training is complete (typically takes about 5 minutes), your face should be recognized correctly.
@@ -470,7 +513,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
     If the problem persists, checking the logs can help identify errors:
     ```bash
-    docker logs <container_name> -f
+    docker logs -f <container_name>
     ```
-    Replace `<container_name>` with the name of your running container.
+    Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
