@@ -58,7 +58,7 @@ require_stack_down reasoner
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
 
 # Perception services
-bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
+bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
 
 # Speech services
 bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d

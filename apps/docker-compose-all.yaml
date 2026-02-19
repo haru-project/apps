@@ -6,6 +6,11 @@ services:
     extends:
       file: docker-compose-perception.yaml
       service: azure-kinect
+  
+  skeletons:
+    extends:
+      file: docker-compose-perception.yaml
+      service: skeletons
 
   faces:
     extends:

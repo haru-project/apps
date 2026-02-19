@@ -45,6 +45,28 @@ services:
       - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
+  
+  # Skeletons (YOLO + track node)
+  skeletons:
+    image: ghcr.io/haru-project/strawberry-ros-skeletons:latest
+    command: ros2 launch strawberry_ros_skeletons strawberry_ros_yolo_finder_node.launch.py venv_path:=/opt/ros/jazzy/workspace/package_venv/bin/python3
+    # command: ros2 launch strawberry_ros_skeletons strawberry_ros_yolo_finder_debug_overlay_node.launch.py venv_path:=/opt/ros/jazzy/workspace/package_venv/bin/python3
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_PARAM_AUTO_PREFIXES: SKELETONS
+      SKELETONS_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ../data/perception/skeletons
+        target: /root/.ros/strawberry_ros_skeletons
+    <<: *common-ros
+    deploy: *gpu-reservations
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
 
   # Faces (InsightFace + fusion node)
   faces:
@@ -58,7 +80,7 @@ services:
     restart: unless-stopped
     volumes:
       - type: bind
-        source: ../data/perception
+        source: ../data/perception/faces
         target: /ros/strawberry_ros_faces_module
     <<: *common-ros
     deploy: *gpu-reservations
