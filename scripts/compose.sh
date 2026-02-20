@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
   echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-  echo "Stacks: perception | speech | speech-lifecycle | llm | llm-lifecycle | reasoner | tts | simulator | all" >&2
+  echo "Stacks: perception | speech | llm | reasoner | tts | simulator | all" >&2
   exit 1
 fi
 shift
@@ -21,16 +21,8 @@ case "${stack}" in
     stack_file="${APPS_DIR}/docker-compose-speech.yaml"
     env_file="${ROOT_DIR}/envs/speech.env"
     ;;
-  speech-lifecycle)
-    stack_file="${APPS_DIR}/docker-compose-speech-lifecycle.yaml"
-    env_file="${ROOT_DIR}/envs/speech.env"
-    ;;
   llm)
     stack_file="${APPS_DIR}/docker-compose-llm.yaml"
-    env_file="${ROOT_DIR}/envs/llm.env"
-    ;;
-  llm-lifecycle)
-    stack_file="${APPS_DIR}/docker-compose-llm-lifecycle.yaml"
     env_file="${ROOT_DIR}/envs/llm.env"
     ;;
   reasoner)
