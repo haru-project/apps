@@ -54,6 +54,8 @@ services:
     environment:
       HARU_PARAM_AUTO_PREFIXES: FACES
       FACES_DEV_AUTOSTART: "true"
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -94,12 +96,17 @@ services:
     environment:
       HARU_PARAM_AUTO_PREFIXES: PEOPLE
       PEOPLE_DEV_AUTOSTART: "true"
+      PEOPLE_SKELETON_SPATIAL_MODE: "3d"
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
       - *common-x11
       - *common-docker-xauth
       - *common-dev
+      - ../../strawberry-ros-people/config/strawberry_people_node.yaml:/var/lib/haru/strawberry_ros_people/config/strawberry_people_node.yaml:ro
+      - ../../strawberry-ros-people/config/strawberry_people_node.yaml:/opt/ros/jazzy/workspace/install/share/strawberry_ros_people/config/strawberry_people_node.yaml:ro
     <<: *common-ros
     deploy: *gpu-reservations
     depends_on:
