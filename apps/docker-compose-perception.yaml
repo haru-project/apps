@@ -28,23 +28,39 @@ x-common-ros: &common-ros
 x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 
 services:
-  # Azure Kinect bridge - supplies depth + color and is relied on by several modules
+  # Azure Kinect sensor driver - supplies depth + color to downstream modules
   azure-kinect:
     image: ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
     env_file:
       - ../envs/perception.env
     environment:
-      DISPLAY: ${DISPLAY} # Required by some BT tracking code even when no display is used
+      DISPLAY: ${DISPLAY}
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
     network_mode: *network-mode
     privileged: true
     restart: unless-stopped
     volumes:
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro # Some BT tracking requires Xauthority even without a display
+      - *common-dev
+    <<: *common-ros
+
+  # Skeletons pipeline (consumes Kinect sensor topics, publishes /strawberry/skeletons)
+  skeletons:
+    image: ghcr.io/haru-project/strawberry-ros-skeletons:latest
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_PARAM_AUTO_PREFIXES: SKELETONS
+      SKELETONS_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    restart: unless-stopped
+    volumes:
       - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
 
   # Faces (InsightFace + fusion node)
   faces:
@@ -105,6 +121,8 @@ services:
     depends_on:
       azure-kinect:
         condition: service_healthy
+      skeletons:
+        condition: service_started
 
   # Visualization nodes (RViz, GUI helpers)
   visualization:
