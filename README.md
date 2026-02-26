@@ -201,20 +201,20 @@ xhost +local:docker
 This gives Docker permission to display graphical applications on your desktop.
 > Note: You only need to do this once per session, or each time you restart your computer.
 
-To start the Haru Simulator, run the following command in your terminal:
+**Download data**:
+```bash
+bash scripts/download_simulator_data.sh
+```
 
+**Start command**:
 ```bash
 bash scripts/compose.sh simulator up --force-recreate -d
 ```
 
-This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
+**Expected output**:
+- A Unity Application window appears
 
-To stop the simulator and shut down all related containers, run:
-```bash
-bash scripts/compose.sh simulator down
-```
-
-Once the software is launched, follow these steps:
+Once the software is launched, follow these steps on the Unity Application window:
 
 1. Set the ROS_IP
     
@@ -275,6 +275,11 @@ Once the software is launched, follow these steps:
         - Trigger **Routines**, which are pre-programmed movements or actions.
     
     > Note: This web interface is still experimental, so you may encounter some limitations or bugs.
+
+To shut down the simulator, run:
+```bash
+bash scripts/compose.sh simulator down
+```
 
 ### Haru Communication App (HCA)
 

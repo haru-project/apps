@@ -12,6 +12,7 @@ services:
       - /dev/snd
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
       - ../data/simulator/playerprefs:/root/.config/unity3d/Miraitec/HaruVirtualEnvironments:rw
 
   web-server:
@@ -26,3 +27,4 @@ services:
       - 7000:7000
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
