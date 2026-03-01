@@ -139,6 +139,9 @@ services:
     volumes:
       - *common-x11
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
+      - type: bind
+        source: ../data/perception/haru_recorder
+        target: /root/.local/share/haru_recorder
       - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
