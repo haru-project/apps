@@ -4,8 +4,8 @@ DATA_FOLDER=$DIR/../data/llm
 rm -rf $DATA_FOLDER
 mkdir -p $DATA_FOLDER
 
-# LLM agents and logs
-docker create --name tmp-llm ghcr.io/haru-project/haru-llm:feature-ci > /dev/null
+# LLM data
+docker create --name tmp-llm ghcr.io/haru-project/haru-llm:hotfix-private-git-auth > /dev/null
 docker cp tmp-llm:/opt/ros/jazzy/workspace/install/share/haru_llm_ros/configs $DATA_FOLDER/configs
 docker rm tmp-llm > /dev/null
 
