@@ -40,6 +40,8 @@ services:
     env_file: ../envs/tts.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
+      - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
     depends_on:
       tts-client:
         condition: service_healthy
