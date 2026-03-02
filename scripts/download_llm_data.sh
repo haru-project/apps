@@ -7,6 +7,7 @@ mkdir -p $DATA_FOLDER
 # LLM data
 docker create --name tmp-llm ghcr.io/haru-project/haru-llm:hotfix-private-git-auth > /dev/null
 docker cp tmp-llm:/opt/ros/jazzy/workspace/install/share/haru_llm_ros/configs $DATA_FOLDER/configs
+docker cp tmp-llm:/opt/ros/jazzy/workspace/install/share/haru_llm_ros/agents $DATA_FOLDER/agents
 docker rm tmp-llm > /dev/null
 
 # Give permissions
