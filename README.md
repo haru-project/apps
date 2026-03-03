@@ -427,6 +427,11 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Enhances Haru with a more expressive and natural-sounding voice
 
+   **Download data**:
+    ```bash
+    bash scripts/donwload_tts_data.sh
+    ```
+
     **Start command**:
     ```bash
     bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
