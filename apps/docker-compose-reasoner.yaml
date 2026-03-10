@@ -29,7 +29,7 @@ services:
     image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
+      "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
       "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
       "enable_reactive:=true",
       "dev_autostart:=true",
@@ -37,6 +37,7 @@ services:
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
   
@@ -47,6 +48,7 @@ services:
     image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
+      "model_file:=${WORLD_MODEL_FILE}",
       "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
       "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
       "start_perception_postprocessors:=true",

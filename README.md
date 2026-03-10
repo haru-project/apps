@@ -444,7 +444,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > You can change the containers configuration in the `envs/reasoner.env`.
 
     > **Microphone mapping (important for multi-mic setups):**
-    > Edit `data/reasoner/configs/postprocessors_params.yaml` to match your physical setup.
+    > Edit `data/reasoner/configs/params/postprocessors_params.yaml` to match your physical setup.
     > - `mic_positions` — set the position (in meters) of each microphone relative to the robot's position
     > - `mic_id_to_person_name` — map each microphone channel ID to a person name
     >
