@@ -20,6 +20,7 @@ services:
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/session/:/root/.bt_ros:rw
     restart: unless-stopped
 
   reasoner:

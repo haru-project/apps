@@ -20,6 +20,7 @@ services:
       - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
       - ../data/simulator/playerprefs:/root/.config/unity3d/Miraitec/HaruVirtualEnvironments:rw
       - ../data/simulator/projector:/shared/resources:rw
+      - ../data/session/:/root/.bt_ros:rw
 
   web-server:
     extends:
