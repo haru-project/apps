@@ -13,7 +13,7 @@ services:
       "gaze_controller_enabled:=true",
       "ipad_students_controller_enabled:=true",
       "ipad_teacher_controller_enabled:=true",
-      "unity_controller_enabled:=false",
+      "unity_controller_enabled:=true",
       "groot_monitor_enabled:=true",
       "dev_autostart:=true",
     ]
