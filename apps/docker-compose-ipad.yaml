@@ -1,17 +1,17 @@
-name: haru-reasoner
+name: haru-ipad
 
 services:
 
-  ipad-wrapper:
+  server:
     extends:
       file: compose.common.yaml
       service: common-ros
     image: ghcr.io/haru-project/haru-ipad-action-server:feature-ci-docker
     command: [
       "ros2", "launch", "haru_ipad_action_server", "action_interface_launch.py",
-      "ipads_num:=1"
+      "ipads_num:=${NUM_IPADS}"
     ]
-    env_file: ../envs/reasoner.env
+    env_file: ../envs/ipad.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped

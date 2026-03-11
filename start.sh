@@ -50,14 +50,14 @@ fi
 # Guard against already-running stacks.
 require_stack_down tts
 require_stack_down simulator
+require_stack_down ipad
 require_stack_down perception
 require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
-require_stack_down ipad
 
 # Ipad services
-bash scripts/compose.sh ipad up ipad-wrapper --force-recreate -d --remove-orphans
+bash scripts/compose.sh ipad up server --force-recreate -d
 
 # Projector services
 bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
