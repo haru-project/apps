@@ -1,14 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/llm
 
-rm -rf $DATA_FOLDER
-mkdir -p $DATA_FOLDER
+source "${DIR}/download_helpers.sh"
+cleanup_data_dir "$DATA_FOLDER"
 
 # LLM data
-docker create --name tmp-llm ghcr.io/haru-project/haru-llm:feature-eval-test > /dev/null
-docker cp tmp-llm:/opt/ros/jazzy/workspace/install/share/haru_llm_ros/configs $DATA_FOLDER/configs
-docker cp tmp-llm:/opt/ros/jazzy/workspace/install/share/haru_llm_ros/agents $DATA_FOLDER/agents
-docker rm tmp-llm > /dev/null
+copy_with_tar ghcr.io/haru-project/haru-llm:feature-eval-test \
+  /opt/ros/jazzy/workspace/install/share/haru_llm_ros/configs \
+  "$DATA_FOLDER/configs"
+copy_with_tar ghcr.io/haru-project/haru-llm:feature-eval-test \
+  /opt/ros/jazzy/workspace/install/share/haru_llm_ros/agents \
+  "$DATA_FOLDER/agents"
 
 # Give permissions
-chmod -R 770 $DATA_FOLDER
+chmod -R a+rwX "$DATA_FOLDER"

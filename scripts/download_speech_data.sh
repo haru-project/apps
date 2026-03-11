@@ -1,13 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/speech
 
-rm -rf $DATA_FOLDER
-mkdir -p $DATA_FOLDER
+source "${DIR}/download_helpers.sh"
+cleanup_data_dir "$DATA_FOLDER"
 
 # Speech data
-docker create --name tmp-speech ghcr.io/haru-project/haru-speech:ros2 > /dev/null
-docker cp tmp-speech:/opt/ros/jazzy/workspace/install/share/haru_speech_ros/configs $DATA_FOLDER/configs
-docker rm tmp-speech > /dev/null
+copy_with_tar ghcr.io/haru-project/haru-speech:ros2 \
+  /opt/ros/jazzy/workspace/install/share/haru_speech_ros/configs \
+  "$DATA_FOLDER/configs"
 
 # Give permissions
-chmod -R 770 $DATA_FOLDER
+chmod -R a+rwX "$DATA_FOLDER"
