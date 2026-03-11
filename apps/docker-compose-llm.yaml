@@ -70,7 +70,7 @@ services:
       - ../envs/llm.env
       - ../envs/llm.secrets.env
     ports:
-      - 4000:4000
+      - 4050:4000
     extra_hosts:
       - dgx02:172.24.39.32
     volumes:

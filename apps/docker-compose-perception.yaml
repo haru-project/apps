@@ -35,12 +35,15 @@ services:
       - ../envs/perception.env
     environment:
       DISPLAY: ${DISPLAY} # Required by some BT tracking code even when no display is used
+      XAUTHORITY: /root/.Xauthority
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
     network_mode: *network-mode
+    ipc: host
     privileged: true
     restart: unless-stopped
     volumes:
+      - *common-x11
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro # Some BT tracking requires Xauthority even without a display
       - *common-dev
     <<: *common-ros

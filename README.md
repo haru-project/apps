@@ -425,7 +425,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - LLM agents are initialized
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:8501
-    - LLM server is running at: http://127.0.0.1:4000
+    - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
