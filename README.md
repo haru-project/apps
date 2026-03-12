@@ -312,7 +312,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:

@@ -30,7 +30,7 @@ x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 services:
   # Azure Kinect bridge - supplies depth + color and is relied on by several modules
   azure-kinect:
-    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-skeleton-integration
     env_file:
       - ../envs/perception.env
     environment:
@@ -51,7 +51,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ghcr.io/haru-project/strawberry-ros-faces-module:latest
+    image: ghcr.io/haru-project/strawberry-ros-faces-module:feature-skeleton-integration
     env_file:
       - ../envs/perception.env
     environment:
@@ -63,6 +63,30 @@ services:
       - type: bind
         source: ../data/perception
         target: /ros/strawberry_ros_faces_module
+    <<: *common-ros
+    deploy: *gpu-reservations
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
+
+  # Skeleton (OpenPose + fusion node)
+  skeletons:
+    image: ghcr.io/haru-project/strawberry-ros-skeletons:feature-skeleton-integration
+    env_file:
+      - ../envs/perception.env
+    environment:
+      DISPLAY: ${DISPLAY} # Required by OpenPose even when no display is used
+      XAUTHORITY: /root/.Xauthority
+      HARU_PARAM_AUTO_PREFIXES: SKELETONS
+      SKELETONS_DEV_AUTOSTART: "true"
+    network_mode: *network-mode
+    ipc: host
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - *common-x11
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
+      - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
     depends_on:
@@ -91,7 +115,7 @@ services:
 
   # People module
   people:
-    image: ghcr.io/haru-project/strawberry-ros-people:latest
+    image: ghcr.io/haru-project/strawberry-ros-people:feature-skeleton-integration
     env_file:
       - ../envs/perception.env
     environment:
@@ -111,7 +135,7 @@ services:
 
   # Visualization nodes (RViz, GUI helpers)
   visualization:
-    image: ghcr.io/haru-project/strawberry-ros-visualization:latest
+    image: ghcr.io/haru-project/strawberry-ros-visualization:feature-skeleton-integration
     env_file:
       - ../envs/perception.env
     environment:
@@ -127,6 +151,17 @@ services:
       - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
+    depends_on:
+      azure-kinect:
+        condition: service_healthy
+      faces:
+        condition: service_healthy
+      skeletons:
+        condition: service_healthy
+      hands:
+        condition: service_healthy
+      people:
+        condition: service_healthy
 
   # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:

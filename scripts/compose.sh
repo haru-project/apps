@@ -6,48 +6,52 @@ APPS_DIR="${ROOT_DIR}/apps"
 
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
-  echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-  echo "Stacks: perception | speech | llm | reasoner | tts | simulator | all" >&2
-  exit 1
+    echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
+    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | all" >&2
+    exit 1
 fi
 shift
 
 case "${stack}" in
-  perception)
-    stack_file="${APPS_DIR}/docker-compose-perception.yaml"
-    env_file="${ROOT_DIR}/envs/perception.env"
+    perception)
+        stack_file="${APPS_DIR}/docker-compose-perception.yaml"
+        env_file="${ROOT_DIR}/envs/perception.env"
     ;;
-  speech)
-    stack_file="${APPS_DIR}/docker-compose-speech.yaml"
-    env_file="${ROOT_DIR}/envs/speech.env"
+    speech)
+        stack_file="${APPS_DIR}/docker-compose-speech.yaml"
+        env_file="${ROOT_DIR}/envs/speech.env"
     ;;
-  llm)
-    stack_file="${APPS_DIR}/docker-compose-llm.yaml"
-    env_file="${ROOT_DIR}/envs/llm.env"
+    llm)
+        stack_file="${APPS_DIR}/docker-compose-llm.yaml"
+        env_file="${ROOT_DIR}/envs/llm.env"
     ;;
-  reasoner)
-    stack_file="${APPS_DIR}/docker-compose-reasoner.yaml"
-    env_file="${ROOT_DIR}/envs/reasoner.env"
+    reasoner)
+        stack_file="${APPS_DIR}/docker-compose-reasoner.yaml"
+        env_file="${ROOT_DIR}/envs/reasoner.env"
     ;;
-  tts)
-    stack_file="${APPS_DIR}/docker-compose-tts.yaml"
-    env_file="${ROOT_DIR}/envs/tts.env"
+    tts)
+        stack_file="${APPS_DIR}/docker-compose-tts.yaml"
+        env_file="${ROOT_DIR}/envs/tts.env"
     ;;
-  simulator)
-    stack_file="${APPS_DIR}/docker-compose-simulator.yaml"
-    env_file="${ROOT_DIR}/envs/simulator.env"
+    simulator)
+        stack_file="${APPS_DIR}/docker-compose-simulator.yaml"
+        env_file="${ROOT_DIR}/envs/simulator.env"
     ;;
-  all)
-    stack_file="${APPS_DIR}/docker-compose-all.yaml"
-    env_file="${ROOT_DIR}/envs/all.env"
+    recorder)
+        stack_file="${APPS_DIR}/docker-compose-recorder.yaml"
+        env_file="${ROOT_DIR}/envs/recorder.env"
     ;;
-  *)
-    echo "Unknown stack: ${stack}" >&2
-    exit 1
+    all)
+        stack_file="${APPS_DIR}/docker-compose-all.yaml"
+        env_file="${ROOT_DIR}/envs/all.env"
+    ;;
+    *)
+        echo "Unknown stack: ${stack}" >&2
+        exit 1
     ;;
 esac
 
 exec docker compose \
-  -f "${stack_file}" \
-  --env-file "${env_file}" \
-  "$@"
+-f "${stack_file}" \
+--env-file "${env_file}" \
+"$@"

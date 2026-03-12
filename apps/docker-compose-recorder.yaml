@@ -1,0 +1,21 @@
+name: haru-recorder
+
+# Centralized network mode — can be overridden with COMPOSE_NETWORK_MODE env var (e.g. bridge)
+x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
+
+services:
+  haru-recorder:
+    image: ${HARU_RECORDER_IMAGE:-ghcr.io/haru-project/haru-recorder:latest}
+    network_mode: *network-mode
+    env_file:
+      - ../envs/recorder.env
+    ports:
+      - "${HARU_RECORDER_WEB_UI_PORT:-8088}:${HARU_RECORDER_WEB_UI_PORT:-8088}"
+    volumes:
+      - type: bind
+        source: ../data/perception/haru_recorder/recordings
+        target: /root/.local/share/haru_recorder
+      - type: bind
+        source: ../data/perception/haru_recorder/config
+        target: /shared/configs
+    restart: unless-stopped
