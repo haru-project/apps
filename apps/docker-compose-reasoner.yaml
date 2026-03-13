@@ -11,15 +11,16 @@ services:
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
       "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
+      "ipad_students_controller_enabled:=true",
+      "ipad_teacher_controller_enabled:=true",
+      "unity_controller_enabled:=true",
       "groot_monitor_enabled:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/session/:/root/.bt_ros:rw
     restart: unless-stopped
 
   reasoner:

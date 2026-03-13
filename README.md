@@ -168,6 +168,7 @@ docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
 docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
+docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
 ```
 
 ## Run Applications
@@ -512,6 +513,47 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Related repositories for debug**: [strawberry-tts](https://github.com/haru-project/strawberry-tts/tree/ros2)
 
+6. iPad layer (optional)
+
+    Provides an action server for controlling iPads connected to Haru. The iPads can be used as displays for students and teachers during interaction scenarios.
+
+    > **Configuration note:**
+    > You can change the containers configuration in the `envs/ipad.env`.
+    > The `NUM_IPADS` variable controls how many iPads the action server expects.
+
+    > **Reasoner integration:**
+    > The reasoner layer includes iPad controller support. Make sure the following parameters are enabled in the reasoner's `bt-forest` service if you want to use iPads:
+    > - `ipad_students_controller_enabled:=true`
+    > - `ipad_teacher_controller_enabled:=true`
+
+    **Start command**:
+    ```bash
+    bash scripts/compose.sh ipad up server --force-recreate -d
+    ```
+
+    **Expected output**:
+    - Container logs on the `server` service confirm:
+        - iPad action server is initialized
+        - Waiting for iPad connections
+
+7. Projector layer (optional)
+
+    Enables the Unity projector display, allowing Haru to project images and videos onto a surface during interactions.
+
+    Projector resources are downloaded as part of the reasoner data and mounted into the simulator.
+
+    **Download data**:
+    ```bash
+    bash scripts/download_reasoner_data.sh
+    ```
+
+    This downloads the projector resources to `data/reasoner/projector/`. The simulator automatically mounts this directory at `/shared/projector/resources` (read-only).
+
+    > **Configuration note:**
+    > Projector resources are managed through the behavior tree system. You can update or replace the resources in `data/reasoner/projector/` to change what content is available for projection.
+
+    > **Note:** The projector requires the simulator (or the physical robot) to be running, as the Unity application handles the actual rendering of projected content.
+
 Once all layers are running, start a test task with:
 ```bash
 bash scripts/compose.sh reasoner up reasoner context-manager execute-task-test
@@ -531,6 +573,7 @@ bash scripts/compose.sh speech down
 bash scripts/compose.sh llm down
 bash scripts/compose.sh reasoner down
 bash scripts/compose.sh tts down
+bash scripts/compose.sh ipad down
 ```
 
 ## Troubleshooting Tips:

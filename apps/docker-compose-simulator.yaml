@@ -17,8 +17,10 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${PULSE_SOCKET_PATH}:/tmp/pulse/native
       - ../data/simulator/asoundrc-pulse:/root/.asoundrc:ro
-      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
       - ../data/simulator/playerprefs:/root/.config/unity3d/Miraitec/HaruVirtualEnvironments:rw
+      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:ro
+      - ../data/reasoner/projector:/shared/projector/resources:ro
+      - ../data/session/:/root/.bt_ros:ro
 
   web-server:
     extends:
