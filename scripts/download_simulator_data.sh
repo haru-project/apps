@@ -1,13 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/simulator
 
-rm -rf $DATA_FOLDER
-mkdir -p $DATA_FOLDER
+source "${DIR}/download_helpers.sh"
+cleanup_data_dir "$DATA_FOLDER"
+
+mkdir -p "$DATA_FOLDER/resources"
 
 # Simulator data
-docker create --name tmp-simulator ghcr.io/haru-project/hve-simulator:feature-ci > /dev/null
-docker cp tmp-simulator:/ros2_ws/src/haru2_core/resources $DATA_FOLDER/resources
-docker rm tmp-simulator > /dev/null
+copy_with_tar ghcr.io/haru-project/hve-simulator:feature-ci \
+  /ros2_ws/src/haru2_core/resources \
+  "$DATA_FOLDER/resources"
 
 # Give permissions
-chmod -R 770 $DATA_FOLDER
+chmod -R a+rwX "$DATA_FOLDER"

@@ -174,6 +174,10 @@ docker pull ghcr.io/haru-project/strawberry-tts:ros2
 
 Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time.
 
+If you want to refresh every bundle in one shot, run `bash scripts/download_all_data.sh`. That wrapper runs each download script in sequence, removes the existing `data/` tree before copying, and leaves the final permissions in the state that the downstream services expect.
+
+The Kinect `99-k4a.rules` udev rule still needs to be installed manually; follow the Perception troubleshooting instructions (search for “udev” below) when you first set up the Azure Kinect so you only have to run `sudo` once.
+
 We recommend using the helper script `scripts/compose.sh` for all stacks. It automatically includes the shared `apps/compose.common.yaml` file and the correct `envs/*.env`.
 To quickly validate all compose files, run:
 ```bash
@@ -303,11 +307,6 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Handles Haru’s vision and sensory input.
 
-    **Download data**:
-    ```bash
-    bash scripts/download_perception_data.sh
-    ```
-
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/perception.env`.
 
@@ -426,7 +425,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - LLM agents are initialized
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:8501
-    - LLM server is running at: http://127.0.0.1:4000
+    - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
