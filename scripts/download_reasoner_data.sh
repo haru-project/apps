@@ -9,6 +9,7 @@ docker create --name tmp-reasoner ghcr.io/haru-project/haru-agent-reasoner:featu
 docker cp tmp-reasoner:/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/tasks $DATA_FOLDER/tasks
 docker cp tmp-reasoner:/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/config $DATA_FOLDER/configs
 docker cp tmp-reasoner:/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/params $DATA_FOLDER/configs
+docker cp tmp-reasoner:/opt/ros/jazzy/workspace/install/share/behavior_tree_unity_projector/examples/resources $DATA_FOLDER/projector
 docker rm tmp-reasoner > /dev/null
 
 # Give permissions
