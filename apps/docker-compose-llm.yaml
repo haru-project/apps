@@ -3,52 +3,43 @@ name: haru-llm
 services:
 
   action-args:
-    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
+    image: ghcr.io/haru-project/haru-llm:ros2
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
-      "dev_autostart:=true",
     ]
     env_file: ../envs/llm.env
-    environment:
-      - REDIS_HOST=0.0.0.0
     network_mode: host
     ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
       - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
+      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
     depends_on:
       - server
     restart: unless-stopped
     
   dashboard:
-    image: ghcr.io/haru-project/haru-llm:feature-improve-goal-verif
-    working_dir: /ros2_ws/src/haru-llm
-    command: ["uv", "run", "--no-sync", "haru-dashboard"]
+    image: ghcr.io/haru-project/haru-llm:ros2
+    command: [
+      "ros2", "launch", "haru_llm_ros", "dashboard.launch.py",
+      "config_file:=${DASHBOARD_CONFIG_FILE}",
+    ]
     env_file: ../envs/llm.env
-    ports:
-      - 8501:8501
-    depends_on:
-      redis:
-        condition: service_healthy
+    network_mode: host
+    ipc: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
     restart: unless-stopped
-  
-  redis:
-    image: redis:latest
-    pull_policy: always
-    ports:
-      - 6379:6379
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   server:
+    build:
+      context: .
+      args:
+        target: runtime
     image: docker.litellm.ai/berriai/litellm:main-stable
-    pull_policy: always
     command:
       - "--config=/app/config.yaml"
     env_file: ../envs/llm.env
@@ -68,8 +59,11 @@ services:
       start_period: 40s  # Wait 40 seconds after container start before beginning health checks
 
   webui:
+    build:
+      context: .
+      args:
+        target: runtime
     image: ghcr.io/open-webui/open-webui:main
-    pull_policy: always
     env_file: ../envs/llm.env
     network_mode: host
     volumes:
@@ -78,8 +72,11 @@ services:
     restart: unless-stopped
   
   vllm:
-    image: vllm/vllm-openai:latest
-    pull_policy: always
+    build:
+      context: .
+      args:
+        target: runtime
+    image: vllm/vllm-openai:v0.8.5
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"
