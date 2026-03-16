@@ -28,15 +28,18 @@ x-common-ros: &common-ros
 x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 
 services:
-  # Azure Kinect sensor driver - supplies depth + color to downstream modules
+  # Azure Kinect sensor driver
   azure-kinect:
-    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-skeleton-integration
+    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
     env_file:
       - ../envs/perception.env
     environment:
       DISPLAY: ${DISPLAY}
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
+      AZURE_KINECT_NAMESPACE: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect
+      AZURE_KINECT_TOPIC_PREFIX: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect
     network_mode: *network-mode
     ipc: host
     privileged: true
@@ -45,14 +48,25 @@ services:
       - *common-dev
     <<: *common-ros
 
-  # Skeletons pipeline (consumes Kinect sensor topics, publishes /strawberry/skeletons)
+  # Skeleton pipeline
   skeletons:
-    image: ghcr.io/haru-project/strawberry-ros-skeletons:latest
+    image: ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
     env_file:
       - ../envs/perception.env
     environment:
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
       HARU_PARAM_AUTO_PREFIXES: SKELETONS
       SKELETONS_DEV_AUTOSTART: "true"
+      SKELETONS_NAMESPACE: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc
+      SKELETONS_RGB_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb/image_raw/compressed
+      SKELETONS_DEPTH_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/depth_to_rgb/image_raw
+      SKELETONS_CAMERA_INFO_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/depth_to_rgb/camera_info
+      SKELETONS_OUTPUT_TOPIC_2D: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/detections_2d
+      SKELETONS_OUTPUT_TOPIC_3D: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/detections_3d
+      SKELETONS_OUTPUT_TOPIC_SKELETONS: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/results
+      SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/debug/overlay/compressed
+      SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY_RAW: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/debug/overlay
+      SKELETONS_OUTPUT_TOPIC_METRICS: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc/skeletons/metrics
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -65,12 +79,16 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ghcr.io/haru-project/strawberry-ros-faces-module:feature-skeleton-integration
+    image: ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
     env_file:
       - ../envs/perception.env
     environment:
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
       HARU_PARAM_AUTO_PREFIXES: FACES
       FACES_DEV_AUTOSTART: "true"
+      FACES_NAMESPACE: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc
+      FACES_IMAGE_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb/image_raw
+      FACES_CAMERA_INFO_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb/camera_info
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -83,38 +101,19 @@ services:
       azure-kinect:
         condition: service_healthy
 
-  # Skeleton (OpenPose + fusion node)
-  skeletons:
-    image: ghcr.io/haru-project/strawberry-ros-skeletons:feature-skeleton-integration
-    env_file:
-      - ../envs/perception.env
-    environment:
-      DISPLAY: ${DISPLAY} # Required by OpenPose even when no display is used
-      XAUTHORITY: /root/.Xauthority
-      HARU_PARAM_AUTO_PREFIXES: SKELETONS
-      SKELETONS_DEV_AUTOSTART: "true"
-    network_mode: *network-mode
-    ipc: host
-    privileged: true
-    restart: unless-stopped
-    volumes:
-      - *common-x11
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
-      - *common-dev
-    <<: *common-ros
-    deploy: *gpu-reservations
-    depends_on:
-      azure-kinect:
-        condition: service_healthy
-
   # Hands module
   hands:
-    image: ghcr.io/haru-project/strawberry-ros-hands:latest
+    image: ghcr.io/haru-project/strawberry-ros-hands:feature-topic-normalize
     env_file:
       - ../envs/perception.env
     environment:
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
       HARU_PARAM_AUTO_PREFIXES: HANDS
       HANDS_DEV_AUTOSTART: "true"
+      HANDS_NAMESPACE: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/proc
+      HANDS_CAMERA_NAME: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb
+      HANDS_IMAGE_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb/image_raw/compressed
+      HANDS_CAMERA_INFO_TOPIC: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/sensor/azure_kinect/rgb/camera_info
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -127,64 +126,36 @@ services:
       azure-kinect:
         condition: service_healthy
 
-  # People module
-  people:
-    image: ghcr.io/haru-project/strawberry-ros-people:feature-skeleton-integration
+  # Belief authority (default perception fusion output)
+  haru-belief:
+    image: ghcr.io/haru-project/haru-belief:feature-topic-normalize
     env_file:
       - ../envs/perception.env
     environment:
-      HARU_PARAM_AUTO_PREFIXES: PEOPLE
-      PEOPLE_DEV_AUTOSTART: "true"
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
+      HARU_PARAM_AUTO_PREFIXES: HARU_BELIEF
+      HARU_BELIEF_DEV_AUTOSTART: "true"
+      HARU_BELIEF_NAMESPACE: /haru/${HARU_DEPLOYMENT:-lab_a}/perception/belief
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
-      - *common-x11
-      - *common-docker-xauth
       - *common-dev
     <<: *common-ros
-    deploy: *gpu-reservations
     depends_on:
-      azure-kinect:
-        condition: service_healthy
       skeletons:
         condition: service_started
-
-  # Visualization nodes (RViz, GUI helpers)
-  visualization:
-    image: ghcr.io/haru-project/strawberry-ros-visualization:feature-skeleton-integration
-    env_file:
-      - ../envs/perception.env
-    environment:
-      HARU_PARAM_AUTO_PREFIXES: VIZ
-      NVIDIA_VISIBLE_DEVICES: all
-      NVIDIA_DRIVER_CAPABILITIES: all
-      VIZ_DEV_AUTOSTART: "true"
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
-      - *common-x11
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
-      - type: bind
-        source: ../data/perception/haru_recorder
-        target: /root/.local/share/haru_recorder
-      - *common-dev
-    <<: *common-ros
-    deploy: *gpu-reservations
-    depends_on:
-      azure-kinect:
-        condition: service_healthy
       faces:
-        condition: service_healthy
-      skeletons:
-        condition: service_healthy
+        condition: service_started
       hands:
-        condition: service_healthy
-      people:
-        condition: service_healthy
+        condition: service_started
 
   # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:
     image: ghcr.io/haru-project/strawberry-resource-monitor:latest
+    env_file:
+      - ../envs/perception.env
+    environment:
+      HARU_DEPLOYMENT: ${HARU_DEPLOYMENT:-lab_a}
     network_mode: *network-mode
     restart: unless-stopped
     volumes:

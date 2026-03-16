@@ -22,15 +22,10 @@ services:
       file: docker-compose-perception.yaml
       service: hands
 
-  people:
+  haru-belief:
     extends:
       file: docker-compose-perception.yaml
-      service: people
-
-  visualization:
-    extends:
-      file: docker-compose-perception.yaml
-      service: visualization
+      service: haru-belief
 
   resource-monitor:
     extends:
