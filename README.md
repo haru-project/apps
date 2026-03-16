@@ -165,13 +165,19 @@ docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
-docker pull ghcr.io/haru-project/haru-llm:feature-ci
-docker pull ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 ```
 
 ## Run Applications
+
+Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time.
+
+If you want to refresh every bundle in one shot, run `bash scripts/download_all_data.sh`. That wrapper runs each download script in sequence, removes the existing `data/` tree before copying, and leaves the final permissions in the state that the downstream services expect.
+
+The Kinect `99-k4a.rules` udev rule still needs to be installed manually; follow the Perception troubleshooting instructions (search for “udev” below) when you first set up the Azure Kinect so you only have to run `sudo` once.
 
 We recommend using the helper script `scripts/compose.sh` for all stacks. It automatically includes the shared `apps/compose.common.yaml` file and the correct `envs/*.env`.
 To quickly validate all compose files, run:
@@ -199,23 +205,23 @@ The Haru Simulator uses a graphical interface, so you need to allow Docker to sh
 xhost +local:docker
 ```
 
-This gives Docker permission to display graphical applications on your desktop.
+This gives Docker permission to display graphical applications on your desktop. It is required because Docker containers need access to the host's X11 display server to render GUI windows (e.g., the Unity simulator, RViz, Groot).
 > Note: You only need to do this once per session, or each time you restart your computer.
 
-To start the Haru Simulator, run the following command in your terminal:
+**Download data**:
+```bash
+bash scripts/download_simulator_data.sh
+```
 
+**Start command**:
 ```bash
 bash scripts/compose.sh simulator up --force-recreate -d
 ```
 
-This will launch the simulator in the **background** using the settings from `envs/simulator.env` file.
+**Expected output**:
+- A Unity Application window appears
 
-To stop the simulator and shut down all related containers, run:
-```bash
-bash scripts/compose.sh simulator down
-```
-
-Once the software is launched, follow these steps:
+Once the software is launched, follow these steps on the Unity Application window:
 
 1. Set the ROS_IP
     
@@ -241,6 +247,8 @@ Once the software is launched, follow these steps:
     - **Enable** the "**Autoplay scene**" checkbox (make sure it is checked).
     - **Disable** the "**Enable py_env**" checkbox (make sure it is unchecked).
     - **Enable** the "**Launch RVIZ**" checkbox (make sure it is checked).
+
+    > Note: RViz may also be started by the perception layer. If you are running both the simulator and the perception stack, you may see two RViz windows. This is expected and will be consolidated in a future release.
 
 6. Adjust Robot Configuration
 
@@ -274,8 +282,13 @@ Once the software is launched, follow these steps:
         - Control the robot’s **motors** manually.
         - Use **Text-To-Speech (TTS)** to make the robot speak.
         - Trigger **Routines**, which are pre-programmed movements or actions.
-    
+
     > Note: This web interface is still experimental, so you may encounter some limitations or bugs.
+
+To shut down the simulator, run:
+```bash
+bash scripts/compose.sh simulator down
+```
 
 ### Haru Communication App (HCA)
 
@@ -285,7 +298,7 @@ The Haru Communication App uses a graphical interface, so you need to allow Dock
 xhost +local:docker
 ```
 
-This gives Docker permission to display graphical applications on your desktop.
+This gives Docker permission to display graphical applications on your desktop. It is required because Docker containers need access to the host's X11 display server to render GUI windows (e.g., RViz, Groot).
 > Note: You only need to do this once per session, or each time you restart your computer.
 
 HCA is made up of several **layers** that work together.
@@ -294,11 +307,6 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 1. Perception layer
 
     Handles Haru’s vision and sensory input.
-
-    **Download data**:
-    ```bash
-    bash scripts/download_perception_data.sh
-    ```
 
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/perception.env`.
@@ -324,15 +332,27 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
-    **Download/Clear models**:
+    **Download/Clear models (mandatory before first start)**:
+
+    > **Important:** You **must** download the speech models before starting the speech layer for the first time. Without this step, the `recognition` container will crash on startup.
+
     ```bash
     bash scripts/compose.sh speech --profile setup up download-models --force-recreate
-    # bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
     ```
 
-    > **Configuration note:**  
-    > You can change the containers configuration in the `envs/speech.env`.  
-    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.  
+    To clear and re-download models:
+    ```bash
+    bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
+    ```
+
+    > **Configuration note:**
+    > You can change the containers configuration in the `envs/speech.env`.
+    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.
+
+    > **Microphone selection and setup:**
+    > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
+    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `Zoom H8`).
+    > If you are using a H6/H8/H12 recorder as your microphone input, make sure to set it to **Multi Track mode** on the device itself before connecting it to your computer. This ensures all input channels are available to the system.
 
     **Start command**:
     ```bash
@@ -361,9 +381,28 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > `envs/llm.env` is the non-secret source of truth for config.
     > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
-    > You can change the LLM server configuration in the `data/llm/configs/litellm_server.yaml`.
-    > You can change the ROS nodes configuration in the `data/llm/configs/haru_llm.yaml`.  
-    
+    > You can change the LLM server configuration in `data/llm/configs/litellm_server.yaml`.
+    > You can change the ROS nodes configuration in `data/llm/configs/haru_llm.yaml`.
+    > You can change agent configs (prompts, settings) in `data/llm/agents/`.
+
+    > **Setting up API keys (required for cloud models):**
+    > The default configuration uses cloud-hosted models. To use them, you need to provide your API keys:
+    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`
+    > 2. Fill in your API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`)
+    >
+    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `data/llm/configs/litellm_server.yaml`.
+    >
+    > **Using local/self-hosted models:**
+    > If you want to run your own model server (e.g., vLLM, Ollama), add a new model entry to `data/llm/configs/litellm_server.yaml`:
+    > ```yaml
+    > - model_name: custom-model
+    >   litellm_params:
+    >     model: <provider>/<model-name>
+    >     api_base: http://<server-host>:<server-port>/v1
+    > ```
+    > Then set the corresponding `*_MODEL_ID` in `envs/llm.env` to `custom-model`.
+    > For a full list of supported providers and configuration options, see the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers).
+
     **Start command**:
     ```bash
     bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
@@ -387,7 +426,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - LLM agents are initialized
         - Models are successfully loaded from the server
     - LLM Dashboard is running at: http://127.0.0.1:8501
-    - LLM server is running at: http://127.0.0.1:4000
+    - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
     **Related repositories for debug**: [haru-llm](https://github.com/haru-project/haru-llm/tree/feature-improve-goal-verif)
@@ -401,8 +440,31 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_reasoner_data.sh
     ```
 
-    > **Configuration note:**  
+    > **Configuration note:**
     > You can change the containers configuration in the `envs/reasoner.env`.
+
+    > **Microphone mapping (important for multi-mic setups):**
+    > Edit `data/reasoner/configs/params/postprocessors_params.yaml` to match your physical setup.
+    > - `mic_positions` — set the position (in meters) of each microphone relative to the robot's position
+    > - `mic_id_to_person_name` — map each microphone channel ID to a person name
+    >
+    > Example (x = front/back, y = left/right, z = up/down):
+    > ```yaml
+    > mic_positions: [
+    >   '0: {x: 1.0, y: 0.0, z: 0.0}',      # 1m in front of robot
+    >   '1: {x: 0.0, y: -1.0, z: 0.0}',     # 1m to the right
+    >   '2: {x: 0.0, y: 1.0, z: 0.0}',      # 1m to the left
+    >   '3: {x: -1.0, y: 0.0, z: 0.0}',     # 1m behind
+    >   '4: {x: , y: , z: }'                # unused channel (ignored)
+    > ]
+    > mic_id_to_person_name: [
+    >   '0: {name: alice}',                 # channel 0 assigned to alice
+    >   '1: {name: bob}',                   # channel 1 assigned to bob
+    >   '2: {name: charlie}',               # channel 2 assigned to charlie
+    >   '3: {name: dana}',                  # channel 3 assigned to dana
+    >   '4: {name: }'                       # unused channel (ignored)
+    > ]
+    > ```
 
     **Start command**:
     ```bash
@@ -413,15 +475,23 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
-    - Multiple Groot windows open, displaying:
-        - Behavior trees
-        - Current execution status
+    - Two Groot windows should open (one per behavior tree controller):
+        - **Expressivity controller** — manages TTS/Routine-driven expressions
+        - **Gaze controller** — manages gaze behavior
+    - Both windows display the behavior tree and its current execution status
+
+    > **Note:** The behavior tree controllers depend on action servers that run on the robot (or the simulator). If the robot or simulator is not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the simulator or the robot is running before starting the reasoner.
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
 5. Expressive TTS layer (optional)
 
     Enhances Haru with a more expressive and natural-sounding voice
+
+   **Download data**:
+    ```bash
+    bash scripts/download_tts_data.sh
+    ```
 
     **Start command**:
     ```bash

@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
@@ -26,27 +26,29 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
-      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+      "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
+      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
       "enable_reactive:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
+      - ../data/reasoner/configs:/shared/configs:rw
+      - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
   
   context-manager:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
+      "model_file:=${WORLD_MODEL_FILE}",
       "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
       "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
       "start_perception_postprocessors:=true",
@@ -58,16 +60,16 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
-      - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
+      - ../data/reasoner/configs:/shared/configs:rw
 
   execute-task-scenario:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
+      "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
@@ -81,10 +83,10 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/agent_reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_TEST_FILE}', task_type: 1}",
+      "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env

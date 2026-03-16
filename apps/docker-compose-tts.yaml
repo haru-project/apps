@@ -11,9 +11,32 @@ services:
     command: [
       "python",
       "/ros2_ws/src/strawberry_tts/src/strawberry_tts/client/fastapi_client_wrapper.py",
-      "--global_timeout", "9.0",
-      "--timeout", "4.0",
-      "--num_retries", "2"
+      "--model_ver", "mixed",
+      "--weights_dir", "/tts",
+      "--json_path", "/ros2_ws/src/strawberry_tts/ref_audio/refs.json",
+      "--config_path", "/ros2_ws/src/strawberry_tts/src/strawberry_tts/configs/params.json",
+      "--ref_dir", "/tts/ref_audio",
+      "--max_syllable_dur", "250.0",
+      "--sr", "32000",
+      "--num_retries", "1",
+      "--global_timeout", "3.0",
+      "--weights_json", "/ros2_ws/src/strawberry_tts/weight_refs_mixed.json",
+      "--voice_gesture_dir", "/ros2_ws/src/strawberry_tts/voice_gestures",
+      "--retry_mos_thresh", "2.9",
+      "--fallback_mos_thresh", "1.5",
+      "--silence_percentile", "50.0",
+      "--gptsovits_url", "http://127.0.0.1:9880",
+      "--cerevoice_url", "http://127.0.0.1:8015",
+      "--timeout", "2.5",
+      "--languages", "en-US", "ja-JP",
+      "--default_language_code", "en-US",
+      "--cerevoice_langs", "en-US",
+      "--base_model_dir", "/ros2_ws/src/strawberry_tts/base_models",
+      "--lipsync_window_size", "32",
+      "--lipsync_threshold_percentile", "90",
+      "--base_weight_fallback",
+      "--genre_weights",
+      "--extended_code_switching"
     ]
     env_file: ../envs/tts.env
     volumes:
@@ -40,6 +63,8 @@ services:
     env_file: ../envs/tts.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
+      - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
     depends_on:
       tts-client:
         condition: service_healthy
