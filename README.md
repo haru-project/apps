@@ -165,7 +165,7 @@ docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
-docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-names-from-ipad
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
@@ -443,19 +443,30 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > You can change the containers configuration in the `envs/reasoner.env`.
 
-    > **Microphone mapping (important for multi-mic setups):**
+    > **Microphone and iPad mapping (important for multi-mic setups):**
     > Edit `data/reasoner/configs/params/postprocessors_params.yaml` to match your physical setup.
-    > - `mic_positions` — set the position (in meters) of each microphone relative to the robot's position
-    > - `mic_id_to_person_name` — map each microphone channel ID to a person name
+    > - `mic_id_to_position` — set the position (in meters) of each microphone relative to the robot's position
+    > - `ipad_id_to_mic_id` — map each iPad device ID to a microphone channel ID (enables dynamic naming from iPads)
+    > - `mic_id_to_person_name` — map each microphone channel ID to a default person name (used as fallback)
+    >
+    > When iPads are connected and participants set their names on the iPad app, the system automatically
+    > uses those names instead of the static `mic_id_to_person_name` values. The mapping flows through
+    > the `ipad_id_to_mic_id` configuration: each iPad ID is linked to a mic channel, and the name set
+    > on the iPad is used for that channel's participant.
     >
     > Example (x = front/back, y = left/right, z = up/down):
     > ```yaml
-    > mic_positions: [
+    > mic_id_to_position: [
     >   '0: {x: 1.0, y: 0.0, z: 0.0}',      # 1m in front of robot
     >   '1: {x: 0.0, y: -1.0, z: 0.0}',     # 1m to the right
     >   '2: {x: 0.0, y: 1.0, z: 0.0}',      # 1m to the left
     >   '3: {x: -1.0, y: 0.0, z: 0.0}',     # 1m behind
     >   '4: {x: , y: , z: }'                # unused channel (ignored)
+    > ]
+    > ipad_id_to_mic_id: [
+    >   '1: 0',                             # iPad 1 linked to mic channel 0
+    >   '2: 1',                             # iPad 2 linked to mic channel 1
+    >   '3: 2',                             # iPad 3 linked to mic channel 2
     > ]
     > mic_id_to_person_name: [
     >   '0: {name: alice}',                 # channel 0 assigned to alice
