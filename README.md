@@ -165,7 +165,7 @@ docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
-docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-names-from-ipad
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
