@@ -351,7 +351,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > **Microphone selection and setup:**
     > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
-    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `Zoom H8`).
+    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `ZOOM H8`).
     > If you are using a H6/H8/H12 recorder as your microphone input, make sure to set it to **Multi Track mode** on the device itself before connecting it to your computer. This ensures all input channels are available to the system.
 
     **Start command**:
@@ -486,12 +486,15 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
-    - Two Groot windows should open (one per behavior tree controller):
+    - Multiple Groot windows should open (one per behavior tree controller):
         - **Expressivity controller** — manages TTS/Routine-driven expressions
         - **Gaze controller** — manages gaze behavior
+        - **iPad students controller** — manages requests/responses to the students iPad
+        - **iPad teacher controller** — manages requests/responses to the teacher iPad
+        - **Unity controller** — manages the projection of photos/videos to the Unity Projector
     - Both windows display the behavior tree and its current execution status
 
-    > **Note:** The behavior tree controllers depend on action servers that run on the robot (or the simulator). If the robot or simulator is not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the simulator or the robot is running before starting the reasoner.
+    > **Note:** The behavior tree controllers depend on action servers that run on the different devices (robot, simulator, iPad, projector, ...). If devices are not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the devices you wish to use are running before starting the reasoner.
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
@@ -563,12 +566,10 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     Projector resources are downloaded as part of the reasoner data and mounted into the simulator.
 
-    **Download data**:
+    **Start command**:
     ```bash
-    bash scripts/download_reasoner_data.sh
+    bash scripts/compose.sh simulator up unity-app --force-recreate -d
     ```
-
-    This downloads the projector resources to `data/reasoner/projector/`. The simulator automatically mounts this directory at `/shared/projector/resources` (read-only).
 
     > **Configuration note:**
     > Projector resources are managed through the behavior tree system. You can update or replace the resources in `data/reasoner/projector/` to change what content is available for projection.
