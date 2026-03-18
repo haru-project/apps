@@ -30,8 +30,8 @@ services:
     image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
-      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+      "reactive_rules_file_path:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
+      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigEsp0.json",
       "enable_reactive:=true",
       "dev_autostart:=true",
     ]
@@ -40,6 +40,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
+      - ../data/reasoner/configs:/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs
     restart: unless-stopped
   
   context-manager:
@@ -76,6 +77,7 @@ services:
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+     # - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
     depends_on:
       - reasoner
     restart: "no"
@@ -93,6 +95,7 @@ services:
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      #- ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
     depends_on:
       - reasoner
     restart: "no"
