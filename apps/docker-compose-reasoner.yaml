@@ -6,27 +6,28 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
       "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
+      "ipad_students_controller_enabled:=true",
+      "ipad_teacher_controller_enabled:=true",
+      "unity_controller_enabled:=true",
       "groot_monitor_enabled:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/session/:/root/.bt_ros:rw
     restart: unless-stopped
 
   reasoner:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
@@ -45,7 +46,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -66,7 +67,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
@@ -83,7 +84,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
