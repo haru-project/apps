@@ -45,24 +45,6 @@ services:
       - *common-dev
     <<: *common-ros
 
-  # Skeletons pipeline (consumes Kinect sensor topics, publishes /strawberry/skeletons)
-  skeletons:
-    image: ghcr.io/haru-project/strawberry-ros-skeletons:latest
-    env_file:
-      - ../envs/perception.env
-    environment:
-      HARU_PARAM_AUTO_PREFIXES: SKELETONS
-      SKELETONS_DEV_AUTOSTART: "true"
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
-      - *common-dev
-    <<: *common-ros
-    deploy: *gpu-reservations
-    depends_on:
-      azure-kinect:
-        condition: service_healthy
-
   # Faces (InsightFace + fusion node)
   faces:
     image: ghcr.io/haru-project/strawberry-ros-faces-module:feature-skeleton-integration
