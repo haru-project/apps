@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/hve-simulator:feature-ci
+docker pull ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
 ```
 
 ### Haru Communication App (HCA)
