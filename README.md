@@ -165,10 +165,11 @@ docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
-docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
+docker pull ghcr.io/haru-project/haru-web-projector:latest
 ```
 
 ## Run Applications
@@ -496,7 +497,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
         - **Unity controller** — manages the projection of photos/videos to the Unity Projector
     - Both windows display the behavior tree and its current execution status
 
-    > **Note:** The behavior tree controllers depend on action servers that run on the different devices (robot, simulator, iPad, projector, ...). If devices are not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the devices you wish to use are running before starting the reasoner.
+    > **Note:** The behavior tree controllers depend on action servers that run by different services (robot, iPad, projector, ...). If services are not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the services you wish to use are running before starting the reasoner.
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
@@ -547,11 +548,6 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     >
     > When the connection is successful, the connection icon in the app turns **green** and you should see connection logs appear in the console.
 
-    > **Reasoner integration:**
-    > The reasoner layer includes iPad controller support. Make sure the following parameters are enabled in the reasoner's `bt-forest` service if you want to use iPads:
-    > - `ipad_students_controller_enabled:=true`
-    > - `ipad_teacher_controller_enabled:=true`
-
     **Start command**:
     ```bash
     bash scripts/compose.sh ipad up server --force-recreate -d
@@ -560,31 +556,25 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Expected output**:
     - Container logs on the `server` service confirm:
         - iPad action server is initialized
-        - Waiting for iPad connections
+        - Connected to iPads
 
 7. Projector layer (optional)
 
-    Enables the Unity projector display, allowing Haru to project images and videos onto a surface during interactions.
+    Enables a web-based projector display, allowing Haru to project images and videos onto a surface during interactions.
 
-    Projector resources are downloaded as part of the reasoner data and mounted into the simulator.
+    Projector resources are downloaded as part of the reasoner data and mounted into the projector service.
+
+    > **Configuration note:**
+    > You can change the containers configuration in the `envs/projector.env`.
+    > Projector resources are managed through the behavior tree system. You can update or replace the resources in `data/reasoner/projector/` to change what content is available for projection.
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh simulator up unity-app --force-recreate -d
+    bash scripts/compose.sh projector up server --force-recreate -d
     ```
 
-    > **Configuration note:**
-    > Projector resources are managed through the behavior tree system. You can update or replace the resources in `data/reasoner/projector/` to change what content is available for projection.
-
-    > **Unity application setup:**
-    > The projector runs as a scene in the Unity application. To configure it:
-    > 1. Make sure **ROS_IP** matches your local IP address.
-    > 2. Select the **"Projector V1"** scene (instead of "Haru Virtual Avatar" used for the simulator).
-    > 3. Click **"Play"** — the ROS_IP indicator in the top left corner should change from orange to white (it should remain white, not blink).
-    >
-    > **Important:** The simulator and the projector cannot run on the same machine simultaneously. If you need both (e.g., you don't have a physical Haru), you must use **two separate PCs** connected to the same LAN — one running the simulator and one running the projector.
-
-    > **Note:** The projector requires the simulator (or the physical robot) to be running on the network, as the Unity application handles the actual rendering of projected content.
+    **Expected output**:
+    - Projector web server is running at: http://127.0.0.1:8081
 
 #### User Application
 
@@ -623,6 +613,7 @@ bash scripts/compose.sh llm down
 bash scripts/compose.sh reasoner down
 bash scripts/compose.sh tts down
 bash scripts/compose.sh ipad down
+bash scripts/compose.sh projector down
 bash scripts/compose.sh user down
 ```
 
