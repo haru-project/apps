@@ -12,6 +12,7 @@ stacks=(
   "reasoner:envs/reasoner.env:docker-compose-reasoner.yaml"
   "tts:envs/tts.env:docker-compose-tts.yaml"
   "simulator:envs/simulator.env:docker-compose-simulator.yaml"
+  "user:envs/user.env:docker-compose-user.yaml"
   "all:envs/all.env:docker-compose-all.yaml"
 )
 

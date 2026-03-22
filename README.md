@@ -301,6 +301,8 @@ xhost +local:docker
 This gives Docker permission to display graphical applications on your desktop. It is required because Docker containers need access to the host's X11 display server to render GUI windows (e.g., RViz, Groot).
 > Note: You only need to do this once per session, or each time you restart your computer.
 
+#### System Applications
+
 HCA is made up of several **layers** that work together.
 We recommend starting them **one at a time** so you can confirm each one runs correctly before moving on.
 
@@ -584,6 +586,23 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > **Note:** The projector requires the simulator (or the physical robot) to be running on the network, as the Unity application handles the actual rendering of projected content.
 
+#### User Application
+
+The User Application provides the **Episode Builder**, a web interface for creating and managing task episodes.
+
+> **Configuration note:**
+> You can change the containers configuration in the `envs/user.env`.
+
+**Start command**:
+```bash
+bash scripts/compose.sh user up episode-builder --force-recreate -d
+```
+
+**Expected output**:
+- Episode Builder web UI is running at: http://127.0.0.1:8551
+
+**Related repositories for debug**: [simple-haru-episode-builder](https://github.com/haru-project/simple-haru-episode-builder)
+
 Once all layers are running, start a test task with:
 ```bash
 bash scripts/compose.sh reasoner up reasoner context-manager execute-task-test
@@ -604,6 +623,7 @@ bash scripts/compose.sh llm down
 bash scripts/compose.sh reasoner down
 bash scripts/compose.sh tts down
 bash scripts/compose.sh ipad down
+bash scripts/compose.sh user down
 ```
 
 ## Troubleshooting Tips:

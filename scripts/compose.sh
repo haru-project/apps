@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
   echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-  echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | all" >&2
+  echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | user | all" >&2
   exit 1
 fi
 shift
@@ -40,6 +40,10 @@ case "${stack}" in
   ipad)
     stack_file="${APPS_DIR}/docker-compose-ipad.yaml"
     env_file="${ROOT_DIR}/envs/ipad.env"
+    ;;
+  user)
+    stack_file="${APPS_DIR}/docker-compose-user.yaml"
+    env_file="${ROOT_DIR}/envs/user.env"
     ;;
   all)
     stack_file="${APPS_DIR}/docker-compose-all.yaml"
