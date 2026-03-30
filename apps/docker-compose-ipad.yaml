@@ -12,6 +12,4 @@ services:
       "ipads_num:=${NUM_IPADS}"
     ]
     env_file: ../envs/ipad.env
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped

@@ -1,0 +1,19 @@
+name: haru
+
+services:
+
+  episode-builder:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ghcr.io/haru-project/haru-episode-builder:latest
+    env_file: ../envs/user.env
+    environment:
+      - PORT=${EPISODE_BUILDER_PORT:-8501}
+    ports:
+      - "${EPISODE_BUILDER_PORT:-8501}:${EPISODE_BUILDER_PORT:-8501}"
+    volumes:
+      - ../data/reasoner/tasks/saved:/app/data/tasks/saved:rw
+      - ../data/reasoner/tasks/episodes:/app/data/episodes:rw
+      - ../data/reasoner/projector:/shared/projector/resources:ro
+    restart: unless-stopped

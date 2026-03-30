@@ -33,7 +33,6 @@ services:
     devices:
       - /dev/snd
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
 
@@ -49,7 +48,6 @@ services:
     ]
     env_file: ../envs/speech.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
   
@@ -65,7 +63,6 @@ services:
     ]
     env_file: ../envs/speech.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     restart: unless-stopped
@@ -82,7 +79,6 @@ services:
     ]
     env_file: ../envs/speech.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
       - ~/haru-speech-cache/voices:${HARU_SPEECH_VOICES_DIR}:rw
@@ -99,7 +95,6 @@ services:
     ]
     env_file: ../envs/speech.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
     restart: unless-stopped

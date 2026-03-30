@@ -6,14 +6,14 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
       "gaze_controller_enabled:=true",
       "ipad_students_controller_enabled:=true",
       "ipad_teacher_controller_enabled:=true",
-      "unity_controller_enabled:=true",
+      "web_projector_controller_enabled:=true",
       "groot_monitor_enabled:=true",
       "dev_autostart:=true",
     ]
@@ -27,7 +27,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
@@ -37,7 +37,6 @@ services:
     ]
     env_file: ../envs/reasoner.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
@@ -46,7 +45,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -59,7 +58,6 @@ services:
     ]
     env_file: ../envs/reasoner.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
       - ../data/reasoner/configs:/shared/configs:rw
 
@@ -67,15 +65,13 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - reasoner
     restart: "no"
@@ -84,15 +80,13 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - reasoner
     restart: "no"

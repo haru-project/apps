@@ -147,7 +147,7 @@ It’s perfect for testing and development when you don’t have the physical ro
 
 To install the simulator, run:
 ```bash
-docker pull ghcr.io/haru-project/hve-simulator:feature-ci
+docker pull ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
 ```
 
 ### Haru Communication App (HCA)
@@ -165,10 +165,11 @@ docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
-docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-migration-haru2core-v2
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
+docker pull ghcr.io/haru-project/haru-web-projector:latest
 ```
 
 ## Run Applications
@@ -301,6 +302,8 @@ xhost +local:docker
 This gives Docker permission to display graphical applications on your desktop. It is required because Docker containers need access to the host's X11 display server to render GUI windows (e.g., RViz, Groot).
 > Note: You only need to do this once per session, or each time you restart your computer.
 
+#### System Applications
+
 HCA is made up of several **layers** that work together.
 We recommend starting them **one at a time** so you can confirm each one runs correctly before moving on.
 
@@ -351,7 +354,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > **Microphone selection and setup:**
     > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
-    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `Zoom H8`).
+    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `ZOOM H8`).
     > If you are using a H6/H8/H12 recorder as your microphone input, make sure to set it to **Multi Track mode** on the device itself before connecting it to your computer. This ensures all input channels are available to the system.
 
     **Start command**:
@@ -443,19 +446,30 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > You can change the containers configuration in the `envs/reasoner.env`.
 
-    > **Microphone mapping (important for multi-mic setups):**
+    > **Microphone and iPad mapping (important for multi-mic setups):**
     > Edit `data/reasoner/configs/params/postprocessors_params.yaml` to match your physical setup.
-    > - `mic_positions` — set the position (in meters) of each microphone relative to the robot's position
-    > - `mic_id_to_person_name` — map each microphone channel ID to a person name
+    > - `mic_id_to_position` — set the position (in meters) of each microphone relative to the robot's position
+    > - `ipad_id_to_mic_id` — map each iPad device ID to a microphone channel ID (enables dynamic naming from iPads)
+    > - `mic_id_to_person_name` — map each microphone channel ID to a default person name (used as fallback)
+    >
+    > When iPads are connected and participants set their names on the iPad app, the system automatically
+    > uses those names instead of the static `mic_id_to_person_name` values. The mapping flows through
+    > the `ipad_id_to_mic_id` configuration: each iPad ID is linked to a mic channel, and the name set
+    > on the iPad is used for that channel's participant.
     >
     > Example (x = front/back, y = left/right, z = up/down):
     > ```yaml
-    > mic_positions: [
+    > mic_id_to_position: [
     >   '0: {x: 1.0, y: 0.0, z: 0.0}',      # 1m in front of robot
     >   '1: {x: 0.0, y: -1.0, z: 0.0}',     # 1m to the right
     >   '2: {x: 0.0, y: 1.0, z: 0.0}',      # 1m to the left
     >   '3: {x: -1.0, y: 0.0, z: 0.0}',     # 1m behind
     >   '4: {x: , y: , z: }'                # unused channel (ignored)
+    > ]
+    > ipad_id_to_mic_id: [
+    >   '1: 0',                             # iPad 1 linked to mic channel 0
+    >   '2: 1',                             # iPad 2 linked to mic channel 1
+    >   '3: 2',                             # iPad 3 linked to mic channel 2
     > ]
     > mic_id_to_person_name: [
     >   '0: {name: alice}',                 # channel 0 assigned to alice
@@ -475,12 +489,15 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     Currently, the Reasoner layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
 
     **Expected output**:
-    - Two Groot windows should open (one per behavior tree controller):
+    - Multiple Groot windows should open (one per behavior tree controller):
         - **Expressivity controller** — manages TTS/Routine-driven expressions
         - **Gaze controller** — manages gaze behavior
+        - **iPad students controller** — manages requests/responses to the students iPad
+        - **iPad teacher controller** — manages requests/responses to the teacher iPad
+        - **Unity controller** — manages the projection of photos/videos to the Unity Projector
     - Both windows display the behavior tree and its current execution status
 
-    > **Note:** The behavior tree controllers depend on action servers that run on the robot (or the simulator). If the robot or simulator is not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the simulator or the robot is running before starting the reasoner.
+    > **Note:** The behavior tree controllers depend on action servers that run by different services (robot, iPad, projector, ...). If services are not running, some controllers may fail to load (timeout after ~10s) and fewer Groot windows will appear than expected. Make sure the services you wish to use are running before starting the reasoner.
 
     **Related repositories for debug**: [agent_reasoner](https://github.com/haru-project/agent_reasoner/tree/jazzy)
 
@@ -531,11 +548,6 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     >
     > When the connection is successful, the connection icon in the app turns **green** and you should see connection logs appear in the console.
 
-    > **Reasoner integration:**
-    > The reasoner layer includes iPad controller support. Make sure the following parameters are enabled in the reasoner's `bt-forest` service if you want to use iPads:
-    > - `ipad_students_controller_enabled:=true`
-    > - `ipad_teacher_controller_enabled:=true`
-
     **Start command**:
     ```bash
     bash scripts/compose.sh ipad up server --force-recreate -d
@@ -544,33 +556,42 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Expected output**:
     - Container logs on the `server` service confirm:
         - iPad action server is initialized
-        - Waiting for iPad connections
+        - Connected to iPads
 
 7. Projector layer (optional)
 
-    Enables the Unity projector display, allowing Haru to project images and videos onto a surface during interactions.
+    Enables a web-based projector display, allowing Haru to project images and videos onto a surface during interactions.
 
-    Projector resources are downloaded as part of the reasoner data and mounted into the simulator.
-
-    **Download data**:
-    ```bash
-    bash scripts/download_reasoner_data.sh
-    ```
-
-    This downloads the projector resources to `data/reasoner/projector/`. The simulator automatically mounts this directory at `/shared/projector/resources` (read-only).
+    Projector resources are downloaded as part of the reasoner data and mounted into the projector service.
 
     > **Configuration note:**
+    > You can change the containers configuration in the `envs/projector.env`.
     > Projector resources are managed through the behavior tree system. You can update or replace the resources in `data/reasoner/projector/` to change what content is available for projection.
 
-    > **Unity application setup:**
-    > The projector runs as a scene in the Unity application. To configure it:
-    > 1. Make sure **ROS_IP** matches your local IP address.
-    > 2. Select the **"Projector V1"** scene (instead of "Haru Virtual Avatar" used for the simulator).
-    > 3. Click **"Play"** — the ROS_IP indicator in the top left corner should change from orange to white (it should remain white, not blink).
-    >
-    > **Important:** The simulator and the projector cannot run on the same machine simultaneously. If you need both (e.g., you don't have a physical Haru), you must use **two separate PCs** connected to the same LAN — one running the simulator and one running the projector.
+    **Start command**:
+    ```bash
+    bash scripts/compose.sh projector up server --force-recreate -d
+    ```
 
-    > **Note:** The projector requires the simulator (or the physical robot) to be running on the network, as the Unity application handles the actual rendering of projected content.
+    **Expected output**:
+    - Projector web server is running at: http://127.0.0.1:8081
+
+#### User Application
+
+The User Application provides the **Episode Builder**, a web interface for creating and managing task episodes.
+
+> **Configuration note:**
+> You can change the containers configuration in the `envs/user.env`.
+
+**Start command**:
+```bash
+bash scripts/compose.sh user up episode-builder --force-recreate -d
+```
+
+**Expected output**:
+- Episode Builder web UI is running at: http://127.0.0.1:8551
+
+**Related repositories for debug**: [simple-haru-episode-builder](https://github.com/haru-project/simple-haru-episode-builder)
 
 Once all layers are running, start a test task with:
 ```bash
@@ -592,6 +613,8 @@ bash scripts/compose.sh llm down
 bash scripts/compose.sh reasoner down
 bash scripts/compose.sh tts down
 bash scripts/compose.sh ipad down
+bash scripts/compose.sh projector down
+bash scripts/compose.sh user down
 ```
 
 ## Troubleshooting Tips:
