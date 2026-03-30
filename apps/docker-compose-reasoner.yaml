@@ -3,47 +3,52 @@ name: haru-reasoner
 services:
 
   bt-forest:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
       "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
+      "ipad_students_controller_enabled:=true",
+      "ipad_teacher_controller_enabled:=true",
+      "web_projector_controller_enabled:=true",
       "groot_monitor_enabled:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../data/session/:/root/.bt_ros:rw
     restart: unless-stopped
 
   reasoner:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/config/reactiveness/reactive_rules.json",
-      "config_file:=/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+      "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
+      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
       "enable_reactive:=true",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/reasoner/tasks:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks:rw
-    depends_on:
-      - bt-forest
+      - ../data/reasoner/configs:/shared/configs:rw
+      - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
   
   context-manager:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
+      "model_file:=${WORLD_MODEL_FILE}",
       "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
       "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
       "start_perception_postprocessors:=true",
@@ -52,39 +57,36 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
-      - ../data/reasoner/configs:/ros2_ws/src/agent_reasoner/haru_agent_reasoner/params:rw
-    depends_on:
-      - reasoner
+      - ../data/reasoner/configs:/shared/configs:rw
 
   execute-task-scenario:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
+      "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
       "-f",
     ]
     env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-
-  execute-task-test:
-    image: ghcr.io/haru-project/agent_reasoner:jazzy
-    command: [
-      "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/ros2_ws/src/agent_reasoner/haru_agent_reasoner/examples/tasks/${TASK_TEST_FILE}', task_type: 1}",
-      "-f",
-    ]
-    env_file: ../envs/reasoner.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - reasoner
+    restart: "no"
+
+  execute-task-test:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
+    command: [
+      "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
+      "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
+      "-f",
+    ]
+    env_file: ../envs/reasoner.env
+    depends_on:
+      - reasoner
+    restart: "no"

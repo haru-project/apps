@@ -3,93 +3,127 @@ name: haru-llm
 services:
 
   action-args:
-    image: ghcr.io/haru-project/haru-llm:ros2
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-llm:feature-eval-test
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
-    env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
+    environment:
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
-      - ../data/llm/agents:/ros2_ws/src/haru-llm/agents:rw
-      - ../data/llm/logs:/ros2_ws/src/haru-llm/logs:rw
+      - ../data/llm/configs:/shared/configs:rw
+      - ../data/llm/agents:/shared/agents:rw
     depends_on:
-      - server
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_healthy
     restart: unless-stopped
     
   dashboard:
-    image: ghcr.io/haru-project/haru-llm:ros2
-    command: [
-      "ros2", "launch", "haru_llm_ros", "dashboard.launch.py",
-      "config_file:=${DASHBOARD_CONFIG_FILE}",
-    ]
-    env_file: ../envs/llm.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../data/llm/configs:/ros2_ws/src/haru-llm/configs:rw
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ghcr.io/haru-project/haru-llm:feature-eval-test
+    command: ["/bin/bash", "-c", "$PACKAGE_VENV -c 'from haru_llm.dashboard.app import run; run()'"]
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
+    ports:
+      - 8501:8501
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+  
+  redis:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: redis:latest
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   server:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: docker.litellm.ai/berriai/litellm:main-stable
     command:
       - "--config=/app/config.yaml"
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     ports:
-      - 4000:4000
+      - 4050:4000
     extra_hosts:
       - dgx02:172.24.39.32
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1" ]  # Command to execute for health check
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)
       interval: 30s  # Perform health check every 30 seconds
       timeout: 10s   # Health check command times out after 10 seconds
       retries: 3     # Retry up to 3 times if health check fails
       start_period: 40s  # Wait 40 seconds after container start before beginning health checks
 
   webui:
-    build:
-      context: .
-      args:
-        target: runtime
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: ghcr.io/open-webui/open-webui:main
-    env_file: ../envs/llm.env
-    network_mode: host
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
+    ports:
+      - 8080:8080
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/open-webui:/app/backend/data:rw
     restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    profiles: ["webui"]
   
   vllm:
-    build:
-      context: .
-      args:
-        target: runtime
-    image: vllm/vllm-openai:v0.8.5
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
+    image: vllm/vllm-openai:latest
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"
-    env_file: ../envs/llm.env
+    env_file:
+      - ../envs/llm.env
+      - ../envs/llm.secrets.env
     ports:
-      - "8000:8000"
+      - 8000:8000
     volumes:
       - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     restart: unless-stopped
+    profiles: ["vllm"]

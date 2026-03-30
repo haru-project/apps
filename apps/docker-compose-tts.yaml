@@ -3,73 +3,99 @@ name: haru-tts
 services:
 
   tts-client:
+    extends:
+      file: compose.common.yaml
+      service: common-ros-gpu
     image: ghcr.io/haru-project/strawberry-tts:ros2
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
       "/ros2_ws/src/strawberry_tts/src/strawberry_tts/client/fastapi_client_wrapper.py",
-      "--global_timeout", "9.0",
-      "--timeout", "4.0",
-      "--num_retries", "2"
+      "--model_ver", "mixed",
+      "--weights_dir", "/tts",
+      "--json_path", "/ros2_ws/src/strawberry_tts/ref_audio/refs.json",
+      "--config_path", "/ros2_ws/src/strawberry_tts/src/strawberry_tts/configs/params.json",
+      "--ref_dir", "/tts/ref_audio",
+      "--max_syllable_dur", "250.0",
+      "--sr", "32000",
+      "--num_retries", "1",
+      "--global_timeout", "3.0",
+      "--weights_json", "/ros2_ws/src/strawberry_tts/weight_refs_mixed.json",
+      "--voice_gesture_dir", "/ros2_ws/src/strawberry_tts/voice_gestures",
+      "--retry_mos_thresh", "2.9",
+      "--fallback_mos_thresh", "1.5",
+      "--silence_percentile", "50.0",
+      "--gptsovits_url", "http://127.0.0.1:9880",
+      "--cerevoice_url", "http://127.0.0.1:8015",
+      "--timeout", "2.5",
+      "--languages", "en-US", "ja-JP",
+      "--default_language_code", "en-US",
+      "--cerevoice_langs", "en-US",
+      "--base_model_dir", "/ros2_ws/src/strawberry_tts/base_models",
+      "--lipsync_window_size", "32",
+      "--lipsync_threshold_percentile", "90",
+      "--base_weight_fallback",
+      "--genre_weights",
+      "--extended_code_switching"
     ]
     env_file: ../envs/tts.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: "all"
-            capabilities: [gpu]
     depends_on:
-      - gpt-sovits
-      - cerevoice-api
+      gpt-sovits:
+        condition: service_healthy
+      cerevoice-api:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f fastapi_client_wrapper.py >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles: ["tts"]
 
   ros-node:
+    extends:
+      file: compose.common.yaml
+      service: common-ros-gpu
     image: ghcr.io/haru-project/strawberry-tts:ros2
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
-    network_mode: host
-    ipc: host
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: "all"
-            capabilities: [gpu]
+      - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
+      - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
     depends_on:
-      - tts-client
+      tts-client:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["ros"]
 
   cerevoice-api:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
     image: ghcr.io/haru-project/strawberry-tts:ros2
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
-    network_mode: host
-    ipc: host
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c \"echo > /dev/tcp/127.0.0.1/8015\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles: ["tts"]
 
   gpt-sovits:
+    extends:
+      file: compose.common.yaml
+      service: common-ros-gpu
     image: ghcr.io/haru-project/strawberry-tts-api:latest
     working_dir: /workspace
     environment:
       - is_half=False
       - is_share=False
-    network_mode: host
-    ipc: host
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: "all"
-            capabilities: [gpu]
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c \"echo > /dev/tcp/127.0.0.1/9880\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles: ["tts"]
