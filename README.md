@@ -162,7 +162,6 @@ docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
 docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
-docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
@@ -313,13 +312,12 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people --force-recreate -d
     ```
 
     **Expected output**:
-    - An RViz window appears showing:
-        - Live camera feed
-        - Detected skeletons and tracking markers
+    - Perception, fusion, and monitoring containers come up without a visualization sidecar
+    - Start `haru-viz` separately as the desktop visualization/debug console
 
     **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 
