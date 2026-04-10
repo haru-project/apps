@@ -27,6 +27,11 @@ services:
       file: docker-compose-perception.yaml
       service: haru-belief
 
+  haru-viz:
+    extends:
+      file: docker-compose-perception.yaml
+      service: haru-viz
+
   resource-monitor:
     extends:
       file: docker-compose-perception.yaml

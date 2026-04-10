@@ -157,10 +157,12 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
-docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
+docker pull ghcr.io/haru-project/haru-belief:feature-topic-normalize
+docker pull ghcr.io/haru-project/haru-viz:develop
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
@@ -312,12 +314,13 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces hands haru-belief haru-viz resource-monitor --force-recreate -d
     ```
 
     **Expected output**:
-    - Perception, fusion, and monitoring containers come up without a visualization sidecar
-    - Start `haru-viz` separately as the desktop visualization/debug console
+    - Perception, fusion, and monitoring come up on their configured perception tags, while `haru-viz` runs from `ghcr.io/haru-project/haru-viz:develop`
+    - The `haru-viz` web UI is reachable at `http://127.0.0.1:5173`
+    - rosbridge stays co-located with `haru-viz` and continues using ports `9090`, `9091`, and `9092`
 
     **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 
