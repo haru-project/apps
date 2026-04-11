@@ -68,15 +68,10 @@ services:
       SKELETONS_DEV_AUTOSTART: "true"
       SKELETONS_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
       SKELETONS_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      SKELETONS_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/rgb/image_raw/compressed
-      SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/depth_to_rgb/image_raw
-      SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/depth_to_rgb/camera_info
-      SKELETONS_OUTPUT_TOPIC_2D: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/detections_2d
-      SKELETONS_OUTPUT_TOPIC_3D: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/detections_3d
+      SKELETONS_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
+      SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/depth_to_rgb
+      SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb/camera_info
       SKELETONS_OUTPUT_TOPIC_SKELETONS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons
-      SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/debug/overlay/compressed
-      SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY_RAW: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/debug/overlay
-      SKELETONS_OUTPUT_TOPIC_METRICS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/metrics
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -95,8 +90,8 @@ services:
       FACES_DEV_AUTOSTART: "true"
       FACES_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
       FACES_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      FACES_IMAGE_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
-      FACES_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/camera_info
+      FACES_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
+      FACES_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb/camera_info
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -115,9 +110,9 @@ services:
       HARU_PARAM_AUTO_PREFIXES: HANDS
       HANDS_DEV_AUTOSTART: "true"
       HANDS_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      HANDS_CAMERA_NAME: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/rgb
-      HANDS_IMAGE_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/rgb/image_raw/compressed
-      HANDS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/rgb/camera_info
+      HANDS_CAMERA_NAME: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
+      HANDS_IMAGE_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb/compressed
+      HANDS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb/camera_info
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -136,7 +131,7 @@ services:
       HARU_PARAM_AUTO_PREFIXES: HARU_BELIEF
       HARU_BELIEF_DEV_AUTOSTART: "true"
       HARU_BELIEF_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
-      HARU_BELIEF_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/belief
+      HARU_BELIEF_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/fusion
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
