@@ -73,7 +73,7 @@ services:
       SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/depth_to_rgb/camera_info
       SKELETONS_OUTPUT_TOPIC_2D: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/detections_2d
       SKELETONS_OUTPUT_TOPIC_3D: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/detections_3d
-      SKELETONS_OUTPUT_TOPIC_SKELETONS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/results
+      SKELETONS_OUTPUT_TOPIC_SKELETONS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons
       SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/debug/overlay/compressed
       SKELETONS_OUTPUT_TOPIC_DEBUG_OVERLAY_RAW: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/debug/overlay
       SKELETONS_OUTPUT_TOPIC_METRICS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons/internal/metrics
