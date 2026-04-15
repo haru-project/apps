@@ -162,7 +162,7 @@ docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normaliz
 docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/haru-belief:feature-topic-normalize
-docker pull ghcr.io/haru-project/haru-viz:develop
+docker pull ghcr.io/haru-project/haru-viz:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
@@ -187,6 +187,24 @@ To quickly validate all compose files, run:
 ```bash
 bash scripts/validate_compose.sh
 ```
+
+### Perception image matrix
+
+The default perception stack is intended to run as a tested image set rather than a mix of floating branch lines:
+
+```text
+azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
+skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+haru-belief       ghcr.io/haru-project/haru-belief:feature-topic-normalize
+haru-viz          ghcr.io/haru-project/haru-viz:feature-topic-normalize
+hands             ghcr.io/haru-project/strawberry-ros-hands:latest
+resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
+```
+
+`hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+
+`haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 
 ### All-in-one compose (single file)
 

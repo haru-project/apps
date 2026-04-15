@@ -35,7 +35,7 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -59,7 +59,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -81,7 +81,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -102,10 +102,12 @@ services:
     deploy: *gpu-reservations
   # Hands module
   hands:
-    image: ghcr.io/haru-project/strawberry-ros-hands:latest
+    image: ${HANDS_IMAGE:-ghcr.io/haru-project/strawberry-ros-hands:latest}
     env_file:
       - ../envs/perception.env
     environment:
+      DISPLAY: ${DISPLAY}
+      XAUTHORITY: /root/.Xauthority
       HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
       HARU_PARAM_AUTO_PREFIXES: HANDS
       HANDS_DEV_AUTOSTART: "true"
@@ -117,13 +119,13 @@ services:
     restart: unless-stopped
     volumes:
       - *common-x11
-      - *common-docker-xauth
+      - *common-root-xauth
       - *common-dev
     <<: *common-ros
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   haru-belief:
-    image: ghcr.io/haru-project/haru-belief:feature-topic-normalize
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -139,7 +141,7 @@ services:
     <<: *common-ros
   # haru-viz browser UI + rosbridge runtime
   haru-viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:develop}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -169,7 +171,7 @@ services:
 
   # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:
-    image: ghcr.io/haru-project/strawberry-resource-monitor:latest
+    image: ${RESOURCE_MONITOR_IMAGE:-ghcr.io/haru-project/strawberry-resource-monitor:latest}
     env_file:
       - ../envs/perception.env
     environment:
