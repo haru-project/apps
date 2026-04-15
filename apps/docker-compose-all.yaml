@@ -12,6 +12,11 @@ services:
       file: docker-compose-perception.yaml
       service: faces
 
+  skeletons:
+    extends:
+      file: docker-compose-perception.yaml
+      service: skeletons
+
   hands:
     extends:
       file: docker-compose-perception.yaml

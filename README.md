@@ -158,6 +158,7 @@ It’s made up of several Docker images that work together.
 To install it, run:
 ```bash
 docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
 docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
@@ -316,7 +317,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
     ```
 
     **Expected output**:
