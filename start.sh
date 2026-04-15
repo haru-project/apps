@@ -49,10 +49,18 @@ fi
 
 # Guard against already-running stacks.
 require_stack_down tts
+require_stack_down simulator
+require_stack_down ipad
 require_stack_down perception
 require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
+
+# Ipad services
+bash scripts/compose.sh ipad up server --force-recreate -d
+
+# Projector services
+bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
 # TTS services
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d

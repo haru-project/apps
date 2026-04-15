@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/hve-simulator:feature-ci
+    image: ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
     working_dir: /ros2_ws
     command: ["/bin/bash", "-c", "export ROS_IP=$(hostname -I | awk '{print $1}') && ros2 launch haru_unity unity_app_launcher_launch.py && tail -f /dev/null"]
     env_file: ../envs/simulator.env
@@ -17,19 +17,20 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${PULSE_SOCKET_PATH}:/tmp/pulse/native
       - ../data/simulator/asoundrc-pulse:/root/.asoundrc:ro
-      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
       - ../data/simulator/playerprefs:/root/.config/unity3d/Miraitec/HaruVirtualEnvironments:rw
+      - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:ro
+      - ../data/reasoner/projector:/shared/projector/resources:ro
+      - ../data/session/:/root/.bt_ros:ro
 
   web-server:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/hve-simulator:feature-ci
+    image: ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
     working_dir: /app/haru2_web/
     command: ["/bin/bash", "-c", "bash run_web.sh"]
     env_file: ../envs/simulator.env
     ports:
       - 7000:7000
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw

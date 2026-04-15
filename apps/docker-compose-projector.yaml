@@ -1,0 +1,19 @@
+name: haru-projector
+
+services:
+
+  server:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-web-projector:latest
+    command: [
+      "ros2", "launch", "haru_web_projector", "web_projector.launch.py",
+      "dev_autostart:=true",
+      "web_server_port:=8081",
+    ]
+    env_file: ../envs/projector.env
+    volumes:
+      - ../data/reasoner/projector:/shared/projector/resources:ro
+      - ../data/session/:/root/.bt_ros:ro
+    restart: unless-stopped

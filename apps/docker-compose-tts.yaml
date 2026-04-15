@@ -39,8 +39,6 @@ services:
       "--extended_code_switching"
     ]
     env_file: ../envs/tts.env
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       gpt-sovits:
         condition: service_healthy
@@ -62,7 +60,6 @@ services:
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
       - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
     depends_on:
@@ -78,8 +75,6 @@ services:
     image: ghcr.io/haru-project/strawberry-tts:ros2
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "bash -c \"echo > /dev/tcp/127.0.0.1/8015\""]
