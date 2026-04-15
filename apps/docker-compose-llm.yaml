@@ -19,7 +19,6 @@ services:
       - REDIS_HOST=127.0.0.1
       - REDIS_PORT=6379
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs:/shared/configs:rw
       - ../data/llm/agents:/shared/agents:rw
     depends_on:
@@ -74,7 +73,6 @@ services:
     extra_hosts:
       - dgx02:172.24.39.32
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container

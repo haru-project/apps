@@ -6,9 +6,9 @@ APPS_DIR="${ROOT_DIR}/apps"
 
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
-  echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-  echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | all" >&2
-  exit 1
+    echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
+    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
+    exit 1
 fi
 shift
 
@@ -38,12 +38,20 @@ case "${stack}" in
         env_file="${ROOT_DIR}/envs/simulator.env"
     ;;
     ipad)
-    stack_file="${APPS_DIR}/docker-compose-ipad.yaml"
-    env_file="${ROOT_DIR}/envs/ipad.env"
+        stack_file="${APPS_DIR}/docker-compose-ipad.yaml"
+        env_file="${ROOT_DIR}/envs/ipad.env"
     ;;
-    recorder)
-        stack_file="${APPS_DIR}/docker-compose-recorder.yaml"
-        env_file="${ROOT_DIR}/envs/recorder.env"
+    projector)
+        stack_file="${APPS_DIR}/docker-compose-projector.yaml"
+        env_file="${ROOT_DIR}/envs/projector.env"
+    ;;
+    user)
+        stack_file="${APPS_DIR}/docker-compose-user.yaml"
+        env_file="${ROOT_DIR}/envs/user.env"
+    ;;
+    all)
+        stack_file="${APPS_DIR}/docker-compose-all.yaml"
+        env_file="${ROOT_DIR}/envs/all.env"
     ;;
     all)
         stack_file="${APPS_DIR}/docker-compose-all.yaml"

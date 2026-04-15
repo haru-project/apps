@@ -33,5 +33,4 @@ services:
     ports:
       - 7000:7000
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
