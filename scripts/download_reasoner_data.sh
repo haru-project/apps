@@ -26,5 +26,10 @@ copy_with_tar ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector \
 /opt/ros/jazzy/workspace/install/share/behavior_tree_unity_projector/examples/resources \
 "$DATA_FOLDER/projector"
 
+SOURCE_POSTPROCESSORS_CONFIG="$DIR/../../agent_reasoner/haru_agent_reasoner/params/postprocessors_params.yaml"
+if [ -f "$SOURCE_POSTPROCESSORS_CONFIG" ]; then
+  cp "$SOURCE_POSTPROCESSORS_CONFIG" "$DATA_FOLDER/configs/params/postprocessors_params.yaml"
+fi
+
 # Give permissions
 chmod -R a+rwX "$DATA_FOLDER"
