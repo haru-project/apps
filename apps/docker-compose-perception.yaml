@@ -89,6 +89,7 @@ services:
       HARU_PARAM_AUTO_PREFIXES: FACES
       FACES_DEV_AUTOSTART: "true"
       FACES_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
+      FACES_DATA_ROOT: /ros/strawberry_ros_faces_module
       FACES_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
       FACES_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
       FACES_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/camera_info
@@ -134,9 +135,13 @@ services:
       HARU_BELIEF_DEV_AUTOSTART: "true"
       HARU_BELIEF_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
       HARU_BELIEF_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/fusion
+      ROS_HOME: /ros/haru_perception_data
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
+      - type: bind
+        source: ../data/perception
+        target: /ros/haru_perception_data
       - *common-dev
     <<: *common-ros
   # haru-viz browser UI + rosbridge runtime
