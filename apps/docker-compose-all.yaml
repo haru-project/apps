@@ -37,6 +37,14 @@ services:
       file: docker-compose-perception.yaml
       service: resource-monitor
 
+  perception-domain-bridge:
+    extends:
+      file: docker-compose-perception.yaml
+      service: perception-domain-bridge
+    depends_on:
+      haru-belief:
+        condition: service_started
+
   # Speech layer
   audio:
     extends:
