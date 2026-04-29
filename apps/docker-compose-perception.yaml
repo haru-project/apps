@@ -72,6 +72,7 @@ services:
       HARU_PARAM_AUTO_PREFIXES: SKELETONS
       SKELETONS_DEV_AUTOSTART: "true"
       SKELETONS_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
+      SKELETONS_USE_FFMPEG_DECODE_BRIDGE: "false"
       SKELETONS_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
       SKELETONS_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
       SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/depth_to_rgb
@@ -95,6 +96,7 @@ services:
       HARU_PARAM_AUTO_PREFIXES: FACES
       FACES_DEV_AUTOSTART: "true"
       FACES_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
+      FACES_USE_FFMPEG_DECODE_BRIDGE: "false"
       FACES_DATA_ROOT: /ros/strawberry_ros_faces_module
       FACES_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
       FACES_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
