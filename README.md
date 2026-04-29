@@ -218,6 +218,74 @@ This uses `envs/all.env` for compose-time variables. Optional services still res
 bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
 ```
 
+### Isolated perception ROS domain
+
+This branch runs perception on a separate ROS domain by default. Perception
+services use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `20`) and non-perception
+services keep using the existing `ROS_DOMAIN_ID`.
+
+Start the perception stack with:
+
+```bash
+bash scripts/compose.sh perception up --force-recreate -d
+```
+
+or the combined stack with:
+
+```bash
+bash scripts/compose.sh all up --force-recreate -d
+```
+
+The separate `perception-domain-bridge` container is the only ROS bridge between
+the perception and robot/application domains. Docker networking is unchanged in
+this phase.
+
+The bridge allowlist is tracked in `config/perception_domain_bridge.yaml`.
+It bridges only:
+
+- `/perception/fusion/persons`
+- `/strawberry/people`
+- `/tf`
+- `/tf_static`
+- `/haru_speech/speech_to_text/status_array` from the existing domain back to perception
+- `/haru_speech/speech_to_text/result` from the existing domain back to perception
+
+It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, audio, faces,
+skeletons, hands, or debug image topics.
+
+Validation commands:
+
+```bash
+# Existing robot/application domain should not see raw perception topics.
+ROS_DOMAIN_ID=0 ros2 topic list | rg '/perception/sensor/kinect|/perception/proc/(faces|skeletons)|ffmpeg|zdepth|depth_to_rgb|camera_info'
+
+# Existing domain should see bridged semantic outputs.
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=0 ros2 topic echo --once /strawberry/people
+ROS_DOMAIN_ID=0 ros2 topic echo --once /tf
+
+# Perception domain should see speech status/results bridged back in.
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /haru_speech/speech_to_text/status_array
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /haru_speech/speech_to_text/result
+```
+
+The first command should produce no matches.
+
+### Perception-domain recorder
+
+The recorder is isolated to the perception ROS domain in this branch. It records
+only topics visible on `HARU_PERCEPTION_ROS_DOMAIN_ID`, which includes raw/internal
+perception topics and any speech topics bridged back into perception.
+
+```bash
+HARU_RECORDER_SESSION_ID=trial-001 \
+  bash scripts/compose.sh recorder up --force-recreate -d
+```
+
+Recordings are written under
+`data/perception/haru_recorder/recordings/domains/perception/`. The recorder does
+not attach to the existing robot/application `ROS_DOMAIN_ID`.
+
 ### Haru Simulator (HS)
 
 The Haru Simulator uses a graphical interface, so you need to allow Docker to show windows on your screen. Run the following command in your terminal before starting the simulator:

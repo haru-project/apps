@@ -1,0 +1,53 @@
+# Explicit allowlist for opt-in isolated perception deployments.
+# Domain IDs are supplied by the compose command:
+#   --from ${HARU_PERCEPTION_ROS_DOMAIN_ID} --to ${ROS_DOMAIN_ID}
+name: haru_perception_domain_bridge
+from_domain: 0
+to_domain: 0
+
+topics:
+  /perception/fusion/persons:
+    type: haru_belief_msgs/msg/PersonsState
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /strawberry/people:
+    type: strawberry_ros_msgs/msg/People
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /tf:
+    type: tf2_msgs/msg/TFMessage
+    qos:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 100
+
+  /tf_static:
+    type: tf2_msgs/msg/TFMessage
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /haru_speech/speech_to_text/status_array:
+    type: haru_speech_msgs/msg/SpeechStatusArray
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /haru_speech/speech_to_text/result:
+    type: haru_speech_msgs/msg/SpeechToTextResult
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
