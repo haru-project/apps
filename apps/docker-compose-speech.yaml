@@ -25,8 +25,12 @@ services:
       service: common-ros
     image: ghcr.io/haru-project/haru-speech:ros2
     command: [
-      "ros2", "launch", "haru_speech_ros", "audio.launch.py",
+      "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
+      "capture_mode:=single_device",
+      "capture_device:=${AUDIO_CAPTURE_DEVICE:-zoom_h8}",
+      "source_id:=${AUDIO_SOURCE_ID:-mic_0}",
+      "device:=${AUDIO_DEVICE_NAME:-ZOOM H8}",
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
@@ -34,6 +38,23 @@ services:
       - /dev/snd
     volumes:
       - ../data/speech/configs:/shared/configs:rw
+    restart: unless-stopped
+
+  audio-capture-manager:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ghcr.io/haru-project/haru-speech:ros2
+    command: [
+      "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
+      "config_file:=${AUDIO_CONFIG_FILE}",
+      "capture_mode:=manager",
+      "dev_autostart:=true",
+    ]
+    env_file: ../envs/speech.env
+    volumes:
+      - ../data/speech/configs:/shared/configs:rw
+    profiles: ["multi-audio"]
     restart: unless-stopped
 
   configure:
