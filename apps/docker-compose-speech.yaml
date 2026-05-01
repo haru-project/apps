@@ -25,7 +25,7 @@ services:
       service: common-ros
     image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     command: [
-      "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
+      "ros2", "launch", "haru_speech", "audio_capture.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
       "capture_mode:=${AUDIO_CAPTURE_MODE:-multi_device}",
       "dev_autostart:=true",
@@ -43,7 +43,7 @@ services:
       service: common-ros
     image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     command: [
-      "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
+      "ros2", "launch", "haru_speech", "audio_capture.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
       "capture_mode:=manager",
       "dev_autostart:=true",
@@ -60,7 +60,7 @@ services:
       service: common-ros-gpu
     image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve}
     command: [
-      "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
+      "ros2", "launch", "haru_speech", "speech_to_text.launch.py",
       "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
       "dev_autostart:=true",
     ]
@@ -76,7 +76,7 @@ services:
       service: common-ros-gpu
     image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}
     command: [
-      "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
+      "ros2", "launch", "haru_speech", "speaker_verification.launch.py",
       "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
       "dev_autostart:=true",
     ]
@@ -93,8 +93,9 @@ services:
       service: common-ros-gpu
     image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization:feature-asr-improve}
     command: [
-      "ros2", "launch", "haru_speech_ros", "sound_localization.launch.py",
+      "ros2", "launch", "haru_speech", "sound_localization.launch.py",
       "config_file:=${SOUND_LOCALIZATION_CONFIG_FILE}",
+      "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
     volumes:
