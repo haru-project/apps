@@ -159,12 +159,13 @@ To install it, run:
 ```bash
 docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
+docker compose -f apps/docker-compose-perception.yaml build perception-domain-bridge
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
 docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
@@ -195,14 +196,17 @@ The default perception stack is intended to run as a tested image set rather tha
 ```text
 azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
 haru-belief       ghcr.io/haru-project/haru-belief:feature-asr-improve
 haru-viz          ghcr.io/haru-project/haru-viz:feature-asr-improve
 hands             ghcr.io/haru-project/strawberry-ros-hands:latest
 resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
+domain-bridge     haru-perception-domain-bridge:feature-asr-improve-local
 ```
 
 `hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+
+`domain-bridge` is built locally from the `haru-belief:feature-asr-improve` runtime image so the bridge can load the custom Haru message packages referenced by `config/domain_bridge.yaml`.
 
 `haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 

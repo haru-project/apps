@@ -87,7 +87,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize}
     env_file:
       - ../envs/perception.env
     environment:
@@ -204,7 +204,12 @@ services:
     deploy: *gpu-reservations
 
   perception-domain-bridge:
-    image: ${DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
+    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:feature-asr-improve-local}
+    build:
+      context: ..
+      dockerfile: docker/domain-bridge.Dockerfile
+      args:
+        BASE_IMAGE: ${PERCEPTION_DOMAIN_BRIDGE_BASE_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -212,6 +217,18 @@ services:
       TO_DOMAIN_ID: ${TO_DOMAIN_ID:-0}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+    command:
+      [
+        "ros2",
+        "run",
+        "domain_bridge",
+        "domain_bridge",
+        "--from",
+        "${FROM_DOMAIN_ID:-20}",
+        "--to",
+        "${TO_DOMAIN_ID:-0}",
+        "/shared/config/domain_bridge.yaml",
+      ]
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
