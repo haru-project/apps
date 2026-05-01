@@ -5,7 +5,7 @@ name: haru-perception
 x-nvidia-device: &nvidia-device
   driver: nvidia
   count: all
-  capabilities: [gpu]
+  capabilities: [ gpu ]
 
 x-gpu-reservations: &gpu-reservations
   resources:
@@ -32,6 +32,9 @@ x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 
 x-perception-domain-env: &perception-domain-env
   ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
+
+volumes:
+  haru-viz-domain-bridge-ros:
 
 services:
   # Azure Kinect sensor driver
@@ -194,6 +197,23 @@ services:
       haru-belief:
         condition: service_started
 
+  haru-viz-domain-bridge-ros:
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
+    env_file:
+      - ../envs/perception.env
+    command:
+      [
+        "bash",
+        "-lc",
+        "find /shared/haru_viz_ros -mindepth 1 -maxdepth 1 -exec rm -rf {} + && cp -a /opt/ros/jazzy/. /shared/haru_viz_ros/ && test -f /shared/haru_viz_ros/setup.bash && test -f /shared/haru_viz_ros/workspace/install/setup.bash",
+      ]
+    restart: "no"
+    volumes:
+      - type: volume
+        source: haru-viz-domain-bridge-ros
+        target: /shared/haru_viz_ros
+    <<: *common-ros
+
   # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:
     image: ${RESOURCE_MONITOR_IMAGE:-ghcr.io/haru-project/strawberry-resource-monitor:latest}
@@ -212,30 +232,20 @@ services:
     deploy: *gpu-reservations
 
   perception-domain-bridge:
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:feature-asr-improve-local}
-    build:
-      context: ..
-      dockerfile: docker/domain-bridge.Dockerfile
-      args:
-        BASE_IMAGE: ${PERCEPTION_DOMAIN_BRIDGE_BASE_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
+    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
     env_file:
       - ../envs/perception.env
     environment:
       FROM_DOMAIN_ID: ${FROM_DOMAIN_ID:-20}
       TO_DOMAIN_ID: ${TO_DOMAIN_ID:-0}
+      DOMAIN_BRIDGE_CONFIG: /shared/config/domain_bridge.yaml
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
     command:
       [
-        "ros2",
-        "run",
-        "domain_bridge",
-        "domain_bridge",
-        "--from",
-        "${FROM_DOMAIN_ID:-20}",
-        "--to",
-        "${TO_DOMAIN_ID:-0}",
-        "/shared/config/domain_bridge.yaml",
+        "bash",
+        "-lc",
+        "set +u; source /opt/ros/jazzy/setup.bash; source /opt/haru_viz_ros/local_setup.bash; if [ -f /opt/haru_viz_ros/workspace/install/local_setup.bash ]; then source /opt/haru_viz_ros/workspace/install/local_setup.bash; fi; set -u; exec ros2 run domain_bridge domain_bridge --from \"${FROM_DOMAIN_ID:-20}\" --to \"${TO_DOMAIN_ID:-0}\" /shared/config/domain_bridge.yaml",
       ]
     network_mode: *network-mode
     restart: unless-stopped
@@ -244,42 +254,13 @@ services:
         source: ../config/domain_bridge.yaml
         target: /shared/config/domain_bridge.yaml
         read_only: true
+      - type: volume
+        source: haru-viz-domain-bridge-ros
+        target: /opt/haru_viz_ros
+        read_only: true
     depends_on:
+      haru-viz-domain-bridge-ros:
+        condition: service_completed_successfully
       haru-belief:
         condition: service_started
-    <<: *common-ros
-
-  perception-domain-service-proxy:
-    profiles: ["robot-service-proxy"]
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:feature-asr-improve-local}
-    build:
-      context: ..
-      dockerfile: docker/domain-bridge.Dockerfile
-      args:
-        BASE_IMAGE: ${PERCEPTION_DOMAIN_BRIDGE_BASE_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
-    env_file:
-      - ../envs/perception.env
-    environment:
-      SOURCE_DOMAIN_ID: ${SERVICE_PROXY_SOURCE_DOMAIN_ID:-${HARU_ROBOT_ROS_DOMAIN_ID:-0}}
-      TARGET_DOMAIN_ID: ${SERVICE_PROXY_TARGET_DOMAIN_ID:-${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
-    command:
-      [
-        "python3",
-        "/shared/scripts/domain_service_proxy.py",
-        "--config",
-        "/shared/config/domain_service_proxy.yaml",
-      ]
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ../config/domain_service_proxy.yaml
-        target: /shared/config/domain_service_proxy.yaml
-        read_only: true
-      - type: bind
-        source: ../scripts/domain_service_proxy.py
-        target: /shared/scripts/domain_service_proxy.py
-        read_only: true
     <<: *common-ros

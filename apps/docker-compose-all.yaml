@@ -1,5 +1,8 @@
 name: haru-all
 
+volumes:
+  haru-viz-domain-bridge-ros:
+
 services:
   # Perception layer
   azure-kinect:
@@ -32,6 +35,11 @@ services:
       file: docker-compose-perception.yaml
       service: haru-viz
 
+  haru-viz-domain-bridge-ros:
+    extends:
+      file: docker-compose-perception.yaml
+      service: haru-viz-domain-bridge-ros
+
   resource-monitor:
     extends:
       file: docker-compose-perception.yaml
@@ -41,14 +49,6 @@ services:
     extends:
       file: docker-compose-perception.yaml
       service: perception-domain-bridge
-    depends_on:
-      haru-belief:
-        condition: service_started
-
-  perception-domain-service-proxy:
-    extends:
-      file: docker-compose-perception.yaml
-      service: perception-domain-service-proxy
     depends_on:
       haru-belief:
         condition: service_started

@@ -205,12 +205,12 @@ haru-belief       ghcr.io/haru-project/haru-belief:feature-asr-improve
 haru-viz          ghcr.io/haru-project/haru-viz:feature-asr-improve
 hands             ghcr.io/haru-project/strawberry-ros-hands:latest
 resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
-domain-bridge     haru-perception-domain-bridge:feature-asr-improve-local
+domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 ```
 
 `hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
 
-`domain-bridge` is built locally from the `haru-belief:feature-asr-improve` runtime image so the bridge can load the custom Haru message packages referenced by `config/domain_bridge.yaml`.
+`domain-bridge` uses the generic `haru-domain-bridge-jazzy` image from `ros2-images`. A one-shot helper copies the ROS prefix out of the `haru-viz` image into a named volume, and the bridge mounts that prefix at `/opt/haru_viz_ros` before starting `domain_bridge` from `/opt/ros/jazzy`. This keeps the bridge executable and container generic while sharing the same message type support that `haru-viz` and the integrated recorder use for visualization, recording, and playback.
 
 `haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 
@@ -249,8 +249,7 @@ bash scripts/compose.sh all up --force-recreate -d
 The `perception-domain-bridge` container is the only default bridge between the
 perception and robot/application domains. It mirrors selected low-bandwidth
 speech and `haru-belief` outputs from domain `20` into domain `0` for
-robot-domain consumers. The `perception-domain-service-proxy` container is
-profile-gated and is not started by default. Docker networking is unchanged.
+robot-domain consumers. Docker networking is unchanged.
 The Azure Kinect container mounts only USB devices by default; `/dev/snd` stays
 with the speech stack so the Kinect microphone array is captured by
 `haru-speech`, not by the camera driver.
