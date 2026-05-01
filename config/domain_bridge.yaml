@@ -1,33 +1,16 @@
-# Explicit allowlist for isolated perception deployments.
-# The compose service invokes this as --from perception --to robot. Entries with
-# `reversed: true` are robot -> perception so haru-viz can see low-bandwidth
-# robot/speech/belief state without moving raw camera streams.
+# One-way bridge for robot-domain consumers of low-bandwidth perception outputs.
+#
+# `/perception/...` publishers and services are authoritative in the perception
+# domain. This bridge mirrors selected speech and haru-belief outputs into the
+# robot domain for application consumers that still run with ROS_DOMAIN_ID=0. It
+# does not bridge raw camera streams, raw audio, speech services, or belief
+# services. `/tf` and `/tf_static` are bridged because robot-domain
+# agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
-from_domain: 0
+from_domain: 20
 to_domain: 0
 
 topics:
-  /perception/proc/faces:
-    type: strawberry_ros_msgs/msg/Faces
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/proc/skeletons:
-    type: strawberry_ros_msgs/msg/Skeletons
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/sensor/camera/kinect/cam_1/camera_info:
-    type: sensor_msgs/msg/CameraInfo
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos:
@@ -46,7 +29,6 @@ topics:
 
   /perception/proc/speech/asr/status_array:
     type: haru_speech_msgs/msg/SpeechStatusArray
-    reversed: true
     qos:
       reliability: reliable
       history: keep_last
@@ -54,7 +36,6 @@ topics:
 
   /perception/proc/speech/asr/result:
     type: haru_speech_msgs/msg/SpeechToTextResult
-    reversed: true
     qos:
       reliability: reliable
       history: keep_last
@@ -62,7 +43,6 @@ topics:
 
   /perception/proc/speech/asr/result_revision:
     type: haru_speech_msgs/msg/SpeechToTextRevision
-    reversed: true
     qos:
       reliability: reliable
       history: keep_last
@@ -70,69 +50,27 @@ topics:
 
   /perception/proc/speech/localization:
     type: haru_speech_msgs/msg/SoundSourceLocalization
-    reversed: true
     qos:
       reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/proc/speech/control/state:
-    type: haru_speech_msgs/msg/SpeechControlState
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: transient_local
-      history: keep_last
-      depth: 1
-
-  /perception/sensor/audio/capture/state:
-    type: haru_speech_msgs/msg/AudioCaptureState
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: transient_local
-      history: keep_last
-      depth: 1
-
-  /perception/sensor/audio/kinect/cam_1/array:
-    type: haru_speech_msgs/msg/AudioData
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: volatile
-      history: keep_last
-      depth: 10
-
-  /perception/sensor/audio/kinect/cam_1:
-    type: haru_speech_msgs/msg/AudioData
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: volatile
-      history: keep_last
-      depth: 10
-
-  /perception/status/audio/status:
-    type: haru_speech_msgs/msg/AudioSourceStatus
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: volatile
-      history: keep_last
-      depth: 10
-
-  /perception/status/audio/info:
-    type: haru_speech_msgs/msg/AudioSourceInfo
-    reversed: true
-    qos:
-      reliability: reliable
-      durability: transient_local
       history: keep_last
       depth: 10
 
   /perception/fusion/persons:
     type: haru_belief_msgs/msg/PersonsState
-    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/persons/overwritten:
+    type: haru_belief_msgs/msg/PersonsState
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/persons/status/overwriter:
+    type: haru_belief_msgs/msg/PersonOverwriterStatusArray
     qos:
       reliability: reliable
       history: keep_last
@@ -140,15 +78,49 @@ topics:
 
   /perception/fusion/speech_sources:
     type: haru_belief_msgs/msg/SoundSourceAttributionArray
-    reversed: true
     qos:
       reliability: reliable
       history: keep_last
       depth: 10
 
+  /perception/fusion/context:
+    type: haru_belief_msgs/msg/Context
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/robot:
+    type: haru_belief_msgs/msg/RobotState
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/things:
+    type: haru_belief_msgs/msg/ThingsState
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/things/tf:
+    type: haru_belief_msgs/msg/ThingTfArray
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/environment:
+    type: haru_belief_msgs/msg/EnvironmentState
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
   /strawberry/people:
     type: strawberry_ros_msgs/msg/People
-    reversed: true
     qos:
       reliability: reliable
       history: keep_last

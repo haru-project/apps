@@ -33,9 +33,6 @@ x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 x-perception-domain-env: &perception-domain-env
   ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
 
-x-robot-domain-env: &robot-domain-env
-  ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
-
 services:
   # Azure Kinect sensor driver
   # Replay-only usage: leave this service stopped and start the consumers with
@@ -146,7 +143,7 @@ services:
     env_file:
       - ../envs/perception.env
     environment:
-      <<: *robot-domain-env
+      <<: *perception-domain-env
       HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
       HARU_PARAM_AUTO_PREFIXES: HARU_BELIEF
       HARU_BELIEF_DEV_AUTOSTART: "true"
@@ -253,6 +250,7 @@ services:
     <<: *common-ros
 
   perception-domain-service-proxy:
+    profiles: ["robot-service-proxy"]
     image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:feature-asr-improve-local}
     build:
       context: ..

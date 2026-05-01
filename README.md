@@ -228,9 +228,10 @@ bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
 
 ### Isolated perception ROS domain
 
-This branch runs high-bandwidth perception on a separate ROS domain by default.
-Camera and image-processing services use `HARU_PERCEPTION_ROS_DOMAIN_ID`
-(default `20`). Speech, belief, and robot-facing services use
+This branch keeps the `/perception/...` namespace in the perception ROS domain
+by default. Camera, image-processing, speech, audio capture, belief, haru-viz,
+and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `20`).
+Robot/application services outside `/perception` continue to use
 `HARU_ROBOT_ROS_DOMAIN_ID` / `ROS_DOMAIN_ID` (default `0`).
 
 Start the perception stack with:
@@ -245,10 +246,11 @@ or the combined stack with:
 bash scripts/compose.sh all up --force-recreate -d
 ```
 
-The `perception-domain-bridge` container is the only topic bridge between the
-perception and robot/application domains. The `perception-domain-service-proxy`
-container exposes a small allowlist of robot-domain services into the
-perception domain for haru-viz controls. Docker networking is unchanged.
+The `perception-domain-bridge` container is the only default bridge between the
+perception and robot/application domains. It mirrors selected low-bandwidth
+speech and `haru-belief` outputs from domain `20` into domain `0` for
+robot-domain consumers. The `perception-domain-service-proxy` container is
+profile-gated and is not started by default. Docker networking is unchanged.
 The Azure Kinect container mounts only USB devices by default; `/dev/snd` stays
 with the speech stack so the Kinect microphone array is captured by
 `haru-speech`, not by the camera driver.
@@ -256,19 +258,27 @@ with the speech stack so the Kinect microphone array is captured by
 The bridge allowlist is tracked in `config/domain_bridge.yaml`.
 The topic bridge allowlist bridges only low-bandwidth topics:
 
-- perception domain `20` -> robot domain `0`: `/perception/proc/faces`,
-  `/perception/proc/skeletons`, Kinect `camera_info`, `/tf`, and `/tf_static`
-- robot domain `0` -> perception domain `20`:
+- perception domain `20` -> robot domain `0`:
   `/perception/proc/speech/asr/status_array`,
   `/perception/proc/speech/asr/result`,
   `/perception/proc/speech/asr/result_revision`,
   `/perception/proc/speech/localization`,
-  `/perception/proc/speech/control/state`,
+  `/tf`,
+  `/tf_static`,
   `/perception/fusion/persons`,
-  `/perception/fusion/speech_sources`, and `/strawberry/people`
+  `/perception/fusion/persons/overwritten`,
+  `/perception/fusion/persons/status/overwriter`,
+  `/perception/fusion/speech_sources`,
+  `/perception/fusion/context`,
+  `/perception/fusion/robot`,
+  `/perception/fusion/things`,
+  `/perception/fusion/things/tf`,
+  `/perception/fusion/environment`, and `/strawberry/people`
 
-It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, raw audio, hands,
-or debug image topics.
+It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, raw audio, speech
+services, belief services, hands, or debug image topics. TF is bridged so
+robot-domain `agent_reasoner` can resolve perception head frames for fusion
+gazing.
 
 Validation commands:
 
@@ -276,15 +286,20 @@ Validation commands:
 # Existing robot/application domain should not see raw perception image topics.
 ROS_DOMAIN_ID=0 ros2 topic list | rg '/perception/sensor/camera/kinect/.*/(rgb|depth|ir)|ffmpeg|zdepth|depth_to_rgb'
 
-# Existing domain should see bridged perception inputs for belief.
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/skeletons
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/faces
-ROS_DOMAIN_ID=0 ros2 topic echo --once /tf
+# Existing domain should see only the selected low-bandwidth outputs mirrored back.
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/speech/asr/status_array
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/speech/asr/result
+ROS_DOMAIN_ID=0 ros2 topic info /tf
+ROS_DOMAIN_ID=0 ros2 topic info /tf_static
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/environment
+ROS_DOMAIN_ID=0 ros2 topic echo --once /strawberry/people
 
-# Perception domain should see speech and belief state bridged back in.
+# Perception domain should own speech, belief, camera, and audio topics.
 ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/proc/speech/asr/status_array
 ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/proc/speech/asr/result
 ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/sensor/audio/capture/state
 ```
 
 The first command should produce no matches.

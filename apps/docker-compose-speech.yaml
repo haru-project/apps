@@ -31,6 +31,8 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     device_cgroup_rules:
       - "c 116:* rmw"
     volumes:
@@ -50,6 +52,8 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     device_cgroup_rules:
       - "c 116:* rmw"
     volumes:
@@ -69,6 +73,8 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
@@ -85,6 +91,8 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
@@ -102,6 +110,8 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
