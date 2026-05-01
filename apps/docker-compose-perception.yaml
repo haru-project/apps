@@ -176,17 +176,21 @@ services:
       HARU_ROSBRIDGE_RGB_PORT: ${HARU_ROSBRIDGE_RGB_PORT:-9091}
       HARU_ROSBRIDGE_DEPTH_PORT: ${HARU_ROSBRIDGE_DEPTH_PORT:-9092}
       HARU_ROSBRIDGE_MAX_MESSAGE_SIZE: ${HARU_ROSBRIDGE_MAX_MESSAGE_SIZE:-8388608}
+      HARU_RECORDER_RECORDING_ROOT: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
       VITE_ROSBRIDGE_URL: ws://127.0.0.1:${HARU_ROSBRIDGE_PORT:-9090}
       VITE_ROSBRIDGE_FORCE_AUTO_CONNECT: "1"
       VITE_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     network_mode: *network-mode
     restart: unless-stopped
     working_dir: /workspace/haru-viz
-    command: ros2 launch haru_viz haru_viz.launch.py
+    command: ros2 launch /workspace/haru-viz/launch/haru_viz.launch.py
     volumes:
       - type: bind
         source: ../../haru-viz
         target: /workspace/haru-viz
+      - type: bind
+        source: ${HARU_VIZ_HOST_RECORDINGS_DIR:-${HOME}/.local/share/haru_viz/recordings}
+        target: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
       - *common-dev
     <<: *common-ros
     depends_on:
