@@ -85,6 +85,51 @@ topics:
       history: keep_last
       depth: 1
 
+  /perception/sensor/audio/capture/state:
+    type: haru_speech_msgs/msg/AudioCaptureState
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /perception/sensor/audio/kinect/array:
+    type: haru_speech_msgs/msg/AudioData
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+
+  /perception/sensor/audio/kinect:
+    type: haru_speech_msgs/msg/AudioData
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+
+  /perception/status/audio/status:
+    type: haru_speech_msgs/msg/AudioSourceStatus
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+
+  /perception/status/audio/info:
+    type: haru_speech_msgs/msg/AudioSourceInfo
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 10
+
   /perception/fusion/persons:
     type: haru_belief_msgs/msg/PersonsState
     reversed: true
