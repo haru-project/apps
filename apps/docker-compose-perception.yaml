@@ -60,6 +60,7 @@ services:
       - *common-dev
       - *common-run
     <<: *common-ros
+    deploy: *gpu-reservations
 
   # Skeleton pipeline
   skeletons:
