@@ -1,7 +1,7 @@
 # Explicit allowlist for opt-in isolated perception deployments.
-# Domain IDs are supplied by the compose command:
-#   --from ${HARU_PERCEPTION_ROS_DOMAIN_ID} --to ${ROS_DOMAIN_ID}
-name: haru_perception_domain_bridge
+# Domain IDs are supplied by the container environment:
+#   FROM_DOMAIN_ID / TO_DOMAIN_ID
+name: haru_domain_bridge
 from_domain: 0
 to_domain: 0
 

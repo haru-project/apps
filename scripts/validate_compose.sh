@@ -15,7 +15,6 @@ stacks=(
   "ipad:envs/ipad.env:docker-compose-ipad.yaml:"
   "projector:envs/projector.env:docker-compose-projector.yaml:"
   "user:envs/user.env:docker-compose-user.yaml:"
-  "recorder:envs/recorder.env:docker-compose-recorder.yaml:"
   "all:envs/all.env:docker-compose-all.yaml:"
 )
 

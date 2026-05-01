@@ -157,12 +157,12 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
-docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
-docker pull ghcr.io/haru-project/haru-belief:feature-topic-normalize
-docker pull ghcr.io/haru-project/haru-viz:feature-topic-normalize
+docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
@@ -193,11 +193,11 @@ bash scripts/validate_compose.sh
 The default perception stack is intended to run as a tested image set rather than a mix of floating branch lines:
 
 ```text
-azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
-skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
-faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
-haru-belief       ghcr.io/haru-project/haru-belief:feature-topic-normalize
-haru-viz          ghcr.io/haru-project/haru-viz:feature-topic-normalize
+azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
+skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
+haru-belief       ghcr.io/haru-project/haru-belief:feature-asr-improve
+haru-viz          ghcr.io/haru-project/haru-viz:feature-asr-improve
 hands             ghcr.io/haru-project/strawberry-ros-hands:latest
 resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
 ```
@@ -240,7 +240,7 @@ The separate `perception-domain-bridge` container is the only ROS bridge between
 the perception and robot/application domains. Docker networking is unchanged in
 this phase.
 
-The bridge allowlist is tracked in `config/perception_domain_bridge.yaml`.
+The bridge allowlist is tracked in `config/domain_bridge.yaml`.
 It bridges only:
 
 - `/perception/fusion/persons`
@@ -271,20 +271,11 @@ ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /haru_
 
 The first command should produce no matches.
 
-### Perception-domain recorder
+### Perception recording
 
-The recorder is isolated to the perception ROS domain in this branch. It records
-only topics visible on `HARU_PERCEPTION_ROS_DOMAIN_ID`, which includes raw/internal
-perception topics and any speech topics bridged back into perception.
-
-```bash
-HARU_RECORDER_SESSION_ID=trial-001 \
-  bash scripts/compose.sh recorder up --force-recreate -d
-```
-
-Recordings are written under
-`data/perception/haru_recorder/recordings/domains/perception/`. The recorder does
-not attach to the existing robot/application `ROS_DOMAIN_ID`.
+Recording and playback are managed by the `haru-viz` service. Use the recorder
+controls in the haru-viz browser UI rather than launching a standalone
+`haru-recorder` compose stack.
 
 ### Haru Simulator (HS)
 

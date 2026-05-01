@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | recorder | all" >&2
+    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
     exit 1
 fi
 shift
@@ -50,10 +50,6 @@ case "${stack}" in
     user)
         stack_files=("${APPS_DIR}/docker-compose-user.yaml")
         env_file="${ROOT_DIR}/envs/user.env"
-    ;;
-    recorder)
-        stack_files=("${APPS_DIR}/docker-compose-recorder.yaml")
-        env_file="${ROOT_DIR}/envs/recorder.env"
     ;;
     all)
         stack_files=("${APPS_DIR}/docker-compose-all.yaml")

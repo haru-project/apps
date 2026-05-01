@@ -38,7 +38,7 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize}
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -63,7 +63,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -87,7 +87,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -135,7 +135,7 @@ services:
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   haru-belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-topic-normalize}
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -156,7 +156,7 @@ services:
     <<: *common-ros
   # haru-viz browser UI + rosbridge runtime
   haru-viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-topic-normalize}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -204,37 +204,20 @@ services:
     deploy: *gpu-reservations
 
   perception-domain-bridge:
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:local}
-    build:
-      context: ..
-      dockerfile: docker/domain-bridge.Dockerfile
-      args:
-        BASE_IMAGE: ${PERCEPTION_DOMAIN_BRIDGE_BASE_IMAGE:-ghcr.io/haru-project/haru-belief:feature-topic-normalize}
+    image: ${DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
     env_file:
       - ../envs/perception.env
     environment:
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      HARU_PERCEPTION_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
+      FROM_DOMAIN_ID: ${FROM_DOMAIN_ID:-20}
+      TO_DOMAIN_ID: ${TO_DOMAIN_ID:-0}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
-    command:
-      [
-        "ros2",
-        "run",
-        "domain_bridge",
-        "domain_bridge",
-        "--from",
-        "${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}",
-        "--to",
-        "${ROS_DOMAIN_ID:-0}",
-        "/shared/config/perception_domain_bridge.yaml",
-      ]
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
       - type: bind
-        source: ../config/perception_domain_bridge.yaml
-        target: /shared/config/perception_domain_bridge.yaml
+        source: ../config/domain_bridge.yaml
+        target: /shared/config/domain_bridge.yaml
         read_only: true
     depends_on:
       haru-belief:

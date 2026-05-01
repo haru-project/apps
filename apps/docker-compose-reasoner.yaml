@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-topic-normalize
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve
     command:
       [
         "ros2",
@@ -30,7 +30,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-topic-normalize
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve
     command:
       [
         "ros2",
@@ -52,7 +52,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-topic-normalize
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve
     command:
       [
         "ros2",
@@ -76,7 +76,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-topic-normalize
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve
     command:
       [
         "ros2",
@@ -96,7 +96,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-topic-normalize
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve
     command:
       [
         "ros2",
