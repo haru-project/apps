@@ -31,9 +31,10 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
-    devices:
-      - /dev/snd
+    device_cgroup_rules:
+      - "c 116:* rmw"
     volumes:
+      - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
 
@@ -49,7 +50,10 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
+    device_cgroup_rules:
+      - "c 116:* rmw"
     volumes:
+      - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
     profiles: ["multi-audio"]
     restart: unless-stopped
