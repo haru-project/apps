@@ -1,20 +1,28 @@
-# Explicit allowlist for opt-in isolated perception deployments.
-# Domain IDs are supplied by the container environment:
-#   FROM_DOMAIN_ID / TO_DOMAIN_ID
+# Explicit allowlist for isolated perception deployments.
+# The compose service invokes this as --from perception --to robot. Entries with
+# `reversed: true` are robot -> perception so haru-viz can see low-bandwidth
+# robot/speech/belief state without moving raw camera streams.
 name: haru_domain_bridge
 from_domain: 0
 to_domain: 0
 
 topics:
-  /perception/fusion/persons:
-    type: haru_belief_msgs/msg/PersonsState
+  /perception/proc/faces:
+    type: strawberry_ros_msgs/msg/Faces
     qos:
       reliability: reliable
       history: keep_last
       depth: 10
 
-  /strawberry/people:
-    type: strawberry_ros_msgs/msg/People
+  /perception/proc/skeletons:
+    type: strawberry_ros_msgs/msg/Skeletons
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/sensor/camera/kinect/cam_1/camera_info:
+    type: sensor_msgs/msg/CameraInfo
     qos:
       reliability: reliable
       history: keep_last
@@ -36,7 +44,7 @@ topics:
       history: keep_last
       depth: 1
 
-  /haru_speech/speech_to_text/status_array:
+  /perception/proc/speech/asr/status_array:
     type: haru_speech_msgs/msg/SpeechStatusArray
     reversed: true
     qos:
@@ -44,8 +52,57 @@ topics:
       history: keep_last
       depth: 10
 
-  /haru_speech/speech_to_text/result:
+  /perception/proc/speech/asr/result:
     type: haru_speech_msgs/msg/SpeechToTextResult
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/proc/speech/asr/result_revision:
+    type: haru_speech_msgs/msg/SpeechToTextRevision
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/proc/speech/localization:
+    type: haru_speech_msgs/msg/SoundSourceLocalization
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/proc/speech/control/state:
+    type: haru_speech_msgs/msg/SpeechControlState
+    reversed: true
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /perception/fusion/persons:
+    type: haru_belief_msgs/msg/PersonsState
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/speech_sources:
+    type: haru_belief_msgs/msg/SoundSourceAttributionArray
+    reversed: true
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /strawberry/people:
+    type: strawberry_ros_msgs/msg/People
     reversed: true
     qos:
       reliability: reliable

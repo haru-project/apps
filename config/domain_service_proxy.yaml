@@ -1,0 +1,49 @@
+# Explicit robot-domain services exposed into the perception/viz domain.
+# The proxy keeps haru-viz single-domain while allowing the containerized apps
+# deployment to call selected low-bandwidth robot/speech/belief services.
+services:
+  - target: /perception/fusion/set_person_name
+    source: /perception/fusion/set_person_name
+    type: haru_belief_msgs/srv/SetPersonName
+    timeout_sec: 3.0
+  - target: /perception/fusion/link_face_id
+    source: /perception/fusion/link_face_id
+    type: haru_belief_msgs/srv/LinkFaceId
+    timeout_sec: 3.0
+  - target: /perception/fusion/link_voice_id
+    source: /perception/fusion/link_voice_id
+    type: haru_belief_msgs/srv/LinkVoiceId
+    timeout_sec: 3.0
+  - target: /perception/fusion/merge_persons
+    source: /perception/fusion/merge_persons
+    type: haru_belief_msgs/srv/MergePersons
+    timeout_sec: 3.0
+
+  - target: /perception/proc/speech/control/get_state
+    source: /perception/proc/speech/control/get_state
+    type: haru_speech_msgs/srv/GetSpeechControlState
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/set_mode
+    source: /perception/proc/speech/control/set_mode
+    type: haru_speech_msgs/srv/SetSpeechControlMode
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/set_debug_capture
+    source: /perception/proc/speech/control/set_debug_capture
+    type: haru_speech_msgs/srv/SetSpeechDebugCapture
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/set_source_muted
+    source: /perception/proc/speech/control/set_source_muted
+    type: haru_speech_msgs/srv/SetSourceMuted
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/reset_state
+    source: /perception/proc/speech/control/reset_state
+    type: haru_speech_msgs/srv/ResetSpeechState
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/clear_source_voice_state
+    source: /perception/proc/speech/control/clear_source_voice_state
+    type: haru_speech_msgs/srv/ClearSourceVoiceState
+    timeout_sec: 3.0
+  - target: /perception/proc/speech/control/bind_source_voice_to_channel
+    source: /perception/proc/speech/control/bind_source_voice_to_channel
+    type: haru_speech_msgs/srv/SourceBindVoiceToChannel
+    timeout_sec: 3.0

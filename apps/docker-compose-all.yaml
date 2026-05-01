@@ -45,6 +45,14 @@ services:
       haru-belief:
         condition: service_started
 
+  perception-domain-service-proxy:
+    extends:
+      file: docker-compose-perception.yaml
+      service: perception-domain-service-proxy
+    depends_on:
+      haru-belief:
+        condition: service_started
+
   # Speech layer
   audio:
     extends:
@@ -54,20 +62,12 @@ services:
       azure-kinect:
         condition: service_started
 
-  configure:
-    extends:
-      file: docker-compose-speech.yaml
-      service: configure
-    depends_on:
-      audio:
-        condition: service_started
-
   recognition:
     extends:
       file: docker-compose-speech.yaml
       service: recognition
     depends_on:
-      configure:
+      audio:
         condition: service_started
 
   verification:
@@ -75,7 +75,7 @@ services:
       file: docker-compose-speech.yaml
       service: verification
     depends_on:
-      configure:
+      audio:
         condition: service_started
 
   localization:
@@ -83,7 +83,7 @@ services:
       file: docker-compose-speech.yaml
       service: localization
     depends_on:
-      configure:
+      audio:
         condition: service_started
 
   # LLM layer

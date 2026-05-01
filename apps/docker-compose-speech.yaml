@@ -2,7 +2,7 @@ name: haru-speech
 
 services:
   download-models:
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base:feature-asr-improve}
     working_dir: /ros2_ws/src/haru-speech
     command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.download"]
     env_file: ../envs/speech.env
@@ -11,7 +11,7 @@ services:
     profiles: ["setup"]
   
   clear-models:
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base:feature-asr-improve}
     working_dir: /ros2_ws/src/haru-speech
     command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.clear"]
     env_file: ../envs/speech.env
@@ -23,14 +23,11 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     command: [
       "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
-      "capture_mode:=single_device",
-      "capture_device:=${AUDIO_CAPTURE_DEVICE:-zoom_h8}",
-      "source_id:=${AUDIO_SOURCE_ID:-mic_0}",
-      "device:=${AUDIO_DEVICE_NAME:-ZOOM H8}",
+      "capture_mode:=${AUDIO_CAPTURE_MODE:-multi_device}",
       "dev_autostart:=true",
     ]
     env_file: ../envs/speech.env
@@ -44,7 +41,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     command: [
       "ros2", "launch", "haru_speech_ros", "audio_capture.launch.py",
       "config_file:=${AUDIO_CONFIG_FILE}",
@@ -57,26 +54,11 @@ services:
     profiles: ["multi-audio"]
     restart: unless-stopped
 
-  configure:
-    extends:
-      file: compose.common.yaml
-      service: common-ros
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "configure.launch.py",
-      "config_file:=${AUDIO_CONFIGURE_CONFIG_FILE}",
-      "dev_autostart:=true",
-    ]
-    env_file: ../envs/speech.env
-    volumes:
-      - ../data/speech/configs:/shared/configs:rw
-    restart: unless-stopped
-  
   recognition:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve}
     command: [
       "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
       "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
@@ -92,7 +74,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}
     command: [
       "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
       "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
@@ -109,7 +91,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization:feature-asr-improve}
     command: [
       "ros2", "launch", "haru_speech_ros", "sound_localization.launch.py",
       "config_file:=${SOUND_LOCALIZATION_CONFIG_FILE}",
