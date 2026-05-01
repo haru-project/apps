@@ -81,36 +81,36 @@ services:
     type: haru_speech_msgs/srv/SetRawAudioDebugEnabled
     timeout_sec: 5.0
 
-  - target: /perception/sensor/audio/kinect/capture/get_state
-    source: /perception/sensor/audio/kinect/capture/get_state
+  - target: /perception/sensor/audio/kinect/cam_1/capture/get_state
+    source: /perception/sensor/audio/kinect/cam_1/capture/get_state
     type: haru_speech_msgs/srv/GetAudioCaptureState
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/refresh_devices
-    source: /perception/sensor/audio/kinect/capture/refresh_devices
+  - target: /perception/sensor/audio/kinect/cam_1/capture/refresh_devices
+    source: /perception/sensor/audio/kinect/cam_1/capture/refresh_devices
     type: haru_speech_msgs/srv/RefreshAudioCaptureDevices
     timeout_sec: 8.0
-  - target: /perception/sensor/audio/kinect/capture/upsert_device
-    source: /perception/sensor/audio/kinect/capture/upsert_device
+  - target: /perception/sensor/audio/kinect/cam_1/capture/upsert_device
+    source: /perception/sensor/audio/kinect/cam_1/capture/upsert_device
     type: haru_speech_msgs/srv/UpsertAudioCaptureDevice
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/remove_device
-    source: /perception/sensor/audio/kinect/capture/remove_device
+  - target: /perception/sensor/audio/kinect/cam_1/capture/remove_device
+    source: /perception/sensor/audio/kinect/cam_1/capture/remove_device
     type: haru_speech_msgs/srv/RemoveAudioCaptureDevice
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/set_device_enabled
-    source: /perception/sensor/audio/kinect/capture/set_device_enabled
+  - target: /perception/sensor/audio/kinect/cam_1/capture/set_device_enabled
+    source: /perception/sensor/audio/kinect/cam_1/capture/set_device_enabled
     type: haru_speech_msgs/srv/SetAudioCaptureDeviceEnabled
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/set_channel_enabled
-    source: /perception/sensor/audio/kinect/capture/set_channel_enabled
+  - target: /perception/sensor/audio/kinect/cam_1/capture/set_channel_enabled
+    source: /perception/sensor/audio/kinect/cam_1/capture/set_channel_enabled
     type: haru_speech_msgs/srv/SetAudioCaptureChannelEnabled
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/set_kinect_transcription_enabled
-    source: /perception/sensor/audio/kinect/capture/set_kinect_transcription_enabled
+  - target: /perception/sensor/audio/kinect/cam_1/capture/set_kinect_transcription_enabled
+    source: /perception/sensor/audio/kinect/cam_1/capture/set_kinect_transcription_enabled
     type: haru_speech_msgs/srv/SetKinectTranscriptionEnabled
     timeout_sec: 5.0
-  - target: /perception/sensor/audio/kinect/capture/set_raw_debug_enabled
-    source: /perception/sensor/audio/kinect/capture/set_raw_debug_enabled
+  - target: /perception/sensor/audio/kinect/cam_1/capture/set_raw_debug_enabled
+    source: /perception/sensor/audio/kinect/cam_1/capture/set_raw_debug_enabled
     type: haru_speech_msgs/srv/SetRawAudioDebugEnabled
     timeout_sec: 5.0
 

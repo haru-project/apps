@@ -94,7 +94,7 @@ topics:
       history: keep_last
       depth: 1
 
-  /perception/sensor/audio/kinect/array:
+  /perception/sensor/audio/kinect/cam_1/array:
     type: haru_speech_msgs/msg/AudioData
     reversed: true
     qos:
@@ -103,7 +103,7 @@ topics:
       history: keep_last
       depth: 10
 
-  /perception/sensor/audio/kinect:
+  /perception/sensor/audio/kinect/cam_1:
     type: haru_speech_msgs/msg/AudioData
     reversed: true
     qos:
