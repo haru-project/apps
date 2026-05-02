@@ -163,9 +163,8 @@ docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-norma
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-ros-people:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
-docker compose -f apps/docker-compose-perception.yaml build perception-domain-bridge
+docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 docker pull ghcr.io/haru-project/haru-speech-base:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve
@@ -210,7 +209,7 @@ domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 
 `hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
 
-`domain-bridge` uses the generic `haru-domain-bridge-jazzy` image from `ros2-images`. A one-shot helper copies the ROS prefix out of the `haru-viz` image into a named volume, and the bridge mounts that prefix at `/opt/haru_viz_ros` before starting `domain_bridge` from `/opt/ros/jazzy`. This keeps the bridge executable and container generic while sharing the same message type support that `haru-viz` and the integrated recorder use for visualization, recording, and playback.
+`domain-bridge` uses a dedicated prebuilt image. This `apps` repository only wires that image into compose, mounts `config/domain_bridge.yaml`, and can validate that the published image contains the interfaces referenced by that config. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` when testing a new bridge image tag or digest.
 
 `haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 
@@ -431,11 +430,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```
 
     **Expected output**:
-    - Perception, fusion, and monitoring come up on their configured perception tags, while `haru-viz` runs from `ghcr.io/haru-project/haru-viz:develop`
+    - Perception, fusion, visualization, and monitoring come up on their configured perception tags
     - The `haru-viz` web UI is reachable at `http://127.0.0.1:5173`
     - rosbridge stays co-located with `haru-viz` and continues using ports `9090`, `9091`, and `9092`
-
-    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 
 2. Speech layer
 
@@ -444,19 +441,6 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     **Download data**:
     ```bash
     bash scripts/download_speech_data.sh
-    ```
-
-    **Download/Clear models (mandatory before first start)**:
-
-    > **Important:** You **must** download the speech models before starting the speech layer for the first time. Without this step, the `recognition` container will crash on startup.
-
-    ```bash
-    bash scripts/compose.sh speech --profile setup up download-models --force-recreate
-    ```
-
-    To clear and re-download models:
-    ```bash
-    bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
     ```
 
     > **Configuration note:**

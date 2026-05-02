@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
-COMMON_FILE="${APPS_DIR}/compose.common.yaml"
 
 stacks=(
   "perception:envs/perception.env:docker-compose-perception.yaml:"
@@ -21,7 +20,7 @@ stacks=(
 for entry in "${stacks[@]}"; do
   IFS=":" read -r name env_path file_names profiles <<< "${entry}"
   echo "Validating ${name}..."
-  cmd=(docker compose -f "${COMMON_FILE}")
+  cmd=(docker compose)
   IFS="," read -ra files <<< "${file_names}"
   for file_name in "${files[@]}"; do
     cmd+=(-f "${APPS_DIR}/${file_name}")

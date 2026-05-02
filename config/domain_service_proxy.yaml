@@ -1,7 +1,0 @@
-# Optional apps-level service proxy for non-perception robot services.
-#
-# `/perception/...` services are native in the perception domain and should not
-# be proxied from ROS_DOMAIN_ID=0. Keep this empty unless a future haru-viz
-# control needs to call a robot-domain service outside the `/perception`
-# namespace.
-services: []

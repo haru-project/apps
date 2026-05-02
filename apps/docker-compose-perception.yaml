@@ -33,9 +33,6 @@ x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 x-perception-domain-env: &perception-domain-env
   ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
 
-volumes:
-  haru-viz-domain-bridge-ros:
-
 services:
   # Azure Kinect sensor driver
   # Replay-only usage: leave this service stopped and start the consumers with
@@ -67,6 +64,88 @@ services:
       - *common-run
     <<: *common-ros
     deploy: *gpu-reservations
+
+  # Compatibility feed for packages that still consume sensor_msgs/CompressedImage.
+  rgb-compressed-republisher:
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
+    env_file:
+      - ../envs/perception.env
+    environment:
+      <<: *perception-domain-env
+      RGB_COMPRESSED_REPUBLISHER_INPUT_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/rgb
+      RGB_COMPRESSED_REPUBLISHER_OUTPUT_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/rgb/compressed
+      RGB_COMPRESSED_REPUBLISHER_JPEG_QUALITY: ${RGB_COMPRESSED_REPUBLISHER_JPEG_QUALITY:-85}
+    network_mode: *network-mode
+    restart: unless-stopped
+    entrypoint: bash
+    command:
+      - -lc
+      - |
+        set +u
+        source /opt/ros/jazzy/setup.bash
+        source /opt/ros/jazzy/workspace/install/setup.bash 2>/dev/null || true
+        python3 - <<'PY'
+        import os
+
+        import cv2
+        import rclpy
+        from cv_bridge import CvBridge
+        from rclpy.qos import (
+            DurabilityPolicy,
+            HistoryPolicy,
+            QoSProfile,
+            ReliabilityPolicy,
+        )
+        from sensor_msgs.msg import CompressedImage, Image
+
+        rclpy.init()
+        node = rclpy.create_node("rgb_compressed_republisher")
+        bridge = CvBridge()
+        in_topic = os.environ["RGB_COMPRESSED_REPUBLISHER_INPUT_TOPIC"]
+        out_topic = os.environ["RGB_COMPRESSED_REPUBLISHER_OUTPUT_TOPIC"]
+        jpeg_quality = int(os.environ.get("RGB_COMPRESSED_REPUBLISHER_JPEG_QUALITY", "85"))
+
+        sub_qos = QoSProfile(
+            depth=5,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
+        pub_qos = QoSProfile(
+            depth=5,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+        )
+        pub = node.create_publisher(CompressedImage, out_topic, pub_qos)
+
+        def republish(msg):
+            try:
+                image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+                ok, encoded = cv2.imencode(
+                    ".jpg",
+                    image,
+                    [int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality],
+                )
+                if not ok:
+                    node.get_logger().warning("JPEG encode failed")
+                    return
+                out = CompressedImage()
+                out.header = msg.header
+                out.format = "jpeg"
+                out.data = encoded.tobytes()
+                pub.publish(out)
+            except Exception as exc:
+                node.get_logger().error(f"failed to republish compressed image: {exc}")
+
+        node.create_subscription(Image, in_topic, republish, sub_qos)
+        node.get_logger().info(f"republishing {in_topic} -> {out_topic}")
+        rclpy.spin(node)
+        PY
+    depends_on:
+      azure-kinect:
+        condition: service_started
+    <<: *common-ros
 
   # Skeleton pipeline
   skeletons:
@@ -139,6 +218,9 @@ services:
       - *common-root-xauth
       - *common-dev
     <<: *common-ros
+    depends_on:
+      rgb-compressed-republisher:
+        condition: service_started
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   haru-belief:
@@ -177,13 +259,19 @@ services:
       HARU_ROSBRIDGE_DEPTH_PORT: ${HARU_ROSBRIDGE_DEPTH_PORT:-9092}
       HARU_ROSBRIDGE_MAX_MESSAGE_SIZE: ${HARU_ROSBRIDGE_MAX_MESSAGE_SIZE:-8388608}
       HARU_RECORDER_RECORDING_ROOT: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
+      HARU_PARAM__WEB_UI_HOST: ${HARU_VIZ_UI_HOST:-0.0.0.0}
+      HARU_PARAM__WEB_UI_PORT: ${HARU_VIZ_UI_PORT:-5173}
+      HARU_PARAM__ROSBRIDGE_PORT: ${HARU_ROSBRIDGE_PORT:-9090}
+      HARU_PARAM__ROSBRIDGE_RGB_PORT: ${HARU_ROSBRIDGE_RGB_PORT:-9091}
+      HARU_PARAM__ROSBRIDGE_DEPTH_PORT: ${HARU_ROSBRIDGE_DEPTH_PORT:-9092}
+      HARU_PARAM__ROSBRIDGE_MAX_MESSAGE_SIZE: ${HARU_ROSBRIDGE_MAX_MESSAGE_SIZE:-8388608}
+      HARU_PARAM__RECORDING_ROOT: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
       VITE_ROSBRIDGE_URL: ws://127.0.0.1:${HARU_ROSBRIDGE_PORT:-9090}
       VITE_ROSBRIDGE_FORCE_AUTO_CONNECT: "1"
       VITE_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
     network_mode: *network-mode
     restart: unless-stopped
     working_dir: /workspace/haru-viz
-    command: ros2 launch /workspace/haru-viz/launch/haru_viz.launch.py
     volumes:
       - type: bind
         source: ../../haru-viz
@@ -196,23 +284,6 @@ services:
     depends_on:
       haru-belief:
         condition: service_started
-
-  haru-viz-domain-bridge-ros:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
-    env_file:
-      - ../envs/perception.env
-    command:
-      [
-        "bash",
-        "-lc",
-        "find /shared/haru_viz_ros -mindepth 1 -maxdepth 1 -exec rm -rf {} + && cp -a /opt/ros/jazzy/. /shared/haru_viz_ros/ && test -f /shared/haru_viz_ros/setup.bash && test -f /shared/haru_viz_ros/workspace/install/setup.bash",
-      ]
-    restart: "no"
-    volumes:
-      - type: volume
-        source: haru-viz-domain-bridge-ros
-        target: /shared/haru_viz_ros
-    <<: *common-ros
 
   # Resource monitor (optional; no GPU usage required but kept here for convenience)
   resource-monitor:
@@ -241,12 +312,6 @@ services:
       DOMAIN_BRIDGE_CONFIG: /shared/config/domain_bridge.yaml
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
-    command:
-      [
-        "bash",
-        "-lc",
-        "set +u; source /opt/ros/jazzy/setup.bash; source /opt/haru_viz_ros/local_setup.bash; if [ -f /opt/haru_viz_ros/workspace/install/local_setup.bash ]; then source /opt/haru_viz_ros/workspace/install/local_setup.bash; fi; set -u; exec ros2 run domain_bridge domain_bridge --from \"${FROM_DOMAIN_ID:-20}\" --to \"${TO_DOMAIN_ID:-0}\" /shared/config/domain_bridge.yaml",
-      ]
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -254,13 +319,7 @@ services:
         source: ../config/domain_bridge.yaml
         target: /shared/config/domain_bridge.yaml
         read_only: true
-      - type: volume
-        source: haru-viz-domain-bridge-ros
-        target: /opt/haru_viz_ros
-        read_only: true
     depends_on:
-      haru-viz-domain-bridge-ros:
-        condition: service_completed_successfully
       haru-belief:
         condition: service_started
     <<: *common-ros

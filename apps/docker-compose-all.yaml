@@ -1,14 +1,19 @@
 name: haru-all
 
-volumes:
-  haru-viz-domain-bridge-ros:
-
 services:
   # Perception layer
   azure-kinect:
     extends:
       file: docker-compose-perception.yaml
       service: azure-kinect
+
+  rgb-compressed-republisher:
+    extends:
+      file: docker-compose-perception.yaml
+      service: rgb-compressed-republisher
+    depends_on:
+      azure-kinect:
+        condition: service_started
 
   faces:
     extends:
@@ -34,11 +39,6 @@ services:
     extends:
       file: docker-compose-perception.yaml
       service: haru-viz
-
-  haru-viz-domain-bridge-ros:
-    extends:
-      file: docker-compose-perception.yaml
-      service: haru-viz-domain-bridge-ros
 
   resource-monitor:
     extends:
