@@ -1,0 +1,16 @@
+{
+    "app_id": "20260129",
+    "episode_id": 1,
+    "episode_name": "School",
+    "num_of_stages": 5,
+    "stages_description": [
+        "Avatar",
+        "Compare and Share",
+        "Kanji",
+        "Photosharing",
+        "Translation"
+    ],
+    "country_name": "Spain",
+    "dialog_agent": "Hem-Episode-2",
+    "haru_id": "haru-35"
+}
