@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
 
 stacks=(
+  "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
   "perception:envs/perception.env:docker-compose-perception.yaml:"
   "speech:envs/speech.env:docker-compose-speech.yaml:"
   "llm:envs/llm.env:docker-compose-llm.yaml:"

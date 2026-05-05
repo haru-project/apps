@@ -1,0 +1,23 @@
+name: haru-domain-bridge
+
+services:
+  domain-bridge:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
+    env_file:
+      - ../envs/domain-bridge.env
+    environment:
+      FROM_DOMAIN_ID: ${FROM_DOMAIN_ID:-200}
+      TO_DOMAIN_ID: ${TO_DOMAIN_ID:-0}
+      DOMAIN_BRIDGE_CONFIG: /shared/config/domain_bridge.yaml
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ../config/domain_bridge.yaml
+        target: /shared/config/domain_bridge.yaml
+        read_only: true

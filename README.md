@@ -160,10 +160,8 @@ To install it, run:
 docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
-docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
 docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 docker pull ghcr.io/haru-project/haru-speech-base:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
@@ -200,18 +198,16 @@ The default perception stack is intended to run as a tested image set rather tha
 azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
 faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
-haru-belief       ghcr.io/haru-project/haru-belief:feature-asr-improve
-haru-viz          ghcr.io/haru-project/haru-viz:feature-asr-improve
-hands             ghcr.io/haru-project/strawberry-ros-hands:latest
-resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
+belief            ghcr.io/haru-project/haru-belief:feature-asr-improve
+viz               ghcr.io/haru-project/haru-viz:feature-asr-improve
 domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 ```
 
-`hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
 
-`domain-bridge` uses a dedicated prebuilt image. This `apps` repository only wires that image into compose, mounts `config/domain_bridge.yaml`, and can validate that the published image contains the interfaces referenced by that config. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` when testing a new bridge image tag or digest.
+`domain-bridge` uses a dedicated prebuilt image. This `apps` repository wires that image into a dedicated compose project, mounts `config/domain_bridge.yaml`, and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper automatically starts this single bridge project before `perception`, `speech`, or `all` stacks, so those stacks do not run duplicate bridge containers. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
 
-`haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
+The `belief` and `viz` services should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 
 ### All-in-one compose (single file)
 
@@ -229,7 +225,7 @@ bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
 
 This branch keeps the `/perception/...` namespace in the perception ROS domain
 by default. Camera, image-processing, speech, audio capture, belief, haru-viz,
-and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `20`).
+and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `200`).
 Robot/application services outside `/perception` continue to use
 `HARU_ROBOT_ROS_DOMAIN_ID` / `ROS_DOMAIN_ID` (default `0`).
 
@@ -245,10 +241,12 @@ or the combined stack with:
 bash scripts/compose.sh all up --force-recreate -d
 ```
 
-The `perception-domain-bridge` container is the only default bridge between the
+The `domain-bridge` container is the only default bridge between the
 perception and robot/application domains. It mirrors selected low-bandwidth
-speech and `haru-belief` outputs from domain `20` into domain `0` for
-robot-domain consumers. Docker networking is unchanged.
+speech and belief outputs from domain `200` into domain `0` for
+robot-domain consumers. It runs in its own compose project and is started
+automatically by `scripts/compose.sh perception up`, `scripts/compose.sh speech
+up`, and `scripts/compose.sh all up`. Docker networking is unchanged.
 The Azure Kinect container mounts only USB devices by default; `/dev/snd` stays
 with the speech stack so the Kinect microphone array is captured by
 `haru-speech`, not by the camera driver.
@@ -256,7 +254,7 @@ with the speech stack so the Kinect microphone array is captured by
 The bridge allowlist is tracked in `config/domain_bridge.yaml`.
 The topic bridge allowlist bridges only low-bandwidth topics:
 
-- perception domain `20` -> robot domain `0`:
+- perception domain `200` -> robot domain `0`:
   `/perception/proc/speech/asr/status_array`,
   `/perception/proc/speech/asr/result`,
   `/perception/proc/speech/asr/result_revision`,
@@ -274,7 +272,7 @@ The topic bridge allowlist bridges only low-bandwidth topics:
   `/perception/fusion/environment`, and `/strawberry/people`
 
 It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, raw audio, speech
-services, belief services, hands, or debug image topics. TF is bridged so
+services, belief services, or debug image topics. TF is bridged so
 robot-domain `agent_reasoner` can resolve perception head frames for fusion
 gazing.
 
@@ -294,17 +292,17 @@ ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/environment
 ROS_DOMAIN_ID=0 ros2 topic echo --once /strawberry/people
 
 # Perception domain should own speech, belief, camera, and audio topics.
-ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/proc/speech/asr/status_array
-ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/proc/speech/asr/result
-ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/fusion/persons
-ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /perception/sensor/audio/capture/state
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/proc/speech/asr/status_array
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/proc/speech/asr/result
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/sensor/audio/capture/state
 ```
 
 The first command should produce no matches.
 
 ### Perception recording
 
-Recording and playback are managed by the `haru-viz` service. Use the recorder
+Recording and playback are managed by the `viz` service. Use the recorder
 controls in the haru-viz browser UI rather than launching a standalone
 `haru-recorder` compose stack.
 
@@ -426,13 +424,13 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect skeletons faces hands haru-belief haru-viz resource-monitor --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces belief viz --force-recreate -d
     ```
 
     **Expected output**:
     - Perception, fusion, visualization, and monitoring come up on their configured perception tags
-    - The `haru-viz` web UI is reachable at `http://127.0.0.1:5173`
-    - rosbridge stays co-located with `haru-viz` and continues using ports `9090`, `9091`, and `9092`
+    - The haru-viz web UI is reachable at `http://127.0.0.1:5173`
+    - rosbridge stays co-located with the `viz` service and continues using ports `9090`, `9091`, and `9092`
 
 2. Speech layer
 
@@ -456,6 +454,10 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```bash
     bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
     ```
+
+    The compose helper automatically starts the dedicated `domain-bridge` stack
+    first, so speech can mirror low-bandwidth outputs back to the
+    robot/application domain even when the perception stack is not running.
 
     **LifeCycle commands**:
     Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.

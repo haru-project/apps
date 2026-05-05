@@ -1,13 +1,13 @@
 # One-way bridge for robot-domain consumers of low-bandwidth perception outputs.
 #
 # `/perception/...` publishers and services are authoritative in the perception
-# domain. This bridge mirrors selected speech and haru-belief outputs into the
+# domain. This bridge mirrors selected speech and belief outputs into the
 # robot domain for application consumers that still run with ROS_DOMAIN_ID=0. It
 # does not bridge raw camera streams, raw audio, speech services, or belief
 # services. `/tf` and `/tf_static` are bridged because robot-domain
 # agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
-from_domain: 20
+from_domain: 200
 to_domain: 0
 
 topics:

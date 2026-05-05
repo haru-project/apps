@@ -7,14 +7,6 @@ services:
       file: docker-compose-perception.yaml
       service: azure-kinect
 
-  rgb-compressed-republisher:
-    extends:
-      file: docker-compose-perception.yaml
-      service: rgb-compressed-republisher
-    depends_on:
-      azure-kinect:
-        condition: service_started
-
   faces:
     extends:
       file: docker-compose-perception.yaml
@@ -25,33 +17,15 @@ services:
       file: docker-compose-perception.yaml
       service: skeletons
 
-  hands:
+  belief:
     extends:
       file: docker-compose-perception.yaml
-      service: hands
+      service: belief
 
-  haru-belief:
+  viz:
     extends:
       file: docker-compose-perception.yaml
-      service: haru-belief
-
-  haru-viz:
-    extends:
-      file: docker-compose-perception.yaml
-      service: haru-viz
-
-  resource-monitor:
-    extends:
-      file: docker-compose-perception.yaml
-      service: resource-monitor
-
-  perception-domain-bridge:
-    extends:
-      file: docker-compose-perception.yaml
-      service: perception-domain-bridge
-    depends_on:
-      haru-belief:
-        condition: service_started
+      service: viz
 
   # Speech layer
   audio:
