@@ -93,7 +93,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:

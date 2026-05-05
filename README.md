@@ -159,7 +159,7 @@ To install it, run:
 ```bash
 docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
@@ -197,7 +197,7 @@ The default perception stack is intended to run as a tested image set rather tha
 ```text
 azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
 skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
 belief            ghcr.io/haru-project/haru-belief:feature-asr-improve
 viz               ghcr.io/haru-project/haru-viz:feature-asr-improve
 domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
@@ -208,6 +208,12 @@ Override any service image with `*_IMAGE=...` in `envs/perception.env` or the sh
 `domain-bridge` uses a dedicated prebuilt image. This `apps` repository wires that image into a dedicated compose project, mounts `config/domain_bridge.yaml`, and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper automatically starts this single bridge project before `perception`, `speech`, or `all` stacks, so those stacks do not run duplicate bridge containers. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
 
 The `belief` and `viz` services should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
+
+Perception model downloads are persisted outside container writable layers. Skeleton models mount at `~/haru-perception-cache/skeletons/models`; faces data, InsightFace cache, and recognition artifacts mount under `apps/data/perception` through `FACES_DATA_ROOT=/ros/strawberry_ros_faces_module`. To migrate existing local caches from older `.ros` paths without deleting the originals, run:
+
+```bash
+bash scripts/migrate_runtime_caches.sh
+```
 
 ### All-in-one compose (single file)
 
