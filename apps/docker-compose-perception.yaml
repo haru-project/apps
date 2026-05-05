@@ -82,10 +82,12 @@ services:
       SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/depth_to_rgb
       SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/camera_info
       SKELETONS_OUTPUT_TOPIC_SKELETONS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons
+      SKELETONS_MODEL_CACHE_DIR: /shared/skeletons/models
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
       - *common-dev
+      - ~/haru-perception-cache/skeletons/models:/shared/skeletons/models:rw
     <<: *common-ros
     deploy: *gpu-reservations
 
