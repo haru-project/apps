@@ -5,7 +5,7 @@ name: haru-perception
 x-nvidia-device: &nvidia-device
   driver: nvidia
   count: all
-  capabilities: [gpu]
+  capabilities: [ gpu ]
 
 x-gpu-reservations: &gpu-reservations
   resources:
@@ -19,6 +19,7 @@ x-common-docker-xauth: &common-docker-xauth "/tmp/.docker.xauth:/tmp/.docker.xau
 x-common-root-xauth: &common-root-xauth "${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
 
 x-common-dev: &common-dev "/dev:/dev:rw"
+x-kinect-usb-dev: &kinect-usb-dev "/dev/bus/usb:/dev/bus/usb:rw"
 x-common-run: &common-run "/run:/run:rw"
 
 # Common ROS shutdown behavior
@@ -30,7 +31,7 @@ x-common-ros: &common-ros
 x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 
 x-perception-domain-env: &perception-domain-env
-  ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
+  ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
 
 services:
   # Azure Kinect sensor driver
@@ -38,7 +39,7 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize}
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -48,8 +49,10 @@ services:
       HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
-      AZURE_KINECT_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect
-      AZURE_KINECT_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1
+      AZURE_KINECT_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect
+      AZURE_KINECT_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1
+      AZURE_KINECT_AUDIO_ENABLED: ${AZURE_KINECT_AUDIO_ENABLED:-false}
+      AZURE_KINECT_PUBLISH_AUDIO_OPUS: ${AZURE_KINECT_PUBLISH_AUDIO_OPUS:-false}
     network_mode: *network-mode
     ipc: host
     privileged: true
@@ -57,13 +60,14 @@ services:
     volumes:
       - *common-x11
       - *common-root-xauth
-      - *common-dev
+      - *kinect-usb-dev
       - *common-run
     <<: *common-ros
+    deploy: *gpu-reservations
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -74,20 +78,22 @@ services:
       SKELETONS_USE_SIM_TIME: ${PERCEPTION_USE_SIM_TIME:-false}
       SKELETONS_USE_FFMPEG_DECODE_BRIDGE: "false"
       SKELETONS_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      SKELETONS_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
-      SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/depth_to_rgb
-      SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/camera_info
+      SKELETONS_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/rgb
+      SKELETONS_DEPTH_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/depth_to_rgb
+      SKELETONS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/camera_info
       SKELETONS_OUTPUT_TOPIC_SKELETONS: ${HARU_TOPIC_PREFIX:-}/perception/proc/skeletons
+      SKELETONS_MODEL_CACHE_DIR: /shared/skeletons/models
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
       - *common-dev
+      - ~/haru-perception-cache/skeletons/models:/shared/skeletons/models:rw
     <<: *common-ros
     deploy: *gpu-reservations
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -99,8 +105,8 @@ services:
       FACES_USE_FFMPEG_DECODE_BRIDGE: "false"
       FACES_DATA_ROOT: /ros/strawberry_ros_faces_module
       FACES_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      FACES_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
-      FACES_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/camera_info
+      FACES_RGB_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/rgb
+      FACES_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/camera/kinect/cam_1/camera_info
     network_mode: *network-mode
     restart: unless-stopped
     volumes:
@@ -109,33 +115,9 @@ services:
         target: /ros/strawberry_ros_faces_module
     <<: *common-ros
     deploy: *gpu-reservations
-  # Hands module
-  hands:
-    image: ${HANDS_IMAGE:-ghcr.io/haru-project/strawberry-ros-hands:latest}
-    env_file:
-      - ../envs/perception.env
-    environment:
-      <<: *perception-domain-env
-      DISPLAY: ${DISPLAY}
-      XAUTHORITY: /root/.Xauthority
-      HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
-      HARU_PARAM_AUTO_PREFIXES: HANDS
-      HANDS_DEV_AUTOSTART: "true"
-      HANDS_NAMESPACE: ${HARU_TOPIC_PREFIX:-}/perception/proc
-      HANDS_CAMERA_NAME: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb
-      HANDS_IMAGE_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/rgb/compressed
-      HANDS_CAMERA_INFO_TOPIC: ${HARU_TOPIC_PREFIX:-}/perception/sensor/kinect/cam_1/camera_info
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
-      - *common-x11
-      - *common-root-xauth
-      - *common-dev
-    <<: *common-ros
-    deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
-  haru-belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-topic-normalize}
+  belief:
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -154,9 +136,9 @@ services:
         target: /ros/haru_perception_data
       - *common-dev
     <<: *common-ros
-  # haru-viz browser UI + rosbridge runtime
-  haru-viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-topic-normalize}
+  # viz service: haru-viz browser UI + rosbridge runtime
+  viz:
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
     env_file:
       - ../envs/perception.env
     environment:
@@ -169,74 +151,29 @@ services:
       HARU_ROSBRIDGE_RGB_PORT: ${HARU_ROSBRIDGE_RGB_PORT:-9091}
       HARU_ROSBRIDGE_DEPTH_PORT: ${HARU_ROSBRIDGE_DEPTH_PORT:-9092}
       HARU_ROSBRIDGE_MAX_MESSAGE_SIZE: ${HARU_ROSBRIDGE_MAX_MESSAGE_SIZE:-8388608}
+      HARU_RECORDER_RECORDING_ROOT: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
+      HARU_PARAM__WEB_UI_HOST: ${HARU_VIZ_UI_HOST:-0.0.0.0}
+      HARU_PARAM__WEB_UI_PORT: ${HARU_VIZ_UI_PORT:-5173}
+      HARU_PARAM__ROSBRIDGE_PORT: ${HARU_ROSBRIDGE_PORT:-9090}
+      HARU_PARAM__ROSBRIDGE_RGB_PORT: ${HARU_ROSBRIDGE_RGB_PORT:-9091}
+      HARU_PARAM__ROSBRIDGE_DEPTH_PORT: ${HARU_ROSBRIDGE_DEPTH_PORT:-9092}
+      HARU_PARAM__ROSBRIDGE_MAX_MESSAGE_SIZE: ${HARU_ROSBRIDGE_MAX_MESSAGE_SIZE:-8388608}
+      HARU_PARAM__RECORDING_ROOT: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
       VITE_ROSBRIDGE_URL: ws://127.0.0.1:${HARU_ROSBRIDGE_PORT:-9090}
       VITE_ROSBRIDGE_FORCE_AUTO_CONNECT: "1"
-      VITE_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
+      VITE_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
     network_mode: *network-mode
     restart: unless-stopped
     working_dir: /workspace/haru-viz
-    command: ros2 launch haru_viz haru_viz.launch.py
     volumes:
       - type: bind
         source: ../../haru-viz
         target: /workspace/haru-viz
-      - *common-dev
-    <<: *common-ros
-    depends_on:
-      haru-belief:
-        condition: service_started
-
-  # Resource monitor (optional; no GPU usage required but kept here for convenience)
-  resource-monitor:
-    image: ${RESOURCE_MONITOR_IMAGE:-ghcr.io/haru-project/strawberry-resource-monitor:latest}
-    env_file:
-      - ../envs/perception.env
-    environment:
-      <<: *perception-domain-env
-      HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
-      - *common-x11
-      - *common-docker-xauth
-      - *common-dev
-    <<: *common-ros
-    deploy: *gpu-reservations
-
-  perception-domain-bridge:
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-haru-perception-domain-bridge:local}
-    build:
-      context: ..
-      dockerfile: docker/domain-bridge.Dockerfile
-      args:
-        BASE_IMAGE: ${PERCEPTION_DOMAIN_BRIDGE_BASE_IMAGE:-ghcr.io/haru-project/haru-belief:feature-topic-normalize}
-    env_file:
-      - ../envs/perception.env
-    environment:
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      HARU_PERCEPTION_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
-    command:
-      [
-        "ros2",
-        "run",
-        "domain_bridge",
-        "domain_bridge",
-        "--from",
-        "${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}",
-        "--to",
-        "${ROS_DOMAIN_ID:-0}",
-        "/shared/config/perception_domain_bridge.yaml",
-      ]
-    network_mode: *network-mode
-    restart: unless-stopped
-    volumes:
       - type: bind
-        source: ../config/perception_domain_bridge.yaml
-        target: /shared/config/perception_domain_bridge.yaml
-        read_only: true
-    depends_on:
-      haru-belief:
-        condition: service_started
+        source: ${HARU_VIZ_HOST_RECORDINGS_DIR:-${HOME}/.local/share/haru_viz/recordings}
+        target: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}
+      - *common-dev
     <<: *common-ros
+    depends_on:
+      belief:
+        condition: service_started

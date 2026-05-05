@@ -66,10 +66,10 @@ bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
 
 # Perception services
-bash scripts/compose.sh perception up azure-kinect faces hands people --force-recreate -d
+bash scripts/compose.sh perception up azure-kinect faces belief viz --force-recreate -d
 
 # Speech services
-bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
+bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
 
 # LLM services
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d

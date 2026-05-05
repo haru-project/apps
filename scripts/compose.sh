@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | recorder | all" >&2
+    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
     exit 1
 fi
 shift
@@ -15,6 +15,10 @@ shift
 stack_files=()
 
 case "${stack}" in
+    domain-bridge)
+        stack_files=("${APPS_DIR}/docker-compose-domain-bridge.yaml")
+        env_file="${ROOT_DIR}/envs/domain-bridge.env"
+    ;;
     perception)
         stack_files=("${APPS_DIR}/docker-compose-perception.yaml")
         env_file="${ROOT_DIR}/envs/perception.env"
@@ -51,10 +55,6 @@ case "${stack}" in
         stack_files=("${APPS_DIR}/docker-compose-user.yaml")
         env_file="${ROOT_DIR}/envs/user.env"
     ;;
-    recorder)
-        stack_files=("${APPS_DIR}/docker-compose-recorder.yaml")
-        env_file="${ROOT_DIR}/envs/recorder.env"
-    ;;
     all)
         stack_files=("${APPS_DIR}/docker-compose-all.yaml")
         env_file="${ROOT_DIR}/envs/all.env"
@@ -64,6 +64,25 @@ case "${stack}" in
         exit 1
     ;;
 esac
+
+should_ensure_domain_bridge=false
+case "${stack}" in
+    perception|speech|all)
+        for arg in "$@"; do
+            if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
+                should_ensure_domain_bridge=true
+                break
+            fi
+        done
+    ;;
+esac
+
+if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
+    docker compose \
+        -f "${APPS_DIR}/docker-compose-domain-bridge.yaml" \
+        --env-file "${ROOT_DIR}/envs/domain-bridge.env" \
+        up -d --no-recreate
+fi
 
 cmd=(docker compose)
 for stack_file in "${stack_files[@]}"; do

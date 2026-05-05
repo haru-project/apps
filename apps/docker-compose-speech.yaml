@@ -1,67 +1,53 @@
 name: haru-speech
 
 services:
-  download-models:
-    image: ghcr.io/haru-project/haru-speech:ros2
-    working_dir: /ros2_ws/src/haru-speech
-    command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.download"]
-    env_file: ../envs/speech.env
-    volumes:
-      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
-    profiles: ["setup"]
-  
-  clear-models:
-    image: ghcr.io/haru-project/haru-speech:ros2
-    working_dir: /ros2_ws/src/haru-speech
-    command: ["/bin/bash", "-c", "/root/.local/bin/uv pip install --python $PACKAGE_VENV --upgrade pip && $PACKAGE_VENV -m haru_speech.models.clear"]
-    env_file: ../envs/speech.env
-    volumes:
-      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
-    profiles: ["setup"]
-
   audio:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "audio.launch.py",
-      "config_file:=${AUDIO_CONFIG_FILE}",
-      "dev_autostart:=true",
-    ]
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     env_file: ../envs/speech.env
-    devices:
-      - /dev/snd
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
+      HARU_PARAM__AUDIO_CAPTURE_MODE: ${AUDIO_CAPTURE_MODE:-multi_device}
+      HARU_PARAM__DEV_AUTOSTART: "true"
+    device_cgroup_rules:
+      - "c 116:* rmw"
     volumes:
+      - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
     restart: unless-stopped
 
-  configure:
+  audio-capture-manager:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "configure.launch.py",
-      "config_file:=${AUDIO_CONFIGURE_CONFIG_FILE}",
-      "dev_autostart:=true",
-    ]
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
+      HARU_PARAM__AUDIO_CAPTURE_MODE: manager
+      HARU_PARAM__DEV_AUTOSTART: "true"
+    device_cgroup_rules:
+      - "c 116:* rmw"
     volumes:
+      - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
+    profiles: ["multi-audio"]
     restart: unless-stopped
-  
+
   recognition:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
-      "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
-      "dev_autostart:=true",
-    ]
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve}
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${SPEECH_RECOGNITION_CONFIG_FILE}
+      HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
@@ -71,13 +57,12 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "speaker_verification.launch.py",
-      "config_file:=${SPEAKER_VERIFICATION_CONFIG_FILE}",
-      "dev_autostart:=true",
-    ]
+    image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${SPEAKER_VERIFICATION_CONFIG_FILE}
+      HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
@@ -88,12 +73,12 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
-    command: [
-      "ros2", "launch", "haru_speech_ros", "sound_localization.launch.py",
-      "config_file:=${SOUND_LOCALIZATION_CONFIG_FILE}",
-    ]
+    image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization:feature-asr-improve}
     env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${SOUND_LOCALIZATION_CONFIG_FILE}
+      HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw

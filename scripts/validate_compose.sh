@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
-COMMON_FILE="${APPS_DIR}/compose.common.yaml"
 
 stacks=(
+  "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
   "perception:envs/perception.env:docker-compose-perception.yaml:"
   "speech:envs/speech.env:docker-compose-speech.yaml:"
   "llm:envs/llm.env:docker-compose-llm.yaml:"
@@ -15,14 +15,13 @@ stacks=(
   "ipad:envs/ipad.env:docker-compose-ipad.yaml:"
   "projector:envs/projector.env:docker-compose-projector.yaml:"
   "user:envs/user.env:docker-compose-user.yaml:"
-  "recorder:envs/recorder.env:docker-compose-recorder.yaml:"
   "all:envs/all.env:docker-compose-all.yaml:"
 )
 
 for entry in "${stacks[@]}"; do
   IFS=":" read -r name env_path file_names profiles <<< "${entry}"
   echo "Validating ${name}..."
-  cmd=(docker compose -f "${COMMON_FILE}")
+  cmd=(docker compose)
   IFS="," read -ra files <<< "${file_names}"
   for file_name in "${files[@]}"; do
     cmd+=(-f "${APPS_DIR}/${file_name}")
