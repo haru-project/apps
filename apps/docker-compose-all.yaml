@@ -22,20 +22,28 @@ services:
       file: docker-compose-perception.yaml
       service: hands
 
-  people:
+  haru-belief:
     extends:
       file: docker-compose-perception.yaml
-      service: people
+      service: haru-belief
 
-  visualization:
+  haru-viz:
     extends:
       file: docker-compose-perception.yaml
-      service: visualization
+      service: haru-viz
 
   resource-monitor:
     extends:
       file: docker-compose-perception.yaml
       service: resource-monitor
+
+  perception-domain-bridge:
+    extends:
+      file: docker-compose-perception.yaml
+      service: perception-domain-bridge
+    depends_on:
+      haru-belief:
+        condition: service_started
 
   # Speech layer
   audio:
