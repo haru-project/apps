@@ -28,7 +28,7 @@ services:
       "--gptsovits_url", "http://127.0.0.1:9880",
       "--cerevoice_url", "http://127.0.0.1:8015",
       "--timeout", "2.5",
-      "--languages", "en-US", "ja-JP",
+      "--languages", "en-US",
       "--default_language_code", "en-US",
       "--cerevoice_langs", "en-US",
       "--base_model_dir", "/ros2_ws/src/strawberry_tts/base_models",
