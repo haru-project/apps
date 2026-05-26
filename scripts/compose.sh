@@ -68,12 +68,14 @@ esac
 should_ensure_domain_bridge=false
 case "${stack}" in
     perception|speech|all)
-        for arg in "$@"; do
-            if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
-                should_ensure_domain_bridge=true
-                break
-            fi
-        done
+        if [[ "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "false" && "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "0" ]]; then
+            for arg in "$@"; do
+                if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
+                    should_ensure_domain_bridge=true
+                    break
+                fi
+            done
+        fi
     ;;
 esac
 

@@ -11,12 +11,14 @@ services:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
       HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
       HARU_PARAM__AUDIO_CAPTURE_MODE: ${AUDIO_CAPTURE_MODE:-multi_device}
+      HARU_PARAM__STATE_FILE: ${AUDIO_CAPTURE_STATE_FILE:-/shared/state/haru_speech/audio_capture_state.yaml}
       HARU_PARAM__DEV_AUTOSTART: "true"
     device_cgroup_rules:
       - "c 116:* rmw"
     volumes:
       - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
+      - ${HARU_SPEECH_STATE_DIR:-${HOME}/.ros/haru_speech}:/shared/state/haru_speech:rw
     restart: unless-stopped
 
   audio-capture-manager:
@@ -29,12 +31,14 @@ services:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
       HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
       HARU_PARAM__AUDIO_CAPTURE_MODE: manager
+      HARU_PARAM__STATE_FILE: ${AUDIO_CAPTURE_STATE_FILE:-/shared/state/haru_speech/audio_capture_state.yaml}
       HARU_PARAM__DEV_AUTOSTART: "true"
     device_cgroup_rules:
       - "c 116:* rmw"
     volumes:
       - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
+      - ${HARU_SPEECH_STATE_DIR:-${HOME}/.ros/haru_speech}:/shared/state/haru_speech:rw
     profiles: ["multi-audio"]
     restart: unless-stopped
 

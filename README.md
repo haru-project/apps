@@ -241,6 +241,22 @@ Start the perception stack with:
 bash scripts/compose.sh perception up --force-recreate -d
 ```
 
+For the full belief-fusion integration path that mirrors
+`perception_testing belief_fusion_isolated.launch.py`, also start the dedicated
+speech stack:
+
+```bash
+bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
+```
+
+For graph parity checks against the source launch, disable the apps domain
+bridge auto-start for both commands:
+
+```bash
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=false bash scripts/compose.sh perception up --force-recreate -d
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=false bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
+```
+
 or the combined stack with:
 
 ```bash
@@ -434,9 +450,9 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     ```
 
     **Expected output**:
-    - Perception, fusion, visualization, and monitoring come up on their configured perception tags
+    - Perception, fusion, visualization, and recording services come up on their configured perception tags
     - The haru-viz web UI is reachable at `http://127.0.0.1:5173`
-    - rosbridge stays co-located with the `viz` service and continues using ports `9090`, `9091`, and `9092`
+    - The native bridge stays co-located with the `viz` service and continues using ports `9090`, `9091`, `9092`, and `9093`
 
 2. Speech layer
 
@@ -449,7 +465,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > **Configuration note:**
     > You can change the containers configuration in the `envs/speech.env`.
-    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.
+    > You can change the ROS nodes configuration in the `data/speech/configs/haru_speech.yaml`.
 
     > **Microphone selection and setup:**
     > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
