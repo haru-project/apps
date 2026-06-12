@@ -55,24 +55,27 @@ require_stack_down perception
 require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
+require_stack_down timeline-player
 
 # Ipad services
-bash scripts/compose.sh ipad up server --force-recreate -d
+# bash scripts/compose.sh ipad up server --force-recreate -d
 
 # Projector services
-bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
+# bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
 # TTS services
-bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
+bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
 
 # Perception services
-bash scripts/compose.sh perception up azure-kinect faces belief viz --force-recreate -d
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh perception up --force-recreate -d
 
 # Speech services
-bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
 
+# Timeline Player services
+bash scripts/compose.sh timeline-player up --force-recreate -d
 # LLM services
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
-
 # Reasoner services
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
+

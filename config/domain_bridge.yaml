@@ -8,13 +8,13 @@
 # agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
 from_domain: 200
-to_domain: 0
+to_domain: 3
 
 topics:
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos:
-      reliability: best_effort
+      reliability: reliable
       durability: volatile
       history: keep_last
       depth: 100
@@ -41,6 +41,20 @@ topics:
       history: keep_last
       depth: 10
 
+  /perception/fusion/speech/asr/status_array:
+    type: haru_speech_msgs/msg/SpeechStatusArray
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
+  /perception/fusion/speech/asr/result:
+    type: haru_speech_msgs/msg/SpeechToTextResult
+    qos:
+      reliability: reliable
+      history: keep_last
+      depth: 10
+
   /perception/proc/speech/asr/result_revision:
     type: haru_speech_msgs/msg/SpeechToTextRevision
     qos:
@@ -58,7 +72,7 @@ topics:
   /perception/fusion/persons:
     type: haru_belief_msgs/msg/PersonsState
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 

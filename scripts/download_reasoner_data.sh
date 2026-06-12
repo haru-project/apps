@@ -3,7 +3,7 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/reasoner
-REASONER_IMAGE="${REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:feature-asr-improve}"
+REASONER_IMAGE="${REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}"
 
 source "${DIR}/download_helpers.sh"
 cleanup_data_dir "$DATA_FOLDER"

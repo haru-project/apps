@@ -55,6 +55,10 @@ case "${stack}" in
         stack_files=("${APPS_DIR}/docker-compose-user.yaml")
         env_file="${ROOT_DIR}/envs/user.env"
     ;;
+    timeline-player)
+        stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
+        env_file="${ROOT_DIR}/envs/timeline-player.env"
+    ;;
     all)
         stack_files=("${APPS_DIR}/docker-compose-all.yaml")
         env_file="${ROOT_DIR}/envs/all.env"
@@ -83,7 +87,7 @@ if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
     docker compose \
         -f "${APPS_DIR}/docker-compose-domain-bridge.yaml" \
         --env-file "${ROOT_DIR}/envs/domain-bridge.env" \
-        up -d --no-recreate
+        up -d --force-recreate
 fi
 
 cmd=(docker compose)

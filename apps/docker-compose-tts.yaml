@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -19,15 +19,15 @@ services:
       "--max_syllable_dur", "250.0",
       "--sr", "32000",
       "--num_retries", "1",
-      "--global_timeout", "3.0",
+      "--global_timeout", "4.0",
       "--weights_json", "/ros2_ws/src/strawberry_tts/weight_refs_mixed.json",
       "--voice_gesture_dir", "/ros2_ws/src/strawberry_tts/voice_gestures",
-      "--retry_mos_thresh", "2.9",
+      "--retry_mos_thresh", "2.7",
       "--fallback_mos_thresh", "1.5",
       "--silence_percentile", "50.0",
       "--gptsovits_url", "http://127.0.0.1:9880",
       "--cerevoice_url", "http://127.0.0.1:8015",
-      "--timeout", "2.5",
+      "--timeout", "3.0",
       "--languages", "en-US", "ja-JP",
       "--default_language_code", "en-US",
       "--cerevoice_langs", "en-US",
@@ -50,13 +50,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles: ["tts"]
+    profiles: ["tts", "all"]
 
   ros-node:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
@@ -66,13 +66,13 @@ services:
       tts-client:
         condition: service_healthy
     restart: unless-stopped
-    profiles: ["ros"]
+    profiles: ["ros", "all"]
 
   cerevoice-api:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/strawberry-tts:ros2
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
     restart: unless-stopped
@@ -81,13 +81,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles: ["tts"]
+    profiles: ["tts", "all"]
 
   gpt-sovits:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts-api:latest
+    image: strawberry-tts-api:latest 
     working_dir: /workspace
     environment:
       - is_half=False
@@ -98,4 +98,4 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles: ["tts"]
+    profiles: ["tts", "all"]

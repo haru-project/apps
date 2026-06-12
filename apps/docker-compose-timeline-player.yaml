@@ -1,0 +1,25 @@
+name: haru-timeline-player
+
+services:
+  timeline-player:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0
+    network_mode: host
+    ipc: host
+    env_file: ../envs/timeline-player.env
+    command: bash -c "source /opt/ros/jazzy/workspace/install/setup.bash && ros2 launch haru_timeline_player timeline_player.launch.py"
+    restart: unless-stopped
+
+  dev:
+    image: ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0
+    network_mode: host
+    ipc: host
+    env_file: ../envs/timeline-player.env
+    volumes:
+      - ../docker/deps:/workspace/src:cached
+      - ..:/workspace/src/haru_timeline_player:cached
+      - ~/.ssh:/root/.ssh:ro
+    command: sleep infinity
+
