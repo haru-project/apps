@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -56,7 +56,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
@@ -72,7 +72,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.6
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
     restart: unless-stopped
