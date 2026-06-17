@@ -87,7 +87,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: strawberry-tts-api:latest 
+    image: ghcr.io/haru-project/strawberry-tts-api:v0.2.1
     working_dir: /workspace
     environment:
       - is_half=False
