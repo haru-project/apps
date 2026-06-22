@@ -31,10 +31,10 @@ services:
       "--languages", "en-US", "ja-JP",
       "--default_language_code", "en-US",
       "--cerevoice_langs", "en-US",
-      "--base_model_dir", "/ros2_ws/src/strawberry_tts/base_models",
+      "--base_model_dir", "/workspace/GPT-SoVITS/GPT_SoVITS/pretrained_models",
       "--lipsync_window_size", "32",
       "--lipsync_threshold_percentile", "90",
-      "--base_weight_fallback",
+      # "--base_weight_fallback",
       "--genre_weights",
       "--extended_code_switching"
     ]
@@ -89,6 +89,8 @@ services:
       service: common-ros-gpu
     image: ghcr.io/haru-project/strawberry-tts-api:v0.2.1
     working_dir: /workspace
+    volumes:
+      - ../data/tts/configs/pronunciation_dict.rep:/workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep
     environment:
       - is_half=False
       - is_share=False
