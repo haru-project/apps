@@ -265,7 +265,7 @@ bash scripts/compose.sh all up --force-recreate -d
 
 The `domain-bridge` container is the only default bridge between the
 perception and robot/application domains. It mirrors selected low-bandwidth
-speech and belief outputs from domain `200` into domain `0` for
+speech and belief outputs from domain `200` into domain `19` for
 robot-domain consumers. It runs in its own compose project and is started
 automatically by `scripts/compose.sh perception up`, `scripts/compose.sh speech
 up`, and `scripts/compose.sh all up`. Docker networking is unchanged.
@@ -276,7 +276,7 @@ with the speech stack so the Kinect microphone array is captured by
 The bridge allowlist is tracked in `config/domain_bridge.yaml`.
 The topic bridge allowlist bridges only low-bandwidth topics:
 
-- perception domain `200` -> robot domain `0`:
+- perception domain `200` -> robot domain `19`:
   `/perception/proc/speech/asr/status_array`,
   `/perception/proc/speech/asr/result`,
   `/perception/proc/speech/asr/result_revision`,
@@ -480,6 +480,10 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     The compose helper automatically starts the dedicated `domain-bridge` stack
     first, so speech can mirror low-bandwidth outputs back to the
     robot/application domain even when the perception stack is not running.
+    `envs/speech.env` must keep `ROS_DOMAIN_ID` and
+    `HARU_PERCEPTION_ROS_DOMAIN_ID` set to the perception domain, usually
+    `200`; `scripts/compose.sh speech ...` now fails early if those values
+    drift.
 
     **LifeCycle commands**:
     Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.

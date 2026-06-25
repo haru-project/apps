@@ -2,13 +2,13 @@
 #
 # `/perception/...` publishers and services are authoritative in the perception
 # domain. This bridge mirrors selected speech and belief outputs into the
-# robot domain for application consumers that still run with ROS_DOMAIN_ID=0. It
+# robot domain for application consumers that run with ROS_DOMAIN_ID=19. It
 # does not bridge raw camera streams, raw audio, speech services, or belief
 # services. `/tf` and `/tf_static` are bridged because robot-domain
 # agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
 from_domain: 200
-to_domain: 3
+to_domain: 19
 
 topics:
   /tf:

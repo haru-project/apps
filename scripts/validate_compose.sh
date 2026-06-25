@@ -10,7 +10,7 @@ stacks=(
   "speech:envs/speech.env:docker-compose-speech.yaml:"
   "llm:envs/llm.env:docker-compose-llm.yaml:"
   "reasoner:envs/reasoner.env:docker-compose-reasoner.yaml:"
-  "tts:envs/tts.env:docker-compose-tts.yaml:"
+  "tts:envs/tts.env:docker-compose-tts.yaml:tts,ros"
   "simulator:envs/simulator.env:docker-compose-simulator.yaml:"
   "ipad:envs/ipad.env:docker-compose-ipad.yaml:"
   "projector:envs/projector.env:docker-compose-projector.yaml:"
@@ -26,11 +26,11 @@ for entry in "${stacks[@]}"; do
   for file_name in "${files[@]}"; do
     cmd+=(-f "${APPS_DIR}/${file_name}")
   done
-  cmd+=(--env-file "${ROOT_DIR}/${env_path}" config)
+  cmd+=(--env-file "${ROOT_DIR}/${env_path}")
   if [[ -n "${profiles}" ]]; then
-    COMPOSE_PROFILES="${profiles}" "${cmd[@]}" >/dev/null
+    COMPOSE_PROFILES="${profiles}" "${cmd[@]}" config --format json | python3 "${ROOT_DIR}/scripts/check_compose_domains.py"
   else
-    "${cmd[@]}" >/dev/null
+    "${cmd[@]}" config --format json | python3 "${ROOT_DIR}/scripts/check_compose_domains.py"
   fi
 done
 
