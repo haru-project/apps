@@ -2,13 +2,13 @@
 #
 # `/perception/...` publishers and services are authoritative in the perception
 # domain. This bridge mirrors selected speech and belief outputs into the
-# robot domain for application consumers that still run with ROS_DOMAIN_ID=0. It
+# robot domain for application consumers that still run with ROS_DOMAIN_ID=13. It
 # does not bridge raw camera streams, raw audio, speech services, or belief
 # services. `/tf` and `/tf_static` are bridged because robot-domain
 # agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
 from_domain: 200
-to_domain: 3
+to_domain: 13
 
 topics:
   /tf:
@@ -79,49 +79,49 @@ topics:
   /perception/fusion/persons/overwritten:
     type: haru_belief_msgs/msg/PersonsState
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/persons/status/overwriter:
     type: haru_belief_msgs/msg/PersonOverwriterStatusArray
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/speech_sources:
     type: haru_belief_msgs/msg/SoundSourceAttributionArray
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/context:
     type: haru_belief_msgs/msg/Context
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/robot:
     type: haru_belief_msgs/msg/RobotState
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/things:
     type: haru_belief_msgs/msg/ThingsState
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 
   /perception/fusion/things/tf:
     type: haru_belief_msgs/msg/ThingTfArray
     qos:
-      reliability: reliable
+      reliability: best_effort
       history: keep_last
       depth: 10
 

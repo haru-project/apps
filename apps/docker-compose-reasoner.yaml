@@ -5,17 +5,21 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
-      "expressivity_controller_enabled:=true",
-      "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
-      "groot_monitor_enabled:=true",
-      "dev_autostart:=true",
-    ]
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_controllers.launch.py",
+        "expressivity_controller_enabled:=true",
+        "gaze_controller_enabled:=true",
+        "ipad_students_controller_enabled:=false",
+        "ipad_teacher_controller_enabled:=false",
+        "web_projector_controller_enabled:=false",
+        "groot_monitor_enabled:=true",
+        "dev_autostart:=true",
+      ]
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -26,35 +30,64 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
-      "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
-      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
-      "enable_reactive:=true",
-      "dev_autostart:=true",
-    ]
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_reasoner.launch.py",
+        "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
+        "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+        "enable_reactive:=true",
+        "dev_autostart:=true",
+      ]
     env_file: ../envs/reasoner.env
     volumes:
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
 
+  goal_manager:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: eut_bt_haru_ros2:jazzy
+    # command:
+    #   [
+    #     "ros2",
+    #     "launch",
+    #     "haru_agent_reasoner",
+    #     "haru_context.launch.py",
+    #     "model_file:=${WORLD_MODEL_FILE}",
+    #     "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
+    #     "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
+    #     "start_perception_postprocessors:=true",
+    #     "context_backup_active:=true",
+    #     "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
+    #     "dev_autostart:=true",
+    #   ]
+    env_file: ../envs/reasoner.env
+
   context-manager:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
-    command: [
-      "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
-      "model_file:=${WORLD_MODEL_FILE}",
-      "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
-      "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
-      "start_perception_postprocessors:=true",
-      "context_backup_active:=true",
-      "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
-      "dev_autostart:=true",
-    ]
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
+    command:
+      [
+        "ros2",
+        "launch",
+        "haru_agent_reasoner",
+        "haru_context.launch.py",
+        "model_file:=${WORLD_MODEL_FILE}",
+        "plansys2_params_file:=${PLANSYS2_CONFIG_FILE}",
+        "postprocessors_params_file:=${POSTPROCESSORS_CONFIG_FILE}",
+        "start_perception_postprocessors:=true",
+        "context_backup_active:=false",
+        "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
+        "dev_autostart:=true",
+      ]
     env_file: ../envs/reasoner.env
     volumes:
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
@@ -64,7 +97,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
@@ -79,7 +112,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
