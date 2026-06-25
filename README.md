@@ -235,6 +235,11 @@ and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `200`).
 Robot/application services outside `/perception` continue to use
 `HARU_ROBOT_ROS_DOMAIN_ID` / `ROS_DOMAIN_ID` (default `0`).
 
+Set `HARU_ROBOT_ID` once in `envs/robot.env` when targeting a physical robot
+whose ROS domain matches its robot id. For example, `HARU_ROBOT_ID=19` makes
+robot-domain ROS services and the domain bridge target domain `19`. Leave it
+unset to keep each stack's existing default domain.
+
 Start the perception stack with:
 
 ```bash

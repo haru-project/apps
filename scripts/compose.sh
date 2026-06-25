@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
+ROBOT_ENV_FILE="${HARU_ROBOT_ENV_FILE:-${ROOT_DIR}/envs/robot.env}"
 
 env_file_value() {
     local file_path="$1"
@@ -139,9 +140,15 @@ case "${stack}" in
 esac
 
 if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
+    domain_bridge_env_args=()
+    if [[ -f "${ROBOT_ENV_FILE}" ]]; then
+        domain_bridge_env_args+=(--env-file "${ROBOT_ENV_FILE}")
+    fi
+    domain_bridge_env_args+=(--env-file "${ROOT_DIR}/envs/domain-bridge.env")
+
     docker compose \
         -f "${APPS_DIR}/docker-compose-domain-bridge.yaml" \
-        --env-file "${ROOT_DIR}/envs/domain-bridge.env" \
+        "${domain_bridge_env_args[@]}" \
         up -d --force-recreate
 fi
 
@@ -149,6 +156,9 @@ cmd=(docker compose)
 for stack_file in "${stack_files[@]}"; do
     cmd+=(-f "${stack_file}")
 done
+if [[ -f "${ROBOT_ENV_FILE}" ]]; then
+    cmd+=(--env-file "${ROBOT_ENV_FILE}")
+fi
 cmd+=(--env-file "${env_file}")
 
 exec "${cmd[@]}" "$@"

@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
+ROBOT_ENV_FILE="${HARU_ROBOT_ENV_FILE:-${ROOT_DIR}/envs/robot.env}"
 
 stacks=(
   "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
@@ -26,6 +27,9 @@ for entry in "${stacks[@]}"; do
   for file_name in "${files[@]}"; do
     cmd+=(-f "${APPS_DIR}/${file_name}")
   done
+  if [[ -f "${ROBOT_ENV_FILE}" ]]; then
+    cmd+=(--env-file "${ROBOT_ENV_FILE}")
+  fi
   cmd+=(--env-file "${ROOT_DIR}/${env_path}")
   if [[ -n "${profiles}" ]]; then
     COMPOSE_PROFILES="${profiles}" "${cmd[@]}" config --format json | python3 "${ROOT_DIR}/scripts/check_compose_domains.py"
