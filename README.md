@@ -168,8 +168,8 @@ docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-verification:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-localization:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
-docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
+docker pull ghcr.io/haru-project/haru-llm:feature-minimal_text_memory
+docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
 docker pull ghcr.io/haru-project/strawberry-tts:ros2
 docker pull ghcr.io/haru-project/haru-ipad-action-server:ros2
