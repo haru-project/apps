@@ -1,0 +1,12 @@
+model_list:
+  - model_name: haru-local:canonical
+    litellm_params:
+      model: hosted_vllm/haru-local:canonical
+      api_base: https://llm-ua.haru-project.com/v1
+      # LiteLLM always sends an Authorization header to hosted_vllm.
+      # llm-ua uses this fixed compatibility value; it is not a secret.
+      api_key: ollama
+
+litellm_settings:
+  drop_params: true
+  callbacks: ["langfuse"]

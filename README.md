@@ -501,19 +501,25 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > `envs/llm.env` is the non-secret source of truth for config.
     > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
-    > You can change the LLM server configuration in `data/llm/configs/litellm_server.yaml`.
+    > The tracked LiteLLM server configuration is `config/llm/litellm_server.yaml`.
     > You can change the ROS nodes configuration in `data/llm/configs/haru_llm.yaml`.
     > You can change agent configs (prompts, settings) in `data/llm/agents/`.
 
-    > **Setting up API keys (required for cloud models):**
-    > The default configuration uses cloud-hosted models. To use them, you need to provide your API keys:
+    > **Default model server:**
+    > All agents use `haru-local:canonical` through the local LiteLLM service. LiteLLM forwards requests to
+    > `https://llm-ua.haru-project.com/v1`. No developer-supplied API key is required. The tracked LiteLLM
+    > configuration includes the server's fixed `ollama` compatibility value because LiteLLM always sends an
+    > upstream authorization header.
+    >
+    > **Optional API keys:**
+    > If you add authenticated cloud models, provide their keys as follows:
     > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`
     > 2. Fill in your API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`)
     >
-    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `data/llm/configs/litellm_server.yaml`.
+    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `config/llm/litellm_server.yaml`.
     >
     > **Using local/self-hosted models:**
-    > If you want to run your own model server (e.g., vLLM, Ollama), add a new model entry to `data/llm/configs/litellm_server.yaml`:
+    > If you want to run another model server (e.g., vLLM, Ollama), add a new model entry to `config/llm/litellm_server.yaml`:
     > ```yaml
     > - model_name: custom-model
     >   litellm_params:

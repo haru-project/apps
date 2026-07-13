@@ -76,7 +76,7 @@ services:
     extra_hosts:
       - dgx02:172.24.39.32
     volumes:
-      - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
+      - ../config/llm/litellm_server.yaml:/app/config.yaml:ro
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)
