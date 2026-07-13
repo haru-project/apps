@@ -284,8 +284,6 @@ The topic bridge allowlist bridges only low-bandwidth topics:
   `/tf`,
   `/tf_static`,
   `/perception/fusion/persons`,
-  `/perception/fusion/persons/overwritten`,
-  `/perception/fusion/persons/status/overwriter`,
   `/perception/fusion/speech_sources`,
   `/perception/fusion/context`,
   `/perception/fusion/robot`,

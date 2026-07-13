@@ -76,20 +76,6 @@ topics:
       history: keep_last
       depth: 10
 
-  /perception/fusion/persons/overwritten:
-    type: haru_belief_msgs/msg/PersonsState
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/fusion/persons/status/overwriter:
-    type: haru_belief_msgs/msg/PersonOverwriterStatusArray
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
   /perception/fusion/speech_sources:
     type: haru_belief_msgs/msg/SoundSourceAttributionArray
     qos:
