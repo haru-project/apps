@@ -1,5 +1,9 @@
 name: haru-speech
 
+x-speech-domain-env: &speech-domain-env
+  ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+  HARU_PERCEPTION_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+
 services:
   audio:
     extends:
@@ -8,7 +12,7 @@ services:
     image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     env_file: ../envs/speech.env
     environment:
-      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      <<: *speech-domain-env
       HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
       HARU_PARAM__AUDIO_CAPTURE_MODE: ${AUDIO_CAPTURE_MODE:-multi_device}
       HARU_PARAM__STATE_FILE: ${AUDIO_CAPTURE_STATE_FILE:-/shared/state/haru_speech/audio_capture_state.yaml}
@@ -28,7 +32,7 @@ services:
     image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
     env_file: ../envs/speech.env
     environment:
-      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      <<: *speech-domain-env
       HARU_PARAM__CONFIG_FILE: ${AUDIO_CONFIG_FILE}
       HARU_PARAM__AUDIO_CAPTURE_MODE: manager
       HARU_PARAM__STATE_FILE: ${AUDIO_CAPTURE_STATE_FILE:-/shared/state/haru_speech/audio_capture_state.yaml}
@@ -49,7 +53,7 @@ services:
     image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve}
     env_file: ../envs/speech.env
     environment:
-      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      <<: *speech-domain-env
       HARU_PARAM__CONFIG_FILE: ${SPEECH_RECOGNITION_CONFIG_FILE}
       HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
@@ -64,7 +68,7 @@ services:
     image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}
     env_file: ../envs/speech.env
     environment:
-      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      <<: *speech-domain-env
       HARU_PARAM__CONFIG_FILE: ${SPEAKER_VERIFICATION_CONFIG_FILE}
       HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
@@ -80,7 +84,7 @@ services:
     image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization:feature-asr-improve}
     env_file: ../envs/speech.env
     environment:
-      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      <<: *speech-domain-env
       HARU_PARAM__CONFIG_FILE: ${SOUND_LOCALIZATION_CONFIG_FILE}
       HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:

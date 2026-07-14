@@ -9,7 +9,16 @@ cleanup_data_dir "$DATA_FOLDER"
 
 COMPOSE_FILE="$DIR/../apps/docker-compose-llm.yaml"
 if [[ -f "$COMPOSE_FILE" ]]; then
-  IMAGE_TAG=$(awk '/^  action-args:/ {found=1} found && /image:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$COMPOSE_FILE")
+  IMAGE_TAG=$(
+    docker compose \
+      -f "$COMPOSE_FILE" \
+      --env-file "$DIR/../envs/llm.env" \
+      config --format json \
+      | python3 -c 'import json, sys; print(json.load(sys.stdin)["services"]["action-args"]["image"])'
+  )
+fi
+if [[ -z "${IMAGE_TAG:-}" ]]; then
+  IMAGE_TAG="ghcr.io/haru-project/haru-llm:feature-context-fix"
 fi
 
 # LLM data

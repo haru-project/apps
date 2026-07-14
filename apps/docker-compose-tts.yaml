@@ -57,7 +57,10 @@ services:
       file: compose.common.yaml
       service: common-ros-gpu
     image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
-    command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
+    command: [
+      "ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py",
+      "action_tts_server_name:=/haru2/action_tts"
+    ]
     env_file: ../envs/tts.env
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs

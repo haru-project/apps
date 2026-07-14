@@ -21,7 +21,7 @@ services:
         tail -f /dev/null
     env_file: ../envs/simulator.env
     environment:
-      - PULSE_SERVER=${PULSE_SERVER}
+      PULSE_SERVER: ${PULSE_SERVER}
     devices:
       - /dev/snd
     volumes:
