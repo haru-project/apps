@@ -55,9 +55,17 @@ case "${stack}" in
         stack_files=("${APPS_DIR}/docker-compose-user.yaml")
         env_file="${ROOT_DIR}/envs/user.env"
     ;;
+    nlp)
+        stack_files=("${APPS_DIR}/docker-compose-nlp.yaml")
+        env_file="${ROOT_DIR}/envs/nlp.env"
+    ;;
     timeline-player)
         stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
         env_file="${ROOT_DIR}/envs/timeline-player.env"
+    ;;
+    memory)
+        stack_files=("${APPS_DIR}/docker-compose-memory.yaml")
+        env_file="${ROOT_DIR}/envs/memory.env"
     ;;
     all)
         stack_files=("${APPS_DIR}/docker-compose-all.yaml")

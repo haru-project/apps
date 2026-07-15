@@ -1,6 +1,20 @@
 name: haru-speech
 
 services:
+  base:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base:feature-asr-improve}
+    env_file: ../envs/speech.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      HARU_PARAM__CONFIG_FILE: ${BASE_CONFIG_FILE}
+      HARU_PARAM__DEV_AUTOSTART: "true"
+    volumes:
+      - ../data/speech/configs:/shared/configs:rw
+      - ${HARU_SPEECH_STATE_DIR:-${HOME}/.ros/haru_speech}:/shared/state/haru_speech:rw
+    restart: unless-stopped
   audio:
     extends:
       file: compose.common.yaml
@@ -19,6 +33,7 @@ services:
       - /dev/snd:/dev/snd:rw
       - ../data/speech/configs:/shared/configs:rw
       - ${HARU_SPEECH_STATE_DIR:-${HOME}/.ros/haru_speech}:/shared/state/haru_speech:rw
+    profiles: ["base"]
     restart: unless-stopped
 
   audio-capture-manager:

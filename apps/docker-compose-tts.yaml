@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.3.0
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -56,7 +56,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.3.0
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
@@ -72,9 +72,11 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.2.7
+    image: ghcr.io/haru-project/strawberry-tts:ros2-dev-v0.3.0
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
+    ports:
+      - "8015:8015"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "bash -c \"echo > /dev/tcp/127.0.0.1/8015\""]
@@ -87,10 +89,20 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts-api:v0.2.1
-    working_dir: /workspace
+    image: ghcr.io/haru-project/strawberry-tts-api:v0.3.0
+    working_dir: /workspace/GPT-SoVITS
     volumes:
       - ../data/tts/configs/pronunciation_dict.rep:/workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep
+      - ../data/tts/ref_audio:/tts/ref_audio
+      - ../data/tts/GPT_weights_mixed:/tts/GPT_weights_mixed
+      - ../data/tts/SoVITS_weights_mixed:/tts/SoVITS_weights_mixed
+    ports:
+      - "9880:9880"
+      - "9871:9871"
+      - "9872:9872"
+      - "9873:9873"
+      - "9874:9874"
+      - "8022:8022"
     environment:
       - is_half=False
       - is_share=False

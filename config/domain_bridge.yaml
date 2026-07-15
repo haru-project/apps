@@ -8,7 +8,7 @@
 # agent_reasoner fusion gazing resolves head and robot transforms there.
 name: haru_domain_bridge
 from_domain: 200
-to_domain: 3
+to_domain: 12
 
 topics:
   /tf:

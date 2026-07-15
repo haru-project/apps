@@ -165,3 +165,8 @@ services:
     extends:
       file: docker-compose-simulator.yaml
       service: web-server
+
+  haru-nlp:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: haru-nlp

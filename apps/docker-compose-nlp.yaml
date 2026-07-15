@@ -1,0 +1,34 @@
+services:
+  redis:
+    image: redis:7-alpine
+    hostname: haru_nlp_server-redis
+    environment:
+      REDIS_ARGS: "--appendonly no"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+  haru-nlp-server:
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
+    env_file:
+    - .env.cpu
+    environment:
+      HARU_NLP_SERVER_HOST: "0.0.0.0"
+      HARU_NLP_SERVER_GPU_ENABLED: "false"
+      HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
+      HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
+      # Use the ignored host cache; do not download models during startup.
+      HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
+      HARU_NLP_SERVER_WORKERS_COUNT: "1"
+      HARU_NLP_SERVER_RELOAD: "false"
+      HARU_NLP_HOME: /models
+      HARU_NLP_SERVER_REDIS_HOST: haru_nlp_server-redis
+    volumes:
+    - ./models:/models
+    ports:
+    - "6565:6565"
+    depends_on:
+      redis:
+        condition: service_healthy

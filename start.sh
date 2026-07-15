@@ -79,3 +79,7 @@ bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
 # Reasoner services
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
 
+# bash scripts/compose.sh nlp up --force-recreate -d
+
+bash scripts/compose.sh memory up --force-recreate -d
+

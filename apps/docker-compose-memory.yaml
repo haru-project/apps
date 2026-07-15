@@ -1,0 +1,80 @@
+name: agent-memory
+
+services:
+  agent-memory-t2v:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ghcr.io/haru-project/agent-memory-t2v:latest
+    environment:
+      ENABLE_CUDA: "${AGENT_MEMORY_T2V_ENABLE_CUDA:-0}"
+    restart: unless-stopped
+
+  agent-memory-weaviate:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: semitechnologies/weaviate:1.28.0
+    ports:
+      - "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}:8080"
+      - "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: "25"
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "text2vec-transformers"
+      ENABLE_MODULES: "text2vec-transformers"
+      TRANSFORMERS_INFERENCE_API: "http://agent-memory-t2v:8080"
+      CLUSTER_HOSTNAME: "agent-memory-node"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    volumes:
+      - agent_memory_weaviate_data:/var/lib/weaviate
+    depends_on:
+      - agent-memory-t2v
+    restart: unless-stopped
+
+  agent-memory:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ghcr.io/haru-project/agent-memory-ros:latest
+    network_mode: host
+    stop_grace_period: 10s
+    env_file: ../envs/memory.env
+    environment:
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+      RMW_IMPLEMENTATION: "${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
+      FASTDDS_BUILTIN_TRANSPORTS: "${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}"
+      WEAVIATE_HOST: "localhost"
+      WEAVIATE_PORT: "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}"
+      WEAVIATE_GRPC_PORT: "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}"
+      CONFIG_FILE: "${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}"
+    volumes:
+      - "../data/memory/configs/agent_memory.yaml:${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}:ro"
+    depends_on:
+      agent-memory-weaviate:
+        condition: service_healthy
+    restart: unless-stopped
+
+  agent-memory-dashboard:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ghcr.io/haru-project/agent-memory-dashboard:latest
+    profiles: ["memory-dashboard"]
+    ports:
+      - "${AGENT_MEMORY_DASHBOARD_PORT:-8502}:8500"
+    environment:
+      WEAVIATE_URL: "http://agent-memory-weaviate:8080"
+    depends_on:
+      agent-memory-weaviate:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  agent_memory_weaviate_data:
