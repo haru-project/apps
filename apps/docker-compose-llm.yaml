@@ -77,6 +77,12 @@ services:
       - dgx02:172.24.39.32
     volumes:
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
+      # Post-call hook referenced by litellm_server.yaml `callbacks:`; litellm fails to
+      # start if the module is not importable (trims trailing junk from Bedrock Gemma
+      # structured outputs). Arrives together with litellm_server.yaml via
+      # download_llm_data.sh (both copied from the image's configs/ dir), so config and
+      # hook are always a matched pair from the same image.
+      - ../data/llm/configs/litellm_post_fix.py:/app/litellm_post_fix.py:ro
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)
