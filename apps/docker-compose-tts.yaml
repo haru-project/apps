@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.0-5090
+    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -56,7 +56,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.0-5090
+    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
@@ -72,7 +72,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.0-5090
+    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
     ports:
@@ -89,7 +89,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts-api:v0.3.0-5090
+    image: ghcr.io/haru-project/strawberry-tts-api:v0.3.1-5090
     working_dir: /workspace/GPT-SoVITS
     volumes:
       - ../data/tts/configs/pronunciation_dict.rep:/workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep

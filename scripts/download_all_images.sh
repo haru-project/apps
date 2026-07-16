@@ -24,6 +24,7 @@ if [[ ${#requested_stacks[@]} -eq 0 ]]; then
         projector
         user
         timeline-player
+        memory
         all
     )
 fi
@@ -40,6 +41,7 @@ declare -A COMPOSE_FILES=(
     [projector]="${APPS_DIR}/docker-compose-projector.yaml"
     [user]="${APPS_DIR}/docker-compose-user.yaml"
     [timeline-player]="${APPS_DIR}/docker-compose-timeline-player.yaml"
+    [memory]="${APPS_DIR}/docker-compose-memory.yaml"
     [all]="${APPS_DIR}/docker-compose-all.yaml"
 )
 
@@ -55,6 +57,7 @@ declare -A ENV_FILES=(
     [projector]="${ROOT_DIR}/envs/projector.env"
     [user]="${ROOT_DIR}/envs/user.env"
     [timeline-player]="${ROOT_DIR}/envs/timeline-player.env"
+    [memory]="${ROOT_DIR}/envs/memory.env"
     [all]="${ROOT_DIR}/envs/all.env"
 )
 
@@ -74,6 +77,12 @@ for stack in "${requested_stacks[@]}"; do
     env_file="${ENV_FILES[$stack]}"
 
     echo "Resolving images for ${stack}..."
+    # Enable the `all` profile and the stack-specific profile (if any)
+    profiles_args=(--profile all)
+    if [[ "${stack}" != "all" ]]; then
+        profiles_args+=(--profile "${stack}")
+    fi
+
     while IFS= read -r image; do
         [[ -z "${image}" ]] && continue
         [[ "${image}" == "scratch" ]] && continue
@@ -81,7 +90,7 @@ for stack in "${requested_stacks[@]}"; do
             seen_images["$image"]=1
             image_list+=("$image")
         fi
-    done < <(docker compose -f "${compose_file}" --env-file "${env_file}" config --images 2>/dev/null || true)
+    done < <(docker compose -f "${compose_file}" --env-file "${env_file}" "${profiles_args[@]}" config --images 2>/dev/null || true)
 done
 
 if [[ ${#image_list[@]} -eq 0 ]]; then
