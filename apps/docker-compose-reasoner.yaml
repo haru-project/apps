@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory  
+    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=true",
@@ -26,7 +26,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory  
+    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
@@ -44,7 +44,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory  
+    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -64,7 +64,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory  
+    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
@@ -73,13 +73,14 @@ services:
     env_file: ../envs/reasoner.env
     depends_on:
       - reasoner
+      - context-manager
     restart: "no"
 
   execute-task-test:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:feature-minimal_text_memory  
+    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",

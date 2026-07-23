@@ -13,7 +13,7 @@ services:
   haru-nlp-server:
     image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
     env_file:
-    - .env.cpu
+    - ../envs/nlp-cpu.env
     environment:
       HARU_NLP_SERVER_HOST: "0.0.0.0"
       HARU_NLP_SERVER_GPU_ENABLED: "false"
@@ -26,7 +26,7 @@ services:
       HARU_NLP_HOME: /models
       HARU_NLP_SERVER_REDIS_HOST: haru_nlp_server-redis
     volumes:
-    - ./models:/models
+    - ../data/nlp/models:/models
     ports:
     - "6565:6565"
     depends_on:

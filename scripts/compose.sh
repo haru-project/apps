@@ -57,7 +57,7 @@ case "${stack}" in
     ;;
     nlp)
         stack_files=("${APPS_DIR}/docker-compose-nlp.yaml")
-        env_file="${ROOT_DIR}/envs/nlp.env"
+        env_file="${ROOT_DIR}/envs/nlp-cpu.env"
     ;;
     timeline-player)
         stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
