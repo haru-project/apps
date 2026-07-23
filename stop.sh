@@ -11,7 +11,7 @@ bash scripts/compose.sh ipad down
 bash scripts/compose.sh simulator down
 bash scripts/compose.sh timeline-player down
 bash scripts/compose.sh memory down
-bash scripts/compose.sh nlp down
+bash scripts/compose.sh nlp --profile all down
 
 
 docker system prune -f

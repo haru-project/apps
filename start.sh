@@ -73,14 +73,17 @@ HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh perception up --for
 HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
 
 # Haru NLP services
-# bash scripts/compose.sh nlp up --force-recreate -d
+# bash scripts/compose.sh nlp --profile cpu up --force-recreate -d
+# bash scripts/compose.sh nlp --profile gpu up --force-recreate -d
 
 # Timeline Player services
 bash scripts/compose.sh timeline-player up --force-recreate -d
 # LLM services
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
+
+bash scripts/compose.sh memory up --force-recreate -d
+
 # Reasoner services
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
 
-bash scripts/compose.sh memory up --force-recreate -d
 
