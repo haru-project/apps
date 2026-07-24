@@ -461,13 +461,17 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
+    This also provisions the ReDimNet speaker-verification model into
+    `~/haru-speech-cache/models`. Keep that cache between launches: the
+    verification container mounts it at `/shared/models`, so it starts without
+    downloading model weights from GitHub.
+
     > **Configuration note:**
     > You can change the containers configuration in the `envs/speech.env`.
     > You can change the ROS nodes configuration in the `data/speech/configs/haru_speech.yaml`.
 
     > **Microphone selection and setup:**
-    > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
-    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `ZOOM H8`).
+    > The Zoom H8 source should be activity-gated (`detect_active_channels: true` and `process_active_channels_only: true`), and Kinect should be disabled unless you are explicitly testing its array features. Run `arecord -l` on the host to confirm the device names, then update `data/speech/configs/haru_speech.yaml` if your hardware differs.
     > If you are using a H6/H8/H12 recorder as your microphone input, make sure to set it to **Multi Track mode** on the device itself before connecting it to your computer. This ensures all input channels are available to the system.
 
     **Start command**:
