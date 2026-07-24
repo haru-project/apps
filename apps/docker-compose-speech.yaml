@@ -101,4 +101,5 @@ services:
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
+    profiles: ["ssl"]
     restart: unless-stopped
