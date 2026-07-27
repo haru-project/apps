@@ -130,6 +130,6 @@ services:
     ports:
       - ${VLLM_HOST_PORT:-8000}:8000
     volumes:
-      - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
+      - ${HARU_HF_CACHE_HOST_DIR:-${HOME}/.cache/huggingface}:/root/.cache/huggingface:rw
     restart: unless-stopped
     profiles: ["vllm"]

@@ -70,7 +70,7 @@ services:
       HARU_PARAM__ENABLE_VERIF: "false"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
-      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
+      - ${HARU_SPEECH_MODELS_HOST_DIR:-${HOME}/haru-speech-cache/models}:${HARU_SPEECH_MODELS_DIR}:rw
     restart: unless-stopped
     
   verification:
@@ -85,8 +85,8 @@ services:
       HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
-      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
-      - ~/haru-speech-cache/voices:${HARU_SPEECH_VOICES_DIR}:rw
+      - ${HARU_SPEECH_MODELS_HOST_DIR:-${HOME}/haru-speech-cache/models}:${HARU_SPEECH_MODELS_DIR}:rw
+      - ${HARU_SPEECH_VOICES_HOST_DIR:-${HOME}/haru-speech-cache/voices}:${HARU_SPEECH_VOICES_DIR}:rw
     restart: unless-stopped
     
   localization:
@@ -101,6 +101,6 @@ services:
       HARU_PARAM__DEV_AUTOSTART: "true"
     volumes:
       - ../data/speech/configs:/shared/configs:rw
-      - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw
+      - ${HARU_SPEECH_MODELS_HOST_DIR:-${HOME}/haru-speech-cache/models}:${HARU_SPEECH_MODELS_DIR}:rw
     profiles: ["ssl"]
     restart: unless-stopped

@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
     volumes:
       - *common-dev
-      - ~/haru-perception-cache/skeletons/models:/root/.ros/strawberry_ros_skeletons/models:rw
+      - ${HARU_SKELETON_MODELS_HOST_DIR:-${HOME}/haru-perception-cache/skeletons/models}:/root/.ros/strawberry_ros_skeletons/models:rw
     <<: *common-ros
     deploy: *gpu-reservations
 

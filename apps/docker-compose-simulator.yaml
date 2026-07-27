@@ -42,6 +42,6 @@ services:
     command: ["/bin/bash", "-c", "bash run_web.sh"]
     env_file: ../envs/simulator.env
     ports:
-      - 7000:7000
+      - ${SIMULATOR_WEB_HOST_PORT:-7000}:7000
     volumes:
       - ../data/simulator/resources:/ros2_ws/src/haru2_core/resources:rw
