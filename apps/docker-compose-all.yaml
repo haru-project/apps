@@ -43,7 +43,7 @@ services:
     extends:
       file: docker-compose-speech.yaml
       service: audio
-    profiles: []
+    profiles: !override []
     depends_on:
       azure-kinect:
         condition: service_started
@@ -76,6 +76,7 @@ services:
     depends_on:
       audio:
         condition: service_started
+    profiles: !override []
 
   # LLM layer
   redis:
@@ -92,6 +93,7 @@ services:
     extends:
       file: docker-compose-llm.yaml
       service: dashboard
+    profiles: ["dashboard"]
 
   action-args:
     extends:
@@ -148,8 +150,6 @@ services:
     depends_on:
       action-args:
         condition: service_started
-      timeline-player:
-        condition: service_healthy
 
   reasoner:
     extends:
@@ -171,6 +171,7 @@ services:
       service: execute-task-scenario
     environment:
       ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+    profiles: ["scenario"]
 
   execute-task-test:
     extends:
@@ -178,17 +179,20 @@ services:
       service: execute-task-test
     environment:
       ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+    profiles: ["test"]
 
-  # TTS layer (optional)
+  # Expressive TTS is part of the core demo.
   gpt-sovits:
     extends:
       file: docker-compose-tts.yaml
       service: gpt-sovits
+    profiles: []
 
   cerevoice-api:
     extends:
       file: docker-compose-tts.yaml
       service: cerevoice-api
+    profiles: []
 
   tts-client:
     extends:
@@ -201,38 +205,45 @@ services:
         condition: service_healthy
       action-args:
         condition: service_started
+    profiles: []
 
   ros-node:
     extends:
       file: docker-compose-tts.yaml
       service: ros-node
+    profiles: []
 
   # Simulator (optional)
   unity-app:
     extends:
       file: docker-compose-simulator.yaml
       service: unity-app
+    profiles: ["simulator"]
 
   web-server:
     extends:
       file: docker-compose-simulator.yaml
       service: web-server
+    profiles: ["simulator"]
 
   # Optional user-facing applications
   ipad-server:
     extends:
       file: docker-compose-ipad.yaml
       service: server
+    profiles: ["ipad"]
 
   projector-server:
     extends:
       file: docker-compose-projector.yaml
       service: server
+    profiles: ["projector"]
 
   episode-builder:
     extends:
       file: docker-compose-user.yaml
       service: episode-builder
+    profiles: ["episode-builder"]
 
   # Local NLP layer. HARU_NLP_SERVER_GPU_ENABLED selects one server profile.
   nlp-redis:
@@ -260,16 +271,18 @@ services:
       nlp-redis:
         condition: service_healthy
 
-  # Timeline player
+  # Compatibility service for robots that do not yet provide the action.
   timeline-player:
     extends:
       file: docker-compose-timeline-player.yaml
       service: timeline-player
+    profiles: ["timeline-compat"]
 
   timeline-player-dev:
     extends:
       file: docker-compose-timeline-player.yaml
       service: dev
+    profiles: ["dev"]
 
 volumes:
   agent_memory_weaviate_data:

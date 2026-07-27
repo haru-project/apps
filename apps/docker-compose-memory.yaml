@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-t2v:latest
+    image: ${AGENT_MEMORY_T2V_IMAGE:-ghcr.io/haru-project/agent-memory-t2v@sha256:021a5ba3059b74111f8ea40c578a6514eb0569ee287a0829761cbac85fc4e52f}
     environment:
       ENABLE_CUDA: "${AGENT_MEMORY_T2V_ENABLE_CUDA:-0}"
     restart: unless-stopped
@@ -14,7 +14,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: semitechnologies/weaviate:1.28.0
+    image: ${AGENT_MEMORY_WEAVIATE_IMAGE:-semitechnologies/weaviate:1.28.0}
     ports:
       - "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}:8080"
       - "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}:50051"
@@ -42,7 +42,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-ros:latest
+    image: ${AGENT_MEMORY_ROS_IMAGE:-ghcr.io/haru-project/agent-memory-ros@sha256:5e82c32f25ee4106f5fb6bd6f546ea034efa36a4e73e507e82f94dea4934f5d1}
     network_mode: host
     stop_grace_period: 10s
     env_file: ../envs/memory.env
@@ -65,7 +65,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-dashboard:latest
+    image: ${AGENT_MEMORY_DASHBOARD_IMAGE:-ghcr.io/haru-project/agent-memory-dashboard@sha256:4e4f3d13af0bece4cdcc1550fb2263f8ff7409a092431f34cfac76fe924e5f10}
     profiles: ["memory-dashboard"]
     ports:
       - "${AGENT_MEMORY_DASHBOARD_PORT:-8502}:8500"

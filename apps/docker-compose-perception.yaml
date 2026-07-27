@@ -40,7 +40,7 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect@sha256:78d8365938d303a35df04e4e5da0e08ea4682314f52f37e804e15be0d35ac3f9}
     env_file:
       - ../envs/perception.env
     environment:
@@ -68,7 +68,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons@sha256:bfaf69e29cf5e46774c07fd9bddbb5881872cc3e7a5e66453be96b77b72f91b5}
     env_file:
       - ../envs/perception.env
     environment:
@@ -93,7 +93,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module@sha256:ff26d5988ed5db5bbee9324fb1e19f97dfceb7dd1d60ce6600beae0a0772821a}
     env_file:
       - ../envs/perception.env
     environment:
@@ -117,7 +117,7 @@ services:
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief@sha256:6dd29ea8faa41e11d987079ad4a94e34f4fbdf7b2548f40cb731fe439f42e428}
     env_file:
       - ../envs/perception.env
     environment:
@@ -139,7 +139,7 @@ services:
 
   # viz service: haru-viz browser UI + rosbridge runtime
   viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz@sha256:6c514b501c23447eb30769b8681d92d2317b2dc8690e950bae9240c4bf2ae48e}
     env_file:
       - ../envs/perception.env
     environment:
@@ -167,11 +167,7 @@ services:
       VITE_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
     network_mode: *network-mode
     restart: unless-stopped
-    working_dir: /workspace/haru-viz
     volumes:
-      - type: bind
-        source: ../../haru-viz
-        target: /workspace/haru-viz
       - type: bind
         source: ${HARU_VIZ_HOST_RECORDINGS_DIR:-${HOME}/.local/share/haru_viz/recordings}
         target: ${HARU_RECORDER_RECORDING_ROOT:-/root/.local/share/haru_viz/recordings}

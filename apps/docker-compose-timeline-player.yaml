@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player@sha256:eca2d39f0a1c3077f1093aebab978c1d54f1ba868f9314685b523cc4b9e5a558}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
@@ -17,9 +17,10 @@ services:
       retries: 24
       start_period: 15s
     restart: unless-stopped
+    profiles: ["timeline-compat"]
 
   dev:
-    image: ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player@sha256:eca2d39f0a1c3077f1093aebab978c1d54f1ba868f9314685b523cc4b9e5a558}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
@@ -28,3 +29,4 @@ services:
       - ..:/workspace/src/haru_timeline_player:cached
       - ~/.ssh:/root/.ssh:ro
     command: sleep infinity
+    profiles: ["dev"]

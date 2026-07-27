@@ -119,5 +119,8 @@ cmd+=(--env-file "${env_file}")
 if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
     cmd+=(--profile "${nlp_profile}")
 fi
+if [[ "${stack}" == "all" ]]; then
+    cmd+=(--profile all)
+fi
 
 exec "${cmd[@]}" "$@"

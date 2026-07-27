@@ -505,34 +505,44 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > `envs/llm.env` is the non-secret source of truth for config.
     > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
-    > You can change the LLM server configuration in `data/llm/configs/litellm_server.yaml`.
+    > The canonical LiteLLM mapping is tracked in `config/llm/litellm_server.yaml`
+    > and mounted read-only.
     > You can change the ROS nodes configuration in `data/llm/configs/haru_llm.yaml`.
     > You can change agent configs (prompts, settings) in `data/llm/agents/`.
 
-    > **Setting up API keys (required for cloud models):**
-    > The default configuration uses cloud-hosted models. To use them, you need to provide your API keys:
-    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`
-    > 2. Fill in your API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`)
+    > **Canonical Bedrock Mantle model:**
+    > All agents use the stable `haru:canonical` alias. By default it maps to
+    > Gemma 4 26B on Bedrock Mantle in the region selected by
+    > `BEDROCK_MANTLE_REGION`.
     >
-    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `data/llm/configs/litellm_server.yaml`.
+    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`.
+    > 2. Set `BEDROCK_MANTLE_API_KEY`.
+    >
+    > The configurator can generate an alternate local mapping for OpenAI,
+    > Anthropic, or a custom OpenAI-compatible endpoint without changing agent
+    > model identifiers.
     >
     > **Using local/self-hosted models:**
-    > If you want to run your own model server (e.g., vLLM, Ollama), add a new model entry to `data/llm/configs/litellm_server.yaml`:
+    > Add or generate a local LiteLLM mapping that preserves the
+    > `haru:canonical` alias:
     > ```yaml
-    > - model_name: custom-model
+    > - model_name: haru:canonical
     >   litellm_params:
     >     model: <provider>/<model-name>
     >     api_base: http://<server-host>:<server-port>/v1
     > ```
-    > Then set the corresponding `*_MODEL_ID` in `envs/llm.env` to `custom-model`.
     > For a full list of supported providers and configuration options, see the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers).
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
+    bash scripts/compose.sh llm up action-args --force-recreate -d
     ```
 
     **Optional profiles**:
+    - Dashboard:
+      ```bash
+      bash scripts/compose.sh llm --profile dashboard up dashboard --force-recreate -d
+      ```
     - Web UI:
       ```bash
       bash scripts/compose.sh llm --profile webui up webui --force-recreate -d
@@ -549,7 +559,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://127.0.0.1:8501
+    - LLM Dashboard is running at http://127.0.0.1:8501 only when its profile is started
     - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 

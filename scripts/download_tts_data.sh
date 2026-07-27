@@ -9,10 +9,8 @@ cleanup_data_dir "$DATA_FOLDER"
 
 # Determine the TTS image tag from docker-compose-tts.yaml (tts-client and gpt-sovits services)
 TTS_COMPOSE_FILE="$DIR/../apps/docker-compose-tts.yaml"
-if [[ -f "$TTS_COMPOSE_FILE" ]]; then
-  IMAGE_TAG=$(awk '/^  tts-client:/ {found=1} found && /image:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$TTS_COMPOSE_FILE")
-  API_IMAGE_TAG=$(awk '/^  gpt-sovits:/ {found=1} found && /image:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$TTS_COMPOSE_FILE")
-fi
+IMAGE_TAG="$(compose_service_image "$TTS_COMPOSE_FILE" "$DIR/../envs/tts.env" tts-client)"
+API_IMAGE_TAG="$(compose_service_image "$TTS_COMPOSE_FILE" "$DIR/../envs/tts.env" gpt-sovits)"
 if [[ -z "${IMAGE_TAG:-}" ]]; then
   IMAGE_TAG="ghcr.io/haru-project/strawberry-tts:ros2"
 fi

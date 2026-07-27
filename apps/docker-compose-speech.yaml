@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base:feature-asr-improve}
+    image: ${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base@sha256:152d851f5e9899f7ebe277bb98f732cab575d37323352619b013ce6cb7b335f4}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
@@ -20,7 +20,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio@sha256:15c38d549b6a31ee1c8f363267b155e21a147033dbe1ae329828af0fcbdd02d2}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
@@ -40,7 +40,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio:feature-asr-improve}
+    image: ${HARU_SPEECH_AUDIO_IMAGE:-ghcr.io/haru-project/haru-speech-audio@sha256:15c38d549b6a31ee1c8f363267b155e21a147033dbe1ae329828af0fcbdd02d2}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
@@ -61,7 +61,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve}
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition@sha256:28e418906774d2f816b9913dc7b5f966aa659229deac3fb705a155e7994ab9c6}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
@@ -77,7 +77,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}
+    image: ${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification@sha256:461e06a140ada45c2e14232fd52f4cddbcacb7aa7c2473addb86548871cc71c5}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
@@ -93,7 +93,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization:feature-asr-improve}
+    image: ${HARU_SPEECH_LOCALIZATION_IMAGE:-ghcr.io/haru-project/haru-speech-localization@sha256:bf194c90f417d65dead83df53a771d209eec6ea93942cf56680d8ec243e031ea}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}

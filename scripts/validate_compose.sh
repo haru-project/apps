@@ -39,4 +39,32 @@ for entry in "${stacks[@]}"; do
   fi
 done
 
+core_services="$(
+  HARU_NLP_SERVER_GPU_ENABLED=false \
+    bash "${ROOT_DIR}/scripts/compose.sh" all config --services
+)"
+for required in \
+  gpt-sovits cerevoice-api tts-client ros-node \
+  audio recognition verification localization \
+  server action-args agent-memory reasoner context-manager bt-forest \
+  nlp-redis haru-nlp-server-cpu
+do
+  if ! grep -qx "${required}" <<< "${core_services}"; then
+    echo "Core all stack is missing ${required}." >&2
+    exit 1
+  fi
+done
+
+for excluded in \
+  base audio-capture-manager dashboard webui vllm \
+  unity-app web-server ipad-server projector-server episode-builder \
+  execute-task-scenario execute-task-test timeline-player timeline-player-dev \
+  haru-nlp-server-gpu agent-memory-dashboard
+do
+  if grep -qx "${excluded}" <<< "${core_services}"; then
+    echo "Core all stack unexpectedly enables ${excluded}." >&2
+    exit 1
+  fi
+done
+
 echo "All compose files validated."

@@ -20,3 +20,11 @@ copy_with_tar() {
   mkdir -p "$dest"
   docker run --rm --entrypoint tar "$image" -C "$src" -cf - . | tar xf - -C "$dest"
 }
+
+compose_service_image() {
+  local compose_file="$1"
+  local env_file="$2"
+  local service="$3"
+  docker compose -f "$compose_file" --env-file "$env_file" config --format json |
+    python3 -c 'import json,sys; print(json.load(sys.stdin)["services"][sys.argv[1]]["image"])' "$service"
+}

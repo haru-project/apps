@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-web-projector:latest
+    image: ${HARU_PROJECTOR_IMAGE:-ghcr.io/haru-project/haru-web-projector@sha256:e07fe2cbfb105a47227fc1ad790227aaf87ad0cfd676051180c0afc95e640c69}
     env_file: ../envs/projector.env
     environment:
       HARU_PARAM__DEV_AUTOSTART: "true"

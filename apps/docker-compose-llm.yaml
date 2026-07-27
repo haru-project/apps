@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-llm:feature-micro_routines
+    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm@sha256:9d57a2fd3035390b1b310fad2b39c405cc6ca7b9cfecb6ba0a63ed9a6e44a978}
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
@@ -19,6 +19,7 @@ services:
     environment:
       - REDIS_HOST=127.0.0.1
       - REDIS_PORT=6379
+      - LLM_SERVER_BASE_URL=http://127.0.0.1:${LLM_SERVER_HOST_PORT:-4050}/v1
     volumes:
       - ../data/llm/configs:/shared/configs:rw
       - ../data/llm/agents:/shared/agents:rw
@@ -33,26 +34,27 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/haru-llm:feature-micro_routines
+    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm@sha256:9d57a2fd3035390b1b310fad2b39c405cc6ca7b9cfecb6ba0a63ed9a6e44a978}
     command: ["/bin/bash", "-c", "$PACKAGE_VENV -c 'from haru_llm.dashboard.app import run; run()'"]
     env_file:
       - ../envs/llm.env
       - path: ../envs/llm.secrets.env
         required: false
     ports:
-      - 8501:8501
+      - ${LLM_DASHBOARD_HOST_PORT:-8501}:8501
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    profiles: ["dashboard"]
   
   redis:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: redis:latest
+    image: ${LLM_REDIS_IMAGE:-redis@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2}
     ports:
-      - 6379:6379
+      - ${LLM_REDIS_HOST_PORT:-6379}:6379
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -64,7 +66,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: docker.litellm.ai/berriai/litellm:main-stable
+    image: ${LITELLM_IMAGE:-docker.litellm.ai/berriai/litellm@sha256:a1745e629abfb17d434426ff48b115f54f4f4c4a0f5af241de569e93c63c411e}
     command:
       - "--config=/app/config.yaml"
     env_file:
@@ -74,13 +76,8 @@ services:
     ports:
       - ${LLM_SERVER_HOST_PORT:-4050}:4000
     volumes:
-      - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
-      # Post-call hook referenced by litellm_server.yaml `callbacks:`; litellm fails to
-      # start if the module is not importable (trims trailing junk from Bedrock Gemma
-      # structured outputs). Arrives together with litellm_server.yaml via
-      # download_llm_data.sh (both copied from the image's configs/ dir), so config and
-      # hook are always a matched pair from the same image.
-      - ../data/llm/configs/litellm_post_fix.py:/app/litellm_post_fix.py:ro
+      - ../config/llm/litellm_server.yaml:/app/config.yaml:ro
+      - ../config/llm/litellm_post_fix.py:/app/litellm_post_fix.py:ro
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)
@@ -93,13 +90,13 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/open-webui/open-webui:main
+    image: ${OPEN_WEBUI_IMAGE:-ghcr.io/open-webui/open-webui@sha256:6a773e5c3a246b65cbe74ce942b294292c0e5f81c138f703d111bc162f7d7c3d}
     env_file:
       - ../envs/llm.env
       - path: ../envs/llm.secrets.env
         required: false
     ports:
-      - 8080:8080
+      - ${OPEN_WEBUI_HOST_PORT:-8080}:8080
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/llm/open-webui:/app/backend/data:rw
@@ -122,7 +119,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-gpu
-    image: vllm/vllm-openai:latest
+    image: ${VLLM_IMAGE:-vllm/vllm-openai@sha256:ffb2d59b1c059a5bd8d781320c9f5189de8293693b7d95da54befddaa54abf52}
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"
@@ -131,7 +128,7 @@ services:
       - path: ../envs/llm.secrets.env
         required: false
     ports:
-      - 8000:8000
+      - ${VLLM_HOST_PORT:-8000}:8000
     volumes:
       - ${HOME}/.cache/huggingface:/root/.cache/huggingface:rw
     restart: unless-stopped

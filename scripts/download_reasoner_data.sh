@@ -9,9 +9,7 @@ cleanup_data_dir "$DATA_FOLDER"
 
 # Determine the reasoner image tag from docker-compose-reasoner.yaml (reasoner service)
 REASONER_COMPOSE_FILE="$DIR/../apps/docker-compose-reasoner.yaml"
-if [[ -f "$REASONER_COMPOSE_FILE" ]]; then
-  IMAGE_TAG=$(awk '/^  reasoner:/ {found=1} found && /image:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$REASONER_COMPOSE_FILE")
-fi
+IMAGE_TAG="$(compose_service_image "$REASONER_COMPOSE_FILE" "$DIR/../envs/reasoner.env" reasoner)"
 
 mkdir -p "$DATA_FOLDER/tasks"
 mkdir -p "$DATA_FOLDER/configs"
