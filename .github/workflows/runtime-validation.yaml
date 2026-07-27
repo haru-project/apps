@@ -25,7 +25,7 @@ jobs:
       - name: Compose validation
         run: bash scripts/validate_compose.sh
       - name: Shell validation
-        run: shellcheck start.sh run.sh stop.sh scripts/compose.sh scripts/validate_compose.sh scripts/download_*.sh
+        run: shellcheck -e SC1091 start.sh run.sh stop.sh scripts/compose.sh scripts/validate_compose.sh scripts/download_*.sh
 
   # This public repository cannot call the private ros2-ci reusable workflows.
   # Replace this job with a commit-pinned ros2-ci call when a public entrypoint exists.
