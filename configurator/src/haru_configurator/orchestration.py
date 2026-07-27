@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 from typing import Iterable
@@ -13,7 +14,7 @@ import docker
 from docker.errors import DockerException, NotFound
 
 from .configuration import load_answers
-from .models import Deployment
+from .models import Deployment, SetupAnswers
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,6 @@ class Orchestrator:
         answers = load_answers(self.root)
         stacks = [
             "tts",
-            "timeline-player",
             "perception",
             "speech",
             "nlp",
@@ -62,6 +62,8 @@ class Orchestrator:
             "memory",
             "reasoner",
         ]
+        if answers.timeline_compatibility_enabled:
+            stacks.append("timeline-player")
         if answers.deployment == Deployment.SIMULATOR:
             stacks.insert(0, "simulator")
         if answers.ipad_enabled:
@@ -69,7 +71,10 @@ class Orchestrator:
         if answers.projector_enabled:
             stacks.append("projector")
         for stack in stacks:
-            profiles = ["--profile", "all"] if stack == "tts" else []
+            profiles = {
+                "tts": ["--profile", "all"],
+                "timeline-player": ["--profile", "timeline-compat"],
+            }.get(stack, [])
             env = (
                 {"HARU_NLP_SERVER_GPU_ENABLED": str(answers.gpu_available).lower()}
                 if stack == "nlp"
@@ -96,8 +101,6 @@ class Orchestrator:
             "-d",
         )
         self._wait_healthy("haru-tts-tts-client-1", "haru-tts-ros-node-1", timeout=180)
-        self.compose("timeline-player", "up", "timeline-player", "--force-recreate", "-d")
-        self._wait_healthy("haru-timeline-player-timeline-player-1", timeout=120)
         perception_services = ["belief", "viz"]
         if answers.kinect_enabled:
             perception_services[0:0] = ["azure-kinect", "skeletons", "faces"]
@@ -129,17 +132,13 @@ class Orchestrator:
             f"haru-nlp-{nlp_service}-1",
             timeout=180,
         )
-        self.compose("llm", "up", "action-args", "dashboard", "--force-recreate", "-d")
+        self.compose("llm", "up", "action-args", "--force-recreate", "-d")
         self._wait_healthy("haru-llm-server-1", "haru-llm-action-args-1", timeout=180)
         self.compose("memory", "up", "--force-recreate", "-d")
         self.compose("reasoner", "up", "reasoner", "context-manager", "--force-recreate", "-d")
         if answers.deployment == Deployment.PHYSICAL:
             self._wait_robot_endpoints(timeout=120)
-        self._wait_action_endpoint(
-            "haru-reasoner-reasoner-1",
-            "/haru2/play_timeline",
-            timeout=120,
-        )
+        self._ensure_timeline_endpoint(answers)
         self.compose("reasoner", "up", "bt-forest", "--force-recreate", "-d")
         self._wait_healthy(
             "haru-reasoner-reasoner-1",
@@ -199,10 +198,13 @@ class Orchestrator:
         container_checks = {
             "LLM": "haru-llm-action-args-1",
             "TTS retrieval bridge": "haru-tts-ros-node-1",
-            "Timeline player": "haru-timeline-player-timeline-player-1",
             "Reasoner": "haru-reasoner-reasoner-1",
             "Behavior trees": "haru-reasoner-bt-forest-1",
         }
+        if answers and answers.timeline_compatibility_enabled:
+            container_checks["Timeline compatibility"] = (
+                "haru-timeline-player-timeline-player-1"
+            )
         if answers and (answers.zoom_h8_enabled or answers.kinect_transcription_enabled):
             container_checks["Speech recognition"] = "haru-speech-recognition-1"
         if answers:
@@ -223,18 +225,53 @@ class Orchestrator:
                 "ros2 service list | grep -qx /strawberry/retrieve_tts_generation",
             )
             checks.append(Check("Expressive TTS retrieval", code == 0, output.strip() or "available"))
-            output, code = self.exec_ros(
-                "haru-tts-ros-node-1",
-                "ros2 action info /haru2/action_tts",
+            tts_servers = self._action_server_count("/haru2/action_tts")
+            checks.append(
+                Check("Robot TTS action server", tts_servers == 1, f"servers={tts_servers}")
             )
-            server_count = output.count("/haru2_core_tts_subscriber_node")
-            checks.append(Check("Robot TTS action server", code == 0 and server_count == 1, f"servers={server_count}"))
-            output, code = self.exec_ros(
-                "haru-tts-ros-node-1",
-                "ros2 action list | grep -qx /haru2/play_timeline",
+            timeline_servers = self._action_server_count("/haru2/play_timeline")
+            checks.append(
+                Check(
+                    "Timeline action server",
+                    timeline_servers == 1,
+                    f"servers={timeline_servers}",
+                )
             )
-            checks.append(Check("Timeline action", code == 0, output.strip() or "available"))
+        if self._container_exists("haru-llm-server-1"):
+            output, code = self.exec_command_in_container(
+                "haru-llm-server-1",
+                (
+                    "python -c \"import json,urllib.request; "
+                    "data=json.load(urllib.request.urlopen("
+                    "'http://127.0.0.1:4000/v1/models',timeout=3)); "
+                    "assert any(item['id']=='haru:canonical' for item in data['data'])\""
+                ),
+            )
+            checks.append(
+                Check(
+                    "Canonical LLM model",
+                    code == 0,
+                    output.strip() or "haru:canonical available",
+                )
+            )
+        if self._container_exists("haru-speech-recognition-1"):
+            output, code = self.exec_ros(
+                "haru-speech-recognition-1",
+                "ros2 topic info /perception/proc/speech/asr/result",
+            )
+            match = re.search(r"Publisher count:\s*(\d+)", output)
+            publishers = int(match.group(1)) if match else 0
+            checks.append(
+                Check("ASR result publisher", code == 0 and publishers == 1, f"publishers={publishers}")
+            )
         return checks
+
+    def exec_command_in_container(
+        self, container_name: str, command: str
+    ) -> tuple[str, int]:
+        container = self.client.containers.get(container_name)
+        result = container.exec_run(["bash", "-lc", command])
+        return result.output.decode(errors="replace"), result.exit_code
 
     def exec_ros(self, container_name: str, command: str) -> tuple[str, int]:
         container = self.client.containers.get(container_name)
@@ -297,6 +334,52 @@ class Orchestrator:
             time.sleep(2)
         raise TimeoutError(f"ROS action endpoint unavailable: {action_name}")
 
+    def _action_server_count(self, action_name: str) -> int:
+        output, code = self.exec_ros(
+            "haru-tts-ros-node-1",
+            f"ros2 action info {action_name}",
+        )
+        if code != 0:
+            return 0
+        match = re.search(r"Action servers:\s*(\d+)", output)
+        return int(match.group(1)) if match else 0
+
+    def _wait_exact_action_server(self, action_name: str, timeout: int) -> None:
+        deadline = time.monotonic() + timeout
+        count = 0
+        while time.monotonic() < deadline:
+            count = self._action_server_count(action_name)
+            if count == 1:
+                return
+            if count > 1:
+                raise RuntimeError(
+                    f"{action_name} has duplicate action servers: {count}"
+                )
+            time.sleep(2)
+        raise TimeoutError(f"{action_name} action server count is {count}; expected 1")
+
+    def _ensure_timeline_endpoint(self, answers: SetupAnswers) -> None:
+        count = self._action_server_count("/haru2/play_timeline")
+        if count > 1:
+            raise RuntimeError(
+                f"/haru2/play_timeline has duplicate action servers: {count}"
+            )
+        if count == 0 and answers.timeline_compatibility_enabled:
+            self.compose(
+                "timeline-player",
+                "--profile",
+                "timeline-compat",
+                "up",
+                "timeline-player",
+                "--force-recreate",
+                "-d",
+            )
+            self._wait_healthy(
+                "haru-timeline-player-timeline-player-1",
+                timeout=120,
+            )
+        self._wait_exact_action_server("/haru2/play_timeline", timeout=120)
+
 
 def data_is_present(root: Path) -> bool:
     return not missing_data_scripts(root)
@@ -305,7 +388,7 @@ def data_is_present(root: Path) -> bool:
 def missing_data_scripts(root: Path) -> list[str]:
     expected: Iterable[tuple[Path, str]] = (
         (root / "data" / "speech" / "configs" / "haru_speech.yaml", "download_speech_data.sh"),
-        (root / "data" / "llm" / "configs" / "litellm_server.yaml", "download_llm_data.sh"),
+        (root / "data" / "llm" / "configs" / "haru_llm.yaml", "download_llm_data.sh"),
         (root / "data" / "reasoner" / "tasks", "download_reasoner_data.sh"),
         (root / "data" / "tts" / "configs" / "strawberry_tts.yaml", "download_tts_data.sh"),
     )

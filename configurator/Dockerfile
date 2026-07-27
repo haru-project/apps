@@ -21,7 +21,7 @@ RUN apk add --no-cache \
 COPY --from=builder /opt/configurator-venv /opt/configurator-venv
 ENV PATH="/opt/configurator-venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
-    HARU_CONFIGURATOR_SCHEMA_VERSION=2 \
+    HARU_CONFIGURATOR_SCHEMA_VERSION=3 \
     HOME=/tmp/haru-home
 USER 65532:65532
 ENTRYPOINT ["/sbin/tini", "--", "haru-local"]

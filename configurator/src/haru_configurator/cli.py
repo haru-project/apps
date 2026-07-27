@@ -15,7 +15,14 @@ from ruamel.yaml import YAML
 import typer
 
 from .configuration import ConfigurationWriter, has_provider_secret, load_answers
-from .discovery import audio_devices, discover_robots, has_display, has_nvidia_gpu, host_reachable
+from .discovery import (
+    audio_devices,
+    discover_robots,
+    has_display,
+    has_nvidia_gpu,
+    host_reachable,
+    port_available,
+)
 from .models import Deployment, LLMProvider, PROVIDER_DEFAULTS, SetupAnswers
 from .orchestration import Orchestrator, data_is_present
 from .scenario import DEFAULT_SCENARIO, ScenarioManager
@@ -113,14 +120,16 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
     )
     model_id, secret_name = PROVIDER_DEFAULTS[provider]
     api_base = None
+    bedrock_region = "eu-central-1"
     if provider == LLMProvider.BEDROCK:
-        region = ask(
-            questionary.select(
-                "Bedrock region",
-                choices=["eu-central-1", "us-east-1", "us-east-2", "us-west-2"],
+        bedrock_region = str(
+            ask(
+                questionary.select(
+                    "Bedrock region",
+                    choices=["eu-central-1", "us-east-1", "us-east-2", "us-west-2"],
+                )
             )
         )
-        model_id = f"gemma-4-26b-bedrock-{region}"
     elif provider == LLMProvider.CUSTOM:
         model_id = str(ask(questionary.text("Model alias", default="custom-model"))).strip()
         api_base = str(ask(questionary.text("OpenAI-compatible API base URL"))).strip()
@@ -136,6 +145,14 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
     llm_port = int(str(ask(questionary.text("LiteLLM host port", default="4050"))))
     ipad = bool(ask(questionary.confirm("Launch the optional iPad stack?", default=False)))
     projector = bool(ask(questionary.confirm("Launch the optional projector stack?", default=False)))
+    timeline_compatibility = bool(
+        ask(
+            questionary.confirm(
+                "Start the local timeline compatibility server if the robot does not provide one?",
+                default=deployment == Deployment.SIMULATOR,
+            )
+        )
+    )
     launch = bool(ask(questionary.confirm("Launch the configured deployment after setup?", default=True)))
     answers = SetupAnswers(
         deployment=deployment,
@@ -143,6 +160,7 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
         llm_provider=provider,
         llm_model_id=model_id,
         llm_api_base=api_base,
+        bedrock_region=bedrock_region,
         zoom_h8_enabled=zoom,
         kinect_enabled=kinect,
         kinect_transcription_enabled=kinect_speech,
@@ -153,8 +171,36 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
         gpu_available=gpu,
         ipad_enabled=ipad,
         projector_enabled=projector,
+        timeline_compatibility_enabled=timeline_compatibility,
         launch_after_setup=launch,
     )
+    occupied = [
+        port
+        for port in (
+            answers.viz_port,
+            answers.rosbridge_port,
+            answers.rosbridge_port + 1,
+            answers.rosbridge_port + 2,
+            answers.rosbridge_port + 3,
+            answers.llm_port,
+            answers.nlp_port,
+            answers.memory_http_port,
+            answers.memory_grpc_port,
+            answers.cerevoice_port,
+            answers.gpt_sovits_port,
+            answers.tts_api_port,
+        )
+        if not port_available(port)
+    ]
+    if occupied:
+        proceed = ask(
+            questionary.confirm(
+                f"Host ports already in use: {', '.join(map(str, occupied))}. Save anyway?",
+                default=False,
+            )
+        )
+        if not proceed:
+            raise typer.Abort()
     return answers, secret
 
 
@@ -195,7 +241,7 @@ def setup(
         orchestrator.up()
         console.print("[green]Deployment is running.[/green]")
         if not answers and bool(ask(questionary.confirm("Run a minimal live LLM smoke test?", default=False))):
-            _llm_smoke(selected.llm_model_id, selected.llm_port)
+            _llm_smoke(selected.llm_port)
         doctor()
 
 
@@ -258,10 +304,10 @@ def logs() -> None:
     console.print(f"[green]Logs captured at {path}[/green]")
 
 
-def _llm_smoke(model_id: str, port: int) -> None:
-    payload = (f'{{"model":"{model_id}","messages":[{{"role":"user","content":"Reply OK"}}],"max_tokens":4}}').encode()
+def _llm_smoke(port: int) -> None:
+    payload = b'{"model":"haru:canonical","messages":[{"role":"user","content":"Reply OK"}],"max_tokens":4}'
     request = urllib.request.Request(
-        f"http://127.0.0.1:{port}/chat/completions",
+        f"http://127.0.0.1:{port}/v1/chat/completions",
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",

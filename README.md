@@ -124,7 +124,24 @@ host-level Docker control; only run the trusted Haru image or set
 Generated non-secret configuration lives under `.haru/`. Provider keys remain
 in the ignored `envs/llm.secrets.env` with user-only permissions. Re-running
 setup is safe: downloaded `data/` is preserved unless refresh is explicitly
-requested.
+requested. The generated configuration records its schema, repository
+revision, and Compose service inventory. Re-run `./setup.sh setup` after
+updating the checkout; stale or unknown services are rejected instead of being
+silently carried forward.
+
+Bedrock Mantle is the recommended provider. Setup asks for
+`BEDROCK_MANTLE_API_KEY` without echoing it and keeps every agent on the stable
+`haru:canonical` model alias. OpenAI, Anthropic, and custom OpenAI-compatible
+backends replace only the alias mapping, so agent configuration does not
+change. The selected robot and perception domains are written to
+`.haru/domain_bridge.yaml` rather than changing the tracked example.
+
+Host cache, recording, display, PulseAudio, device, and GPU settings are
+generated from absolute host paths. Physical setup enables the Kinect and
+expects robot action servers; simulator setup enables Unity and does not
+require robot hardware. The local timeline player is compatibility-only and
+must be selected explicitly when the robot driver does not provide
+`/haru2/play_timeline`.
 
 The local Haru NLP stack contains only Redis and one inference server. Setup
 sets `HARU_NLP_SERVER_GPU_ENABLED` from the detected GPU choice; `true` starts
@@ -821,9 +838,11 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 3. LLMs Don't Connect
 
     If you cannot access the LLMs:
-    - If you are using LLMs that need an API key, make sure to provide it in the env file.
-    - Make sure you can chat with the LLMs you want to use. You can use the WebUI running at `http://0.0.0.0:8080`.
-    - For each LLM agent, you can set its LLM model by setting the following env variable `{AGENT_NAME}_MODEL_ID`.
+    - Run `./setup.sh doctor` and confirm that LiteLLM is healthy and advertises `haru:canonical`.
+    - Re-run `./setup.sh setup` if `.haru/compatibility.json` does not match the current checkout.
+    - For Bedrock Mantle, confirm `BEDROCK_MANTLE_API_KEY` is present in `envs/llm.secrets.env` and that `BEDROCK_MANTLE_REGION` matches the deployed model.
+    - Keep agent model variables set to `haru:canonical`; provider-specific model names belong only in the generated `.haru/litellm_server.yaml`.
+    - A real provider request is opt-in because it can incur cost.
 
 4. Face is Not Recognized
 

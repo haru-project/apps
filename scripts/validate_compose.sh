@@ -40,7 +40,8 @@ for entry in "${stacks[@]}"; do
 done
 
 core_services="$(
-  HARU_NLP_SERVER_GPU_ENABLED=false \
+  HARU_COMPOSE_IGNORE_LOCAL_CONFIG=true \
+    HARU_NLP_SERVER_GPU_ENABLED=false \
     HARU_DEPLOYMENT=physical \
     bash "${ROOT_DIR}/scripts/compose.sh" all config --services
 )"
@@ -69,7 +70,8 @@ do
 done
 
 simulator_services="$(
-  HARU_NLP_SERVER_GPU_ENABLED=false \
+  HARU_COMPOSE_IGNORE_LOCAL_CONFIG=true \
+    HARU_NLP_SERVER_GPU_ENABLED=false \
     HARU_DEPLOYMENT=simulator \
     bash "${ROOT_DIR}/scripts/compose.sh" all config --services
 )"

@@ -24,9 +24,9 @@ jobs:
       - name: Install configurator
         run: python -m pip install './configurator[test]'
       - name: Unit tests
-        run: pytest configurator/tests
+        run: pytest configurator/tests tests
       - name: Shell validation
-        run: shellcheck setup.sh start.sh run.sh stop.sh scripts/compose.sh
+        run: shellcheck setup.sh start.sh run.sh stop.sh scripts/compose.sh scripts/validate_compose.sh
       - name: Compose validation
         run: bash scripts/validate_compose.sh
 
@@ -62,15 +62,26 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Verify non-root daemon access
+      - name: Start disposable Docker daemon
         if: github.event_name != 'push'
-        run: >-
-          docker run --rm --user "$(id -u):$(id -g)"
-          --group-add "$(stat -c '%g' /var/run/docker.sock)"
-          -v /var/run/docker.sock:/var/run/docker.sock
-          --entrypoint python
-          ghcr.io/haru-project/apps-configurator:sha-${{ github.sha }}
-          -c 'import docker; assert docker.from_env().ping()'
+        run: |
+          docker run -d --privileged --name configurator-dind \
+            -e DOCKER_TLS_CERTDIR= -p 23750:2375 \
+            docker@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
+          for attempt in $(seq 1 30); do
+            DOCKER_HOST=tcp://127.0.0.1:23750 docker info >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          docker logs configurator-dind
+          exit 1
+      - name: Verify non-root disposable daemon access
+        if: github.event_name != 'push'
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" --network host \
+            -e DOCKER_HOST=tcp://127.0.0.1:23750 \
+            --entrypoint python \
+            ghcr.io/haru-project/apps-configurator:sha-${{ github.sha }} \
+            -c 'import docker; assert docker.from_env().ping()'
       - name: Scan image
         uses: aquasecurity/trivy-action@v0.36.0
         with:

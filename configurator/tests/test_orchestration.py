@@ -40,7 +40,7 @@ def test_wait_action_endpoint_times_out(monkeypatch) -> None:
         orchestrator._wait_action_endpoint("reasoner", "/haru2/play_timeline", timeout=1)
 
 
-def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch) -> None:
+def test_up_checks_driver_timeline_before_behavior_trees(monkeypatch) -> None:
     answers = SimpleNamespace(
         deployment=Deployment.PHYSICAL,
         kinect_enabled=False,
@@ -49,13 +49,14 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
         gpu_available=True,
         ipad_enabled=False,
         projector_enabled=False,
+        timeline_compatibility_enabled=False,
     )
     monkeypatch.setattr("haru_configurator.orchestration.load_answers", lambda _: answers)
     orchestrator = Orchestrator.__new__(Orchestrator)
     orchestrator.root = Path("/repo")
     compose_calls: list[tuple[str, ...]] = []
     compose_environments: dict[tuple[str, ...], dict[str, str] | None] = {}
-    action_waits: list[tuple[str, str, int]] = []
+    timeline_checks: list[object] = []
     def record_compose(*args, **kwargs) -> None:
         compose_calls.append(args)
         compose_environments[args] = kwargs.get("env")
@@ -65,19 +66,25 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
     monkeypatch.setattr(orchestrator, "_wait_robot_endpoints", lambda timeout: None)
     monkeypatch.setattr(
         orchestrator,
-        "_wait_action_endpoint",
-        lambda container, action, timeout: action_waits.append((container, action, timeout)),
+        "_ensure_timeline_endpoint",
+        lambda selected: timeline_checks.append(selected),
     )
 
     orchestrator.up()
 
-    timeline_start = compose_calls.index(
-        ("timeline-player", "up", "timeline-player", "--force-recreate", "-d")
-    )
     forest_start = compose_calls.index(
         ("reasoner", "up", "bt-forest", "--force-recreate", "-d")
     )
-    assert timeline_start < forest_start
+    assert not any(call[0] == "timeline-player" for call in compose_calls)
+    assert (
+        "llm",
+        "up",
+        "action-args",
+        "--force-recreate",
+        "-d",
+    ) in compose_calls
+    assert not any("dashboard" in call for call in compose_calls)
+    assert forest_start > 0
     nlp_start = (
         "nlp",
         "up",
@@ -88,6 +95,43 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
     )
     assert nlp_start in compose_calls
     assert compose_environments[nlp_start] == {"HARU_NLP_SERVER_GPU_ENABLED": "true"}
-    assert action_waits == [
-        ("haru-reasoner-reasoner-1", "/haru2/play_timeline", 120)
+    assert timeline_checks == [answers]
+
+
+def test_timeline_compatibility_starts_only_when_endpoint_missing(monkeypatch) -> None:
+    answers = SimpleNamespace(timeline_compatibility_enabled=True)
+    orchestrator = Orchestrator.__new__(Orchestrator)
+    counts = iter([0, 1])
+    compose_calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(orchestrator, "_action_server_count", lambda _: next(counts))
+    monkeypatch.setattr(
+        orchestrator, "compose", lambda *args, **kwargs: compose_calls.append(args)
+    )
+    monkeypatch.setattr(orchestrator, "_wait_healthy", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        orchestrator,
+        "_wait_exact_action_server",
+        lambda action, timeout: orchestrator._action_server_count(action),
+    )
+
+    orchestrator._ensure_timeline_endpoint(answers)
+
+    assert compose_calls == [
+        (
+            "timeline-player",
+            "--profile",
+            "timeline-compat",
+            "up",
+            "timeline-player",
+            "--force-recreate",
+            "-d",
+        )
     ]
+
+
+def test_duplicate_timeline_servers_are_rejected(monkeypatch) -> None:
+    answers = SimpleNamespace(timeline_compatibility_enabled=False)
+    orchestrator = Orchestrator.__new__(Orchestrator)
+    monkeypatch.setattr(orchestrator, "_action_server_count", lambda _: 2)
+    with pytest.raises(RuntimeError, match="duplicate"):
+        orchestrator._ensure_timeline_endpoint(answers)
