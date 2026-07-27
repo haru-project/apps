@@ -14,6 +14,14 @@ shift
 
 stack_files=()
 nlp_profile="cpu"
+deployment_profile="${HARU_DEPLOYMENT:-}"
+case "${deployment_profile:-physical}" in
+    physical|simulator) ;;
+    *)
+        echo "HARU_DEPLOYMENT must be physical or simulator." >&2
+        exit 1
+    ;;
+esac
 case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
     1|true|TRUE|True|yes|YES|Yes|on|ON|On)
         nlp_profile="gpu"
@@ -120,7 +128,7 @@ if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
     cmd+=(--profile "${nlp_profile}")
 fi
 if [[ "${stack}" == "all" ]]; then
-    cmd+=(--profile all)
+    cmd+=(--profile all --profile "${deployment_profile:-physical}")
 fi
 
 exec "${cmd[@]}" "$@"

@@ -10,7 +10,7 @@ services:
     env_file: ../envs/projector.env
     environment:
       HARU_PARAM__DEV_AUTOSTART: "true"
-      HARU_PARAM__WEB_SERVER_PORT: "8081"
+      HARU_PARAM__WEB_SERVER_PORT: "${PROJECTOR_HOST_PORT:-8081}"
     volumes:
       - ../data/reasoner/projector:/shared/projector/resources:ro
       - ../data/session/:/root/.bt_ros:ro

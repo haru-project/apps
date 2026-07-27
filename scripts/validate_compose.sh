@@ -41,6 +41,7 @@ done
 
 core_services="$(
   HARU_NLP_SERVER_GPU_ENABLED=false \
+    HARU_DEPLOYMENT=physical \
     bash "${ROOT_DIR}/scripts/compose.sh" all config --services
 )"
 for required in \
@@ -63,6 +64,24 @@ for excluded in \
 do
   if grep -qx "${excluded}" <<< "${core_services}"; then
     echo "Core all stack unexpectedly enables ${excluded}." >&2
+    exit 1
+  fi
+done
+
+simulator_services="$(
+  HARU_NLP_SERVER_GPU_ENABLED=false \
+    HARU_DEPLOYMENT=simulator \
+    bash "${ROOT_DIR}/scripts/compose.sh" all config --services
+)"
+for required in unity-app web-server; do
+  grep -qx "${required}" <<< "${simulator_services}" || {
+    echo "Simulator all stack is missing ${required}." >&2
+    exit 1
+  }
+done
+for excluded in azure-kinect skeletons faces; do
+  if grep -qx "${excluded}" <<< "${simulator_services}"; then
+    echo "Simulator all stack unexpectedly enables ${excluded}." >&2
     exit 1
   fi
 done

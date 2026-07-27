@@ -12,16 +12,19 @@ services:
     extends:
       file: docker-compose-perception.yaml
       service: azure-kinect
+    profiles: ["physical"]
 
   faces:
     extends:
       file: docker-compose-perception.yaml
       service: faces
+    profiles: ["physical"]
 
   skeletons:
     extends:
       file: docker-compose-perception.yaml
       service: skeletons
+    profiles: ["physical"]
 
   belief:
     extends:
@@ -44,9 +47,6 @@ services:
       file: docker-compose-speech.yaml
       service: audio
     profiles: !override []
-    depends_on:
-      azure-kinect:
-        condition: service_started
 
   audio-capture-manager:
     extends:
