@@ -234,36 +234,18 @@ services:
       file: docker-compose-user.yaml
       service: episode-builder
 
-  # NLP layer. CPU and GPU servers remain mutually selectable by profile.
+  # Local NLP layer. HARU_NLP_SERVER_GPU_ENABLED selects one server profile.
   nlp-redis:
     extends:
       file: docker-compose-nlp.yaml
       service: redis
-    networks:
-      default:
-      haru-nlp-server:
-        aliases:
-          - haru_nlp_server-redis
-
-  loki:
-    extends:
-      file: docker-compose-nlp.yaml
-      service: loki
-
-  prometheus:
-    extends:
-      file: docker-compose-nlp.yaml
-      service: prometheus
-
-  tempo:
-    extends:
-      file: docker-compose-nlp.yaml
-      service: tempo
 
   haru-nlp-server-cpu:
     extends:
       file: docker-compose-nlp.yaml
       service: haru-nlp-server-cpu
+    environment:
+      HARU_NLP_SERVER_REDIS_HOST: nlp-redis
     depends_on: !override
       nlp-redis:
         condition: service_healthy
@@ -272,13 +254,11 @@ services:
     extends:
       file: docker-compose-nlp.yaml
       service: haru-nlp-server-gpu
+    environment:
+      HARU_NLP_SERVER_REDIS_HOST: nlp-redis
     depends_on: !override
-      loki:
-        condition: service_started
       nlp-redis:
         condition: service_healthy
-    logging:
-      driver: json-file
 
   # Timeline player
   timeline-player:
@@ -290,10 +270,6 @@ services:
     extends:
       file: docker-compose-timeline-player.yaml
       service: dev
-
-networks:
-  haru-nlp-server:
-    name: haru-nlp-server
 
 volumes:
   agent_memory_weaviate_data:

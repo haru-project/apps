@@ -13,6 +13,19 @@ fi
 shift
 
 stack_files=()
+nlp_profile="cpu"
+case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
+    1|true|TRUE|True|yes|YES|Yes|on|ON|On)
+        nlp_profile="gpu"
+    ;;
+    0|false|FALSE|False|no|NO|No|off|OFF|Off|"")
+        nlp_profile="cpu"
+    ;;
+    *)
+        echo "HARU_NLP_SERVER_GPU_ENABLED must be true or false." >&2
+        exit 1
+    ;;
+esac
 
 case "${stack}" in
     domain-bridge)
@@ -57,7 +70,7 @@ case "${stack}" in
     ;;
     nlp)
         stack_files=("${APPS_DIR}/docker-compose-nlp.yaml")
-        env_file="${ROOT_DIR}/envs/nlp-cpu.env"
+        env_file="${ROOT_DIR}/envs/nlp-${nlp_profile}.env"
     ;;
     timeline-player)
         stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
@@ -103,5 +116,8 @@ for stack_file in "${stack_files[@]}"; do
     cmd+=(-f "${stack_file}")
 done
 cmd+=(--env-file "${env_file}")
+if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
+    cmd+=(--profile "${nlp_profile}")
+fi
 
 exec "${cmd[@]}" "$@"

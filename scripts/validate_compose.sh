@@ -15,9 +15,12 @@ stacks=(
   "ipad:envs/ipad.env:docker-compose-ipad.yaml:"
   "projector:envs/projector.env:docker-compose-projector.yaml:"
   "user:envs/user.env:docker-compose-user.yaml:"
+  "nlp-cpu:envs/nlp-cpu.env:docker-compose-nlp.yaml:cpu"
+  "nlp-gpu:envs/nlp-gpu.env:docker-compose-nlp.yaml:gpu"
   "timeline-player:envs/timeline-player.env:docker-compose-timeline-player.yaml:"
   "memory:envs/memory.env:docker-compose-memory.yaml:"
-  "all:envs/all.env:docker-compose-all.yaml:"
+  "all-cpu:envs/all.env:docker-compose-all.yaml:cpu"
+  "all-gpu:envs/all.env:docker-compose-all.yaml:gpu"
 )
 
 for entry in "${stacks[@]}"; do
