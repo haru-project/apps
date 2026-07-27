@@ -131,4 +131,13 @@ if [[ "${stack}" == "all" ]]; then
     cmd+=(--profile all --profile "${deployment_profile:-physical}")
 fi
 
+local_env_file="${ROOT_DIR}/.haru/local.env"
+local_override_file="${ROOT_DIR}/.haru/compose-${stack}.yaml"
+if [[ -f "${local_env_file}" ]]; then
+    cmd+=(--env-file "${local_env_file}")
+fi
+if [[ -f "${local_override_file}" ]]; then
+    cmd+=(-f "${local_override_file}")
+fi
+
 exec "${cmd[@]}" "$@"
