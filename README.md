@@ -126,6 +126,10 @@ in the ignored `envs/llm.secrets.env` with user-only permissions. Re-running
 setup is safe: downloaded `data/` is preserved unless refresh is explicitly
 requested.
 
+The local Haru NLP stack contains only Redis and one inference server. Setup
+sets `HARU_NLP_SERVER_GPU_ENABLED` from the detected GPU choice; `true` starts
+the GPU service and `false` starts the CPU service.
+
 Common commands:
 
 ```bash
