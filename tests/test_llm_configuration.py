@@ -30,3 +30,8 @@ def test_post_fix_trims_only_trailing_json_junk() -> None:
     assert trim('{"ok": true}') == '{"ok": true}'
     assert trim("plain text") == "plain text"
     assert trim('{"incomplete":') == '{"incomplete":'
+
+
+def test_tracked_robot_domain_defaults_are_not_robot_specific() -> None:
+    assert "ROS_DOMAIN_ID=0" in (ROOT / "envs/memory.env").read_text()
+    assert "ROS_DOMAIN_ID=0" in (ROOT / "envs/timeline-player.env").read_text()
