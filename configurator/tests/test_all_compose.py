@@ -36,3 +36,18 @@ def test_all_compose_includes_every_component_service() -> None:
                 missing.append(f"{path.name}:{source_name} -> {aggregate_name}")
 
     assert not missing, "Missing aggregate services:\n" + "\n".join(missing)
+
+
+def test_local_nlp_excludes_server_observability_and_custom_network() -> None:
+    root = Path(__file__).resolve().parents[2]
+    yaml = YAML(typ="rt")
+    nlp = yaml.load((root / "apps" / "docker-compose-nlp.yaml").read_text())
+    aggregate = yaml.load((root / "apps" / "docker-compose-all.yaml").read_text())
+
+    for service in ("loki", "tempo", "prometheus", "grafana"):
+        assert service not in nlp["services"]
+        assert service not in aggregate["services"]
+    assert "haru-nlp-server" not in nlp.get("networks", {})
+    assert "haru-nlp-server" not in aggregate.get("networks", {})
+    assert nlp["services"]["haru-nlp-server-cpu"]["profiles"] == ["cpu"]
+    assert nlp["services"]["haru-nlp-server-gpu"]["profiles"] == ["gpu"]

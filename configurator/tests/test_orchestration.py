@@ -46,6 +46,7 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
         kinect_enabled=False,
         zoom_h8_enabled=False,
         kinect_transcription_enabled=False,
+        gpu_available=True,
         ipad_enabled=False,
         projector_enabled=False,
     )
@@ -53,8 +54,13 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
     orchestrator = Orchestrator.__new__(Orchestrator)
     orchestrator.root = Path("/repo")
     compose_calls: list[tuple[str, ...]] = []
+    compose_environments: dict[tuple[str, ...], dict[str, str] | None] = {}
     action_waits: list[tuple[str, str, int]] = []
-    monkeypatch.setattr(orchestrator, "compose", lambda *args: compose_calls.append(args))
+    def record_compose(*args, **kwargs) -> None:
+        compose_calls.append(args)
+        compose_environments[args] = kwargs.get("env")
+
+    monkeypatch.setattr(orchestrator, "compose", record_compose)
     monkeypatch.setattr(orchestrator, "_wait_healthy", lambda *args, **kwargs: None)
     monkeypatch.setattr(orchestrator, "_wait_robot_endpoints", lambda timeout: None)
     monkeypatch.setattr(
@@ -72,6 +78,16 @@ def test_up_starts_and_checks_timeline_player_before_behavior_trees(monkeypatch)
         ("reasoner", "up", "bt-forest", "--force-recreate", "-d")
     )
     assert timeline_start < forest_start
+    nlp_start = (
+        "nlp",
+        "up",
+        "redis",
+        "haru-nlp-server-gpu",
+        "--force-recreate",
+        "-d",
+    )
+    assert nlp_start in compose_calls
+    assert compose_environments[nlp_start] == {"HARU_NLP_SERVER_GPU_ENABLED": "true"}
     assert action_waits == [
         ("haru-reasoner-reasoner-1", "/haru2/play_timeline", 120)
     ]
