@@ -103,6 +103,44 @@ Most applications require access to GPU resources, so ensure that your system ha
 
 With Docker and the NVIDIA Container Toolkit installed, you're ready to start downloading and running Haru applications.
 
+### Guided local setup (recommended)
+
+The repository includes a containerized configurator. It discovers nearby
+`haru-N.local` robots, configures either a physical robot or simulator,
+selects audio hardware and an LLM provider, writes ignored host-local
+overrides, validates the resulting Compose projects, and can launch the full
+deployment.
+
+```bash
+./setup.sh setup
+```
+
+The configurator image is `ghcr.io/haru-project/apps-configurator:demo-jiyugaoka`.
+The launcher mounts the Docker socket so the configurator can pull images and
+manage this repository's Compose projects. Access to that socket grants
+host-level Docker control; only run the trusted Haru image or set
+`HARU_CONFIGURATOR_IMAGE` to an image you built yourself.
+
+Generated non-secret configuration lives under `.haru/`. Provider keys remain
+in the ignored `envs/llm.secrets.env` with user-only permissions. Re-running
+setup is safe: downloaded `data/` is preserved unless refresh is explicitly
+requested.
+
+Common commands:
+
+```bash
+./setup.sh doctor
+./setup.sh up
+./setup.sh scenario run data/reasoner/tasks/episodes/20260527.json
+./setup.sh scenario stop
+./setup.sh logs
+./setup.sh down
+```
+
+`start.sh`, `run.sh`, and `stop.sh` remain as compatibility wrappers. Scenario
+runs use a fresh task ID and fresh conversational state by default; pass
+`--continue-session` only when retaining previous context is intentional.
+
 1. Authenticate with the Private Registry
 
     Haru applications are hosted in a private registry on GitHub. To authorize your machine to access it, run the following in your terminal:
@@ -666,9 +704,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > The bridge provides `/strawberry/retrieve_tts_generation`. Without it,
     > expressive audio may be generated but cannot be retrieved by the reasoner.
-    > Keep this container healthy before starting an expressive scenario.
+    > The guided setup starts and health-checks it automatically.
     >
-
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.
 
