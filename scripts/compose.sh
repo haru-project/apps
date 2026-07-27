@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
+local_env_file="${ROOT_DIR}/.haru/local.env"
 
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
@@ -15,6 +16,23 @@ shift
 stack_files=()
 nlp_profile="cpu"
 deployment_profile="${HARU_DEPLOYMENT:-}"
+nlp_gpu_enabled="${HARU_NLP_SERVER_GPU_ENABLED:-}"
+if [[ -f "${local_env_file}" ]]; then
+    while IFS='=' read -r key value; do
+        case "${key}" in
+            HARU_DEPLOYMENT)
+                if [[ -z "${deployment_profile}" ]]; then
+                    deployment_profile="${value}"
+                fi
+            ;;
+            HARU_NLP_SERVER_GPU_ENABLED)
+                if [[ -z "${nlp_gpu_enabled}" ]]; then
+                    nlp_gpu_enabled="${value}"
+                fi
+            ;;
+        esac
+    done < "${local_env_file}"
+fi
 case "${deployment_profile:-physical}" in
     physical|simulator) ;;
     *)
@@ -22,7 +40,7 @@ case "${deployment_profile:-physical}" in
         exit 1
     ;;
 esac
-case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
+case "${nlp_gpu_enabled:-false}" in
     1|true|TRUE|True|yes|YES|Yes|on|ON|On)
         nlp_profile="gpu"
     ;;
@@ -131,7 +149,6 @@ if [[ "${stack}" == "all" ]]; then
     cmd+=(--profile all --profile "${deployment_profile:-physical}")
 fi
 
-local_env_file="${ROOT_DIR}/.haru/local.env"
 local_override_file="${ROOT_DIR}/.haru/compose-${stack}.yaml"
 if [[ -f "${local_env_file}" ]]; then
     cmd+=(--env-file "${local_env_file}")

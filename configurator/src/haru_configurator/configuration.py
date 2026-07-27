@@ -73,6 +73,7 @@ class ConfigurationWriter:
             "HARU_DEPLOYMENT": answers.deployment.value,
             "HARU_ROBOT_HOST": answers.robot_host or "",
             "HARU_GPU_AVAILABLE": str(answers.gpu_available).lower(),
+            "HARU_NLP_SERVER_GPU_ENABLED": str(answers.gpu_available).lower(),
         }
         values.update({key: answers.llm_model_id for key in AGENT_MODEL_KEYS})
         path = self.local_dir / "local.env"

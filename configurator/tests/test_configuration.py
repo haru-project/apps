@@ -42,6 +42,7 @@ def test_writer_creates_local_physical_override_and_protects_secret(tmp_path, mo
 
     local_env = (root / ".haru" / "local.env").read_text(encoding="utf-8")
     assert "ROS_DOMAIN_ID=19" in local_env
+    assert "HARU_NLP_SERVER_GPU_ENABLED=true" in local_env
     assert "secret-value" not in local_env
     override = (root / ".haru" / "compose-reasoner.yaml").read_text(encoding="utf-8")
     assert "expressivity_controller.xml" not in override

@@ -52,7 +52,16 @@ class Orchestrator:
 
     def pull(self) -> None:
         answers = load_answers(self.root)
-        stacks = ["tts", "timeline-player", "perception", "speech", "llm", "memory", "reasoner"]
+        stacks = [
+            "tts",
+            "timeline-player",
+            "perception",
+            "speech",
+            "nlp",
+            "llm",
+            "memory",
+            "reasoner",
+        ]
         if answers.deployment == Deployment.SIMULATOR:
             stacks.insert(0, "simulator")
         if answers.ipad_enabled:
@@ -61,7 +70,12 @@ class Orchestrator:
             stacks.append("projector")
         for stack in stacks:
             profiles = ["--profile", "all"] if stack == "tts" else []
-            self.compose(stack, *profiles, "pull")
+            env = (
+                {"HARU_NLP_SERVER_GPU_ENABLED": str(answers.gpu_available).lower()}
+                if stack == "nlp"
+                else None
+            )
+            self.compose(stack, *profiles, "pull", env=env)
 
     def up(self) -> None:
         answers = load_answers(self.root)
@@ -98,6 +112,23 @@ class Orchestrator:
                 "--force-recreate",
                 "-d",
             )
+        nlp_variant = "gpu" if answers.gpu_available else "cpu"
+        nlp_service = f"haru-nlp-server-{nlp_variant}"
+        nlp_env = {"HARU_NLP_SERVER_GPU_ENABLED": str(answers.gpu_available).lower()}
+        self.compose(
+            "nlp",
+            "up",
+            "redis",
+            nlp_service,
+            "--force-recreate",
+            "-d",
+            env=nlp_env,
+        )
+        self._wait_healthy(
+            "haru-nlp-redis-1",
+            f"haru-nlp-{nlp_service}-1",
+            timeout=180,
+        )
         self.compose("llm", "up", "action-args", "dashboard", "--force-recreate", "-d")
         self._wait_healthy("haru-llm-server-1", "haru-llm-action-args-1", timeout=180)
         self.compose("memory", "up", "--force-recreate", "-d")
@@ -133,7 +164,7 @@ class Orchestrator:
             ("simulator", []),
             ("ipad", []),
             ("projector", []),
-            ("nlp", ["--profile", "all"]),
+            ("nlp", ["--profile", "cpu", "--profile", "gpu"]),
             ("domain-bridge", []),
         ):
             self.compose(stack, *profiles, "down", check=False)
@@ -174,6 +205,9 @@ class Orchestrator:
         }
         if answers and (answers.zoom_h8_enabled or answers.kinect_transcription_enabled):
             container_checks["Speech recognition"] = "haru-speech-recognition-1"
+        if answers:
+            nlp_variant = "gpu" if answers.gpu_available else "cpu"
+            container_checks["Haru NLP"] = f"haru-nlp-haru-nlp-server-{nlp_variant}-1"
         for label, name in container_checks.items():
             try:
                 container = self.client.containers.get(name)
