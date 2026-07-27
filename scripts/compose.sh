@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
 local_env_file="${ROOT_DIR}/.haru/local.env"
+use_local_config=true
+case "${HARU_COMPOSE_IGNORE_LOCAL_CONFIG:-false}" in
+    1|true|TRUE|True|yes|YES|Yes|on|ON|On) use_local_config=false ;;
+esac
 
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
@@ -17,7 +21,7 @@ stack_files=()
 nlp_profile="cpu"
 deployment_profile="${HARU_DEPLOYMENT:-}"
 nlp_gpu_enabled="${HARU_NLP_SERVER_GPU_ENABLED:-}"
-if [[ -f "${local_env_file}" ]]; then
+if [[ "${use_local_config}" == "true" && -f "${local_env_file}" ]]; then
     while IFS='=' read -r key value; do
         case "${key}" in
             HARU_DEPLOYMENT)
@@ -153,10 +157,10 @@ if [[ "${stack}" == "all" ]]; then
 fi
 
 local_override_file="${ROOT_DIR}/.haru/compose-${stack}.yaml"
-if [[ -f "${local_env_file}" ]]; then
+if [[ "${use_local_config}" == "true" && -f "${local_env_file}" ]]; then
     cmd+=(--env-file "${local_env_file}")
 fi
-if [[ -f "${local_override_file}" ]]; then
+if [[ "${use_local_config}" == "true" && -f "${local_override_file}" ]]; then
     cmd+=(-f "${local_override_file}")
 fi
 

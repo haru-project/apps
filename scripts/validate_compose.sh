@@ -248,7 +248,8 @@ if "groot_monitor_enabled:=false" not in service["command"]:
 '
 
 core_services="$(
-  HARU_NLP_SERVER_GPU_ENABLED=false \
+  HARU_COMPOSE_IGNORE_LOCAL_CONFIG=true \
+    HARU_NLP_SERVER_GPU_ENABLED=false \
     HARU_DEPLOYMENT=physical \
     bash "${ROOT_DIR}/scripts/compose.sh" all config --services
 )"
@@ -277,7 +278,8 @@ do
 done
 
 simulator_services="$(
-  HARU_NLP_SERVER_GPU_ENABLED=false \
+  HARU_COMPOSE_IGNORE_LOCAL_CONFIG=true \
+    HARU_NLP_SERVER_GPU_ENABLED=false \
     HARU_DEPLOYMENT=simulator \
     bash "${ROOT_DIR}/scripts/compose.sh" all config --services
 )"

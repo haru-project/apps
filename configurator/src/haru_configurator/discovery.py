@@ -95,3 +95,14 @@ def has_nvidia_gpu() -> bool:
     except (OSError, subprocess.TimeoutExpired):
         return False
     return result.returncode == 0 and "nvidia" in result.stdout.lower()
+
+
+def port_available(port: int) -> bool:
+    """Return whether a TCP host port can be bound locally."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(("0.0.0.0", port))
+        except OSError:
+            return False
+    return True

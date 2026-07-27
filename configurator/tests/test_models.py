@@ -35,7 +35,7 @@ def test_simulator_keeps_configured_domain() -> None:
 @pytest.mark.parametrize(
     ("provider", "secret_name"),
     [
-        (LLMProvider.BEDROCK, "BEDROCK_API_KEY"),
+        (LLMProvider.BEDROCK, "BEDROCK_MANTLE_API_KEY"),
         (LLMProvider.OPENAI, "OPENAI_API_KEY"),
         (LLMProvider.ANTHROPIC, "ANTHROPIC_API_KEY"),
         (LLMProvider.CUSTOM, "CUSTOM_LLM_API_KEY"),
@@ -50,3 +50,8 @@ def test_provider_secret_mapping(provider: LLMProvider, secret_name: str) -> Non
 def test_host_ports_must_be_distinct() -> None:
     with pytest.raises(ValidationError):
         SetupAnswers(deployment=Deployment.SIMULATOR, llm_port=5173)
+
+
+def test_host_paths_are_absolute(monkeypatch) -> None:
+    with pytest.raises(ValidationError):
+        SetupAnswers(deployment=Deployment.SIMULATOR, host_home="relative")
