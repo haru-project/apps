@@ -13,7 +13,7 @@ services:
       "ipad_students_controller_enabled:=false",
       "ipad_teacher_controller_enabled:=false",
       "unity_controller_enabled:=false",
-      "groot_monitor_enabled:=true",
+      "groot_monitor_enabled:=${GROOT_MONITOR_ENABLED:-true}",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env

@@ -1,6 +1,12 @@
 name: haru-all
 
 services:
+  # ROS domain bridge
+  domain-bridge:
+    extends:
+      file: docker-compose-domain-bridge.yaml
+      service: domain-bridge
+
   # Perception layer
   azure-kinect:
     extends:
@@ -28,13 +34,24 @@ services:
       service: viz
 
   # Speech layer
+  base:
+    extends:
+      file: docker-compose-speech.yaml
+      service: base
+
   audio:
     extends:
       file: docker-compose-speech.yaml
       service: audio
+    profiles: []
     depends_on:
       azure-kinect:
         condition: service_started
+
+  audio-capture-manager:
+    extends:
+      file: docker-compose-speech.yaml
+      service: audio-capture-manager
 
   recognition:
     extends:
@@ -80,6 +97,8 @@ services:
     extends:
       file: docker-compose-llm.yaml
       service: action-args
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
     depends_on:
       redis:
         condition: service_healthy
@@ -98,34 +117,67 @@ services:
       file: docker-compose-llm.yaml
       service: vllm
 
+  # Memory layer
+  agent-memory-t2v:
+    extends:
+      file: docker-compose-memory.yaml
+      service: agent-memory-t2v
+
+  agent-memory-weaviate:
+    extends:
+      file: docker-compose-memory.yaml
+      service: agent-memory-weaviate
+
+  agent-memory:
+    extends:
+      file: docker-compose-memory.yaml
+      service: agent-memory
+
+  agent-memory-dashboard:
+    extends:
+      file: docker-compose-memory.yaml
+      service: agent-memory-dashboard
+
   # Reasoner layer
   bt-forest:
     extends:
       file: docker-compose-reasoner.yaml
       service: bt-forest
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
     depends_on:
       action-args:
         condition: service_started
+      timeline-player:
+        condition: service_healthy
 
   reasoner:
     extends:
       file: docker-compose-reasoner.yaml
       service: reasoner
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
 
   context-manager:
     extends:
       file: docker-compose-reasoner.yaml
       service: context-manager
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
 
   execute-task-scenario:
     extends:
       file: docker-compose-reasoner.yaml
       service: execute-task-scenario
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
 
   execute-task-test:
     extends:
       file: docker-compose-reasoner.yaml
       service: execute-task-test
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
 
   # TTS layer (optional)
   gpt-sovits:
@@ -166,7 +218,82 @@ services:
       file: docker-compose-simulator.yaml
       service: web-server
 
-  haru-nlp:
+  # Optional user-facing applications
+  ipad-server:
+    extends:
+      file: docker-compose-ipad.yaml
+      service: server
+
+  projector-server:
+    extends:
+      file: docker-compose-projector.yaml
+      service: server
+
+  episode-builder:
+    extends:
+      file: docker-compose-user.yaml
+      service: episode-builder
+
+  # NLP layer. CPU and GPU servers remain mutually selectable by profile.
+  nlp-redis:
     extends:
       file: docker-compose-nlp.yaml
-      service: haru-nlp
+      service: redis
+    networks:
+      default:
+      haru-nlp-server:
+        aliases:
+          - haru_nlp_server-redis
+
+  loki:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: loki
+
+  prometheus:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: prometheus
+
+  tempo:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: tempo
+
+  haru-nlp-server-cpu:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: haru-nlp-server-cpu
+    depends_on: !override
+      nlp-redis:
+        condition: service_healthy
+
+  haru-nlp-server-gpu:
+    extends:
+      file: docker-compose-nlp.yaml
+      service: haru-nlp-server-gpu
+    depends_on: !override
+      loki:
+        condition: service_started
+      nlp-redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+
+  # Timeline player
+  timeline-player:
+    extends:
+      file: docker-compose-timeline-player.yaml
+      service: timeline-player
+
+  timeline-player-dev:
+    extends:
+      file: docker-compose-timeline-player.yaml
+      service: dev
+
+networks:
+  haru-nlp-server:
+    name: haru-nlp-server
+
+volumes:
+  agent_memory_weaviate_data:

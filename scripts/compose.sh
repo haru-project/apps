@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
+    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
     exit 1
 fi
 shift

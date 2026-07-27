@@ -25,8 +25,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      # server:
-      #   condition: service_healthy
+      server:
+        condition: service_healthy
     restart: unless-stopped
     
   dashboard:
@@ -72,9 +72,7 @@ services:
       - path: ../envs/llm.secrets.env
         required: false
     ports:
-      - 4050:4000
-    extra_hosts:
-      - dgx02:172.24.39.32
+      - ${LLM_SERVER_HOST_PORT:-4050}:4000
     volumes:
       - ../data/llm/configs/litellm_server.yaml:/app/config.yaml:rw
       # Post-call hook referenced by litellm_server.yaml `callbacks:`; litellm fails to

@@ -636,10 +636,15 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
     ```
 
-    **Optional ROS bridge**:
+    **Required ROS bridge for expressive scenarios**:
     ```bash
     bash scripts/compose.sh tts --profile tts --profile ros up ros-node --force-recreate -d
     ```
+
+    > The bridge provides `/strawberry/retrieve_tts_generation`. Without it,
+    > expressive audio may be generated but cannot be retrieved by the reasoner.
+    > Keep this container healthy before starting an expressive scenario.
+    >
 
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.

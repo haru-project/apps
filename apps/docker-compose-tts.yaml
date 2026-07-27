@@ -66,6 +66,12 @@ services:
       tts-client:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -lc 'source /opt/ros/jazzy/setup.bash && source /ros2_ws/install/setup.bash && ros2 service list 2>/dev/null | grep -qx /strawberry/retrieve_tts_generation'"]
+      interval: 10s
+      timeout: 8s
+      retries: 6
+      start_period: 20s
     profiles: ["ros", "all"]
 
   cerevoice-api:
