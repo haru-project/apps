@@ -77,9 +77,11 @@ for stack in "${requested_stacks[@]}"; do
     env_file="${ENV_FILES[$stack]}"
 
     echo "Resolving images for ${stack}..."
-    # Enable the `all` profile and the stack-specific profile (if any)
+    # Enable the `all` profile and the stack-specific profile (if any).
     profiles_args=(--profile all)
-    if [[ "${stack}" != "all" ]]; then
+    if [[ "${stack}" == "timeline-player" ]]; then
+        profiles_args+=(--profile timeline-compat)
+    elif [[ "${stack}" != "all" ]]; then
         profiles_args+=(--profile "${stack}")
     fi
 

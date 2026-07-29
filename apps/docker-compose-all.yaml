@@ -100,7 +100,7 @@ services:
       file: docker-compose-llm.yaml
       service: action-args
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     depends_on:
       redis:
         condition: service_healthy
@@ -146,7 +146,7 @@ services:
       file: docker-compose-reasoner.yaml
       service: bt-forest
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     depends_on:
       action-args:
         condition: service_started
@@ -156,21 +156,21 @@ services:
       file: docker-compose-reasoner.yaml
       service: reasoner
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
 
   context-manager:
     extends:
       file: docker-compose-reasoner.yaml
       service: context-manager
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
 
   execute-task-scenario:
     extends:
       file: docker-compose-reasoner.yaml
       service: execute-task-scenario
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     profiles: ["scenario"]
 
   execute-task-test:
@@ -178,7 +178,7 @@ services:
       file: docker-compose-reasoner.yaml
       service: execute-task-test
     environment:
-      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     profiles: ["test"]
 
   # Expressive TTS is part of the core demo.

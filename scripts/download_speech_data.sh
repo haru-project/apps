@@ -79,4 +79,11 @@ done
 
 # Give permissions
 chmod -R a+rwX "$DATA_FOLDER"
-chmod -R a+rwX "$MODELS_FOLDER"
+# The provisioning container runs as root, so repair permissions from inside a
+# container as well. A host-side chmod cannot modify the resulting root-owned
+# cache files on a fresh installation.
+docker run --rm \
+  --entrypoint chmod \
+  -v "$MODELS_FOLDER:/shared/models:rw" \
+  "$VERIFICATION_IMAGE" \
+  -R a+rwX /shared/models

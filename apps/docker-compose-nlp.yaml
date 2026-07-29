@@ -16,7 +16,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server@sha256:97508a4d3368dcf0a418a5dd6bedc1eb7715ee3e8c91ab89f2bdf85c0e37606e}
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
     env_file:
       - ../envs/nlp-cpu.env
     environment:
@@ -48,7 +48,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-gpu
-    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server@sha256:97508a4d3368dcf0a418a5dd6bedc1eb7715ee3e8c91ab89f2bdf85c0e37606e}
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
     env_file:
       - ../envs/nlp-gpu.env
     environment:

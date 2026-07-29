@@ -5,12 +5,12 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy@sha256:d31c69e19339e6088fe786fcdef4a22664da5d8594479c1e316aed806acc4a6c}
+    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
     env_file:
       - ../envs/domain-bridge.env
     environment:
-      FROM_DOMAIN_ID: ${FROM_DOMAIN_ID:-200}
-      TO_DOMAIN_ID: ${TO_DOMAIN_ID:-0}
+      FROM_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-${FROM_DOMAIN_ID:-200}}
+      TO_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${TO_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}}
       DOMAIN_BRIDGE_CONFIG: /shared/config/domain_bridge.yaml
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}

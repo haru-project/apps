@@ -5,13 +5,15 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player@sha256:eca2d39f0a1c3077f1093aebab978c1d54f1ba868f9314685b523cc4b9e5a558}
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     command: bash -c "source /opt/ros/jazzy/workspace/install/setup.bash && ros2 launch haru_timeline_player timeline_player.launch.py"
     healthcheck:
-      test: ["CMD-SHELL", "source /opt/ros/jazzy/workspace/install/setup.bash && ros2 action list | grep -qx /haru2/play_timeline"]
+      test: ["CMD-SHELL", "bash -lc 'source /opt/ros/jazzy/workspace/install/setup.bash && ros2 action list | grep -qx /haru2/play_timeline'"]
       interval: 5s
       timeout: 5s
       retries: 24
@@ -20,10 +22,12 @@ services:
     profiles: ["timeline-compat"]
 
   dev:
-    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player@sha256:eca2d39f0a1c3077f1093aebab978c1d54f1ba868f9314685b523cc4b9e5a558}
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     volumes:
       - ../docker/deps:/workspace/src:cached
       - ..:/workspace/src/haru_timeline_player:cached

@@ -100,7 +100,7 @@ esac
 
 should_ensure_domain_bridge=false
 case "${stack}" in
-    perception|speech|all)
+    perception|speech)
         if [[ "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "false" && "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "0" ]]; then
             for arg in "$@"; do
                 if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
@@ -126,6 +126,9 @@ done
 cmd+=(--env-file "${env_file}")
 if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
     cmd+=(--profile "${nlp_profile}")
+fi
+if [[ "${stack}" == "timeline-player" ]]; then
+    cmd+=(--profile timeline-compat)
 fi
 if [[ "${stack}" == "all" ]]; then
     cmd+=(--profile all --profile "${deployment_profile:-physical}")

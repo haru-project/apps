@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm@sha256:9d57a2fd3035390b1b310fad2b39c405cc6ca7b9cfecb6ba0a63ed9a6e44a978}
+    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm:feature-micro_routines}
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
@@ -34,7 +34,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm@sha256:9d57a2fd3035390b1b310fad2b39c405cc6ca7b9cfecb6ba0a63ed9a6e44a978}
+    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm:feature-micro_routines}
     command: ["/bin/bash", "-c", "$PACKAGE_VENV -c 'from haru_llm.dashboard.app import run; run()'"]
     env_file:
       - ../envs/llm.env
@@ -46,13 +46,19 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "${PACKAGE_VENV:-/opt/ros/jazzy/workspace/package_venv/bin/python3}", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=2).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     profiles: ["dashboard"]
   
   redis:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${LLM_REDIS_IMAGE:-redis@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2}
+    image: ${LLM_REDIS_IMAGE:-redis:latest}
     ports:
       - ${LLM_REDIS_HOST_PORT:-6379}:6379
     restart: unless-stopped
@@ -66,7 +72,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${LITELLM_IMAGE:-docker.litellm.ai/berriai/litellm@sha256:a1745e629abfb17d434426ff48b115f54f4f4c4a0f5af241de569e93c63c411e}
+    image: ${LITELLM_IMAGE:-docker.litellm.ai/berriai/litellm:main-stable}
     command:
       - "--config=/app/config.yaml"
     env_file:
@@ -90,7 +96,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${OPEN_WEBUI_IMAGE:-ghcr.io/open-webui/open-webui@sha256:6a773e5c3a246b65cbe74ce942b294292c0e5f81c138f703d111bc162f7d7c3d}
+    image: ${OPEN_WEBUI_IMAGE:-ghcr.io/open-webui/open-webui:main}
     env_file:
       - ../envs/llm.env
       - path: ../envs/llm.secrets.env
@@ -119,7 +125,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-gpu
-    image: ${VLLM_IMAGE:-vllm/vllm-openai@sha256:ffb2d59b1c059a5bd8d781320c9f5189de8293693b7d95da54befddaa54abf52}
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
     command:
       - "--model=${VLLM_MODEL_NAME}"
       - "--gpu-memory-utilization=0.9"

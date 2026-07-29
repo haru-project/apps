@@ -10,6 +10,8 @@ services:
     image: scratch
     extends:
       service: common-service
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
     network_mode: host
     ipc: host
     stop_grace_period: 10s

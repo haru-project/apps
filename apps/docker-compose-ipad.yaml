@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_IPAD_IMAGE:-ghcr.io/haru-project/haru-ipad-action-server@sha256:46b6cbc36ff20a19dd75bf09ce5b5c84fc5aa56a791181584ca589e617b8e94f}
+    image: ${HARU_IPAD_IMAGE:-ghcr.io/haru-project/haru-ipad-action-server:ros2}
     command: [
       "ros2", "launch", "haru_ipad_action_server", "action_interface_launch.py",
       "ipads_num:=${NUM_IPADS:-0}"
