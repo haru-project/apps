@@ -11,6 +11,8 @@ dependencies = [
   "docker==7.1.0",
   "pydantic==2.11.7",
   "python-dotenv==1.1.1",
+  # questionary 2.1.0 relies on the pre-3.0.52 prompt layout structure.
+  "prompt-toolkit==3.0.51",
   "questionary==2.1.0",
   "rich==14.0.0",
   "ruamel.yaml==0.18.14",
