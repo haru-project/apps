@@ -32,7 +32,7 @@ PROVIDER_DEFAULTS: dict[LLMProvider, tuple[str, str]] = {
 
 
 class SetupAnswers(BaseModel):
-    schema_version: Literal[3] = 3
+    schema_version: Literal[4] = 4
     deployment: Deployment
     robot_host: str | None = None
     robot_id: int | None = Field(default=None, ge=0, le=232)
@@ -45,9 +45,9 @@ class SetupAnswers(BaseModel):
         "eu-central-1"
     )
     zoom_h8_enabled: bool = True
-    kinect_enabled: bool = True
+    kinect_enabled: Literal[True] = True
     kinect_transcription_enabled: bool = False
-    groot_enabled: bool = False
+    groot_enabled: Literal[False] = False
     viz_port: int = Field(default=5173, ge=1, le=65535)
     rosbridge_port: int = Field(default=9090, ge=1, le=65535)
     llm_port: int = Field(default=4050, ge=1, le=65535)
@@ -63,7 +63,7 @@ class SetupAnswers(BaseModel):
     gpu_available: bool = True
     ipad_enabled: bool = False
     projector_enabled: bool = False
-    timeline_compatibility_enabled: bool = False
+    timeline_compatibility_enabled: Literal[True] = True
     launch_after_setup: bool = True
     host_home: str = Field(
         default_factory=lambda: os.environ.get("HARU_HOST_HOME", str(Path.home()))
@@ -90,6 +90,10 @@ class SetupAnswers(BaseModel):
 
     @model_validator(mode="after")
     def validate_deployment(self) -> "SetupAnswers":
+        if not self.zoom_h8_enabled and not self.kinect_transcription_enabled:
+            raise ValueError(
+                "At least one speech input must be enabled: Zoom H8 or Kinect"
+            )
         if (
             self.llm_provider != LLMProvider.BEDROCK
             and self.llm_model_id == PROVIDER_DEFAULTS[LLMProvider.BEDROCK][0]

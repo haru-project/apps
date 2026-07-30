@@ -13,9 +13,24 @@ from ruamel.yaml import YAML
 from haru_configurator import configuration
 from haru_configurator.configuration import (
     ConfigurationWriter,
+    compatibility_payload,
     has_provider_secret,
     validate_compatibility,
 )
+
+
+def test_compatibility_uses_launcher_revision_without_git(tmp_path, monkeypatch) -> None:
+    (tmp_path / "apps").mkdir()
+    (tmp_path / "configurator").mkdir()
+    (tmp_path / "configurator" / "schema-version").write_text("4\n", encoding="utf-8")
+    monkeypatch.setenv("HARU_REPO_REVISION", "revision-from-launcher")
+    monkeypatch.setattr(
+        configuration.subprocess,
+        "run",
+        lambda *args, **kwargs: pytest.fail("git must not run in the container"),
+    )
+
+    assert compatibility_payload(tmp_path)["repo_revision"] == "revision-from-launcher"
 from haru_configurator.models import Deployment, LLMProvider, SetupAnswers
 
 
@@ -47,7 +62,7 @@ def test_writer_creates_local_physical_override_and_protects_secret(tmp_path, mo
     monkeypatch.setattr(
         configuration,
         "compatibility_payload",
-        lambda _: {"schema_version": "3", "repo_revision": "test", "service_inventory": []},
+        lambda _: {"schema_version": "4", "repo_revision": "test", "service_inventory": []},
     )
     answers = SetupAnswers(
         deployment=Deployment.PHYSICAL,
@@ -89,7 +104,7 @@ def test_simulator_override_does_not_mount_physical_trees(tmp_path, monkeypatch)
     monkeypatch.setattr(
         configuration,
         "compatibility_payload",
-        lambda _: {"schema_version": "3", "repo_revision": "test", "service_inventory": []},
+        lambda _: {"schema_version": "4", "repo_revision": "test", "service_inventory": []},
     )
     ConfigurationWriter(root).write(SetupAnswers(deployment=Deployment.SIMULATOR))
     override = (root / ".haru" / "compose-reasoner.yaml").read_text(encoding="utf-8")
@@ -115,7 +130,7 @@ def test_writer_generates_canonical_provider_and_domain_bridge(tmp_path, monkeyp
     monkeypatch.setattr(
         configuration,
         "compatibility_payload",
-        lambda _: {"schema_version": "3", "repo_revision": "test", "service_inventory": []},
+        lambda _: {"schema_version": "4", "repo_revision": "test", "service_inventory": []},
     )
     answers = SetupAnswers(
         deployment=Deployment.PHYSICAL,
@@ -173,7 +188,7 @@ def test_provider_alternatives_preserve_canonical_alias(
         configuration,
         "compatibility_payload",
         lambda _: {
-            "schema_version": "3",
+            "schema_version": "4",
             "repo_revision": "test",
             "service_inventory": [],
         },
@@ -210,7 +225,7 @@ def test_writer_removes_stale_overlay(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(
         configuration,
         "compatibility_payload",
-        lambda _: {"schema_version": "3", "repo_revision": "test", "service_inventory": []},
+        lambda _: {"schema_version": "4", "repo_revision": "test", "service_inventory": []},
     )
     ConfigurationWriter(root).write(SetupAnswers(deployment=Deployment.SIMULATOR))
     assert not stale.exists()
@@ -221,7 +236,7 @@ def test_compatibility_rejects_changed_checkout(tmp_path, monkeypatch) -> None:
     local = root / ".haru"
     local.mkdir()
     stored = {
-        "schema_version": "3",
+        "schema_version": "4",
         "repo_revision": "old",
         "service_inventory": ["all:service"],
     }
@@ -230,7 +245,7 @@ def test_compatibility_rejects_changed_checkout(tmp_path, monkeypatch) -> None:
         configuration,
         "compatibility_payload",
         lambda _: {
-            "schema_version": "3",
+            "schema_version": "4",
             "repo_revision": "new",
             "service_inventory": ["all:service"],
         },
@@ -260,7 +275,7 @@ def test_generated_all_overlay_renders_for_deployment_matrix(
         configuration,
         "compatibility_payload",
         lambda _: {
-            "schema_version": "3",
+            "schema_version": "4",
             "repo_revision": "test",
             "service_inventory": [],
         },

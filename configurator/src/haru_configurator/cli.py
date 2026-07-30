@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import sys
+import subprocess
 import urllib.request
 
 import questionary
@@ -16,9 +16,7 @@ import typer
 
 from .configuration import ConfigurationWriter, has_provider_secret, load_answers
 from .discovery import (
-    audio_devices,
     discover_robots,
-    has_display,
     has_nvidia_gpu,
     host_reachable,
     port_available,
@@ -32,6 +30,54 @@ app = typer.Typer(no_args_is_help=True, help="Configure and operate a local Haru
 scenario_app = typer.Typer(no_args_is_help=True, help="Run and stop task scenarios safely.")
 app.add_typer(scenario_app, name="scenario")
 console = Console()
+error_console = Console(stderr=True)
+
+
+def port_or_prompt(message: str, default: int, span: int = 1) -> int:
+    if all(port_available(port) for port in range(default, default + span)):
+        return default
+    occupied = (
+        str(default)
+        if span == 1
+        else f"{default}-{default + span - 1}"
+    )
+    return int(
+        str(
+            ask(
+                questionary.text(
+                    f"{message} (default {occupied} already occupied)",
+                    default=str(default),
+                )
+            )
+        )
+    )
+
+
+def speech_input_answers() -> tuple[bool, bool]:
+    zoom = bool(
+        ask(questionary.confirm("Enable Zoom H8 speech input?", default=True))
+    )
+    if zoom:
+        kinect = bool(
+            ask(
+                questionary.confirm(
+                    "Enable Kinect microphone transcription?", default=False
+                )
+            )
+        )
+        return zoom, kinect
+
+    alternative = ask(
+        questionary.select(
+            "Select the alternative speech input",
+            choices=[
+                questionary.Choice(
+                    "Azure Kinect microphone array", "kinect"
+                )
+            ],
+        )
+    )
+    return zoom, alternative == "kinect"
 
 
 def repo_root() -> Path:
@@ -84,7 +130,6 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
             if not proceed:
                 raise typer.Abort()
 
-    devices = audio_devices()
     gpu = has_nvidia_gpu()
     if not gpu:
         proceed = ask(
@@ -95,15 +140,7 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
         )
         if not proceed:
             raise typer.Abort()
-    zoom_detected = "ZOOM" in devices.upper()
-    kinect_detected = "KINECT" in devices.upper() or Path("/run/udev").exists()
-    zoom = bool(ask(questionary.confirm("Enable Zoom H8 speech input?", default=zoom_detected)))
-    kinect = bool(ask(questionary.confirm("Enable Azure Kinect perception?", default=kinect_detected)))
-    kinect_speech = False
-    if kinect:
-        kinect_speech = bool(
-            ask(questionary.confirm("Enable Kinect microphone transcription?", default=False))
-        )
+    zoom, kinect_speech = speech_input_answers()
 
     provider = LLMProvider(
         ask(
@@ -137,22 +174,13 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
     secret = str(ask(questionary.password(f"{secret_name} (required)"))).strip()
     if not secret:
         raise RuntimeError(f"{secret_name} is required")
-    groot = bool(ask(questionary.confirm("Enable Groot behavior-tree windows?", default=has_display())))
-    viz_port = int(str(ask(questionary.text("haru-viz host port", default="5173"))))
-    rosbridge_port = int(
-        str(ask(questionary.text("ROS bridge base host port (uses four ports)", default="9090")))
+    viz_port = port_or_prompt("haru-viz host port", 5173)
+    rosbridge_port = port_or_prompt(
+        "ROS bridge base host port (uses four ports)", 9090, span=4
     )
-    llm_port = int(str(ask(questionary.text("LiteLLM host port", default="4050"))))
+    llm_port = port_or_prompt("LiteLLM host port", 4050)
     ipad = bool(ask(questionary.confirm("Launch the optional iPad stack?", default=False)))
     projector = bool(ask(questionary.confirm("Launch the optional projector stack?", default=False)))
-    timeline_compatibility = bool(
-        ask(
-            questionary.confirm(
-                "Start the local timeline compatibility server if the robot does not provide one?",
-                default=deployment == Deployment.SIMULATOR,
-            )
-        )
-    )
     launch = bool(ask(questionary.confirm("Launch the configured deployment after setup?", default=True)))
     answers = SetupAnswers(
         deployment=deployment,
@@ -162,16 +190,13 @@ def interactive_answers() -> tuple[SetupAnswers, str | None]:
         llm_api_base=api_base,
         bedrock_region=bedrock_region,
         zoom_h8_enabled=zoom,
-        kinect_enabled=kinect,
         kinect_transcription_enabled=kinect_speech,
-        groot_enabled=groot,
         viz_port=viz_port,
         rosbridge_port=rosbridge_port,
         llm_port=llm_port,
         gpu_available=gpu,
         ipad_enabled=ipad,
         projector_enabled=projector,
-        timeline_compatibility_enabled=timeline_compatibility,
         launch_after_setup=launch,
     )
     occupied = [
@@ -318,13 +343,19 @@ def _llm_smoke(port: int) -> None:
     console.print("[green]LLM smoke test passed.[/green]")
 
 
-def main() -> None:
+def main() -> int:
     try:
         app()
-    except (RuntimeError, FileNotFoundError, ValidationError) as error:
-        console.print(f"[red]Error:[/red] {error}", file=sys.stderr)
-        raise typer.Exit(1) from error
+    except (
+        RuntimeError,
+        FileNotFoundError,
+        subprocess.CalledProcessError,
+        ValidationError,
+    ) as error:
+        error_console.print(f"[red]Error:[/red] {error}")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

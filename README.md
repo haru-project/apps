@@ -121,6 +121,14 @@ manage this repository's Compose projects. Access to that socket grants
 host-level Docker control; only run the trusted Haru image or set
 `HARU_CONFIGURATOR_IMAGE` to an image you built yourself.
 
+Immediately before pulling or launching, setup verifies access to a private
+Haru package without downloading its layers. Existing Docker credentials are
+copied into an ephemeral, helper-independent configuration. If they cannot
+access the package, setup tries the account authenticated by `gh auth login`;
+on an interactive terminal it then asks for a GitHub username and a token with
+`read:packages` access. The ephemeral credentials are removed when the
+containerized configurator exits.
+
 Generated non-secret configuration lives under `.haru/`. Provider keys remain
 in the ignored `envs/llm.secrets.env` with user-only permissions. Re-running
 setup is safe: downloaded `data/` is preserved unless refresh is explicitly

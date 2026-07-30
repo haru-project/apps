@@ -52,6 +52,7 @@ class Orchestrator:
         return self.command("bash", "scripts/compose.sh", stack, *args, **kwargs)
 
     def pull(self) -> None:
+        self.ensure_registry_access()
         answers = load_answers(self.root)
         stacks = [
             "tts",
@@ -83,6 +84,7 @@ class Orchestrator:
             self.compose(stack, *profiles, "pull", env=env)
 
     def up(self) -> None:
+        self.ensure_registry_access()
         answers = load_answers(self.root)
         if answers.deployment == Deployment.SIMULATOR:
             self.compose("simulator", "up", "unity-app", "web-server", "--force-recreate", "-d")
@@ -101,9 +103,7 @@ class Orchestrator:
             "-d",
         )
         self._wait_healthy("haru-tts-tts-client-1", "haru-tts-ros-node-1", timeout=180)
-        perception_services = ["belief", "viz"]
-        if answers.kinect_enabled:
-            perception_services[0:0] = ["azure-kinect", "skeletons", "faces"]
+        perception_services = ["azure-kinect", "skeletons", "faces", "belief", "viz"]
         self.compose("perception", "up", *perception_services, "--force-recreate", "-d")
         if answers.zoom_h8_enabled or answers.kinect_transcription_enabled:
             self.compose(
@@ -180,6 +180,9 @@ class Orchestrator:
 
     def validate(self) -> None:
         self.command("bash", "scripts/validate_compose.sh")
+
+    def ensure_registry_access(self) -> None:
+        self.command("bash", "scripts/ensure_ghcr_access.sh")
 
     def checks(self) -> list[Check]:
         checks: list[Check] = []

@@ -20,6 +20,41 @@ def test_missing_downloads_are_selected_individually(tmp_path: Path) -> None:
     assert "download_tts_data.sh" in scripts
 
 
+def test_pull_checks_registry_access_before_compose(monkeypatch) -> None:
+    answers = SimpleNamespace(
+        deployment=Deployment.PHYSICAL,
+        timeline_compatibility_enabled=False,
+        ipad_enabled=False,
+        projector_enabled=False,
+        gpu_available=True,
+    )
+    monkeypatch.setattr("haru_configurator.orchestration.load_answers", lambda _: answers)
+    orchestrator = Orchestrator.__new__(Orchestrator)
+    orchestrator.root = Path("/repo")
+    events: list[str] = []
+    monkeypatch.setattr(
+        orchestrator,
+        "ensure_registry_access",
+        lambda: events.append("registry"),
+    )
+    monkeypatch.setattr(
+        orchestrator,
+        "compose",
+        lambda *args, **kwargs: events.append(f"compose:{args[0]}"),
+    )
+
+    orchestrator.pull()
+
+    assert events[0] == "registry"
+    assert events[1:] == [
+        "compose:tts",
+        "compose:perception",
+        "compose:speech",
+        "compose:nlp",
+        "compose:llm",
+        "compose:memory",
+        "compose:reasoner",
+    ]
 def test_wait_action_endpoint_waits_until_action_is_visible(monkeypatch) -> None:
     orchestrator = Orchestrator.__new__(Orchestrator)
     results = iter([("", 0), ("/haru2/play_timeline\n", 0)])
@@ -43,7 +78,6 @@ def test_wait_action_endpoint_times_out(monkeypatch) -> None:
 def test_up_checks_driver_timeline_before_behavior_trees(monkeypatch) -> None:
     answers = SimpleNamespace(
         deployment=Deployment.PHYSICAL,
-        kinect_enabled=False,
         zoom_h8_enabled=False,
         kinect_transcription_enabled=False,
         gpu_available=True,
@@ -57,11 +91,13 @@ def test_up_checks_driver_timeline_before_behavior_trees(monkeypatch) -> None:
     compose_calls: list[tuple[str, ...]] = []
     compose_environments: dict[tuple[str, ...], dict[str, str] | None] = {}
     timeline_checks: list[object] = []
+
     def record_compose(*args, **kwargs) -> None:
         compose_calls.append(args)
         compose_environments[args] = kwargs.get("env")
 
     monkeypatch.setattr(orchestrator, "compose", record_compose)
+    monkeypatch.setattr(orchestrator, "ensure_registry_access", lambda: None)
     monkeypatch.setattr(orchestrator, "_wait_healthy", lambda *args, **kwargs: None)
     monkeypatch.setattr(orchestrator, "_wait_robot_endpoints", lambda timeout: None)
     monkeypatch.setattr(
@@ -76,6 +112,17 @@ def test_up_checks_driver_timeline_before_behavior_trees(monkeypatch) -> None:
         ("reasoner", "up", "bt-forest", "--force-recreate", "-d")
     )
     assert not any(call[0] == "timeline-player" for call in compose_calls)
+    assert (
+        "perception",
+        "up",
+        "azure-kinect",
+        "skeletons",
+        "faces",
+        "belief",
+        "viz",
+        "--force-recreate",
+        "-d",
+    ) in compose_calls
     assert (
         "llm",
         "up",

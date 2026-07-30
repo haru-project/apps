@@ -11,6 +11,7 @@ unset \
   ROS_DOMAIN_ID \
   FROM_DOMAIN_ID \
   TO_DOMAIN_ID
+export HARU_COMPOSE_IGNORE_LOCAL_CONFIG=true
 
 stacks=(
   "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
@@ -295,5 +296,20 @@ for excluded in azure-kinect skeletons faces; do
     exit 1
   fi
 done
+
+# When setup has generated host-local overrides, render every resulting stack
+# as well. Baseline assertions above intentionally ignore these overrides so a
+# non-zero robot domain does not invalidate tracked-default expectations.
+if [[ -f "${ROOT_DIR}/.haru/local.env" ]]; then
+  for stack in \
+    domain-bridge perception speech llm reasoner tts simulator ipad projector \
+    user nlp timeline-player memory all
+  do
+    echo "Validating configured ${stack}..."
+    HARU_COMPOSE_IGNORE_LOCAL_CONFIG=false \
+      bash "${ROOT_DIR}/scripts/compose.sh" \
+      "${stack}" --profile "*" config >/dev/null
+  done
+fi
 
 echo "All compose files validated."

@@ -346,13 +346,15 @@ def service_inventory(root: Path) -> list[str]:
 
 
 def compatibility_payload(root: Path) -> dict[str, Any]:
-    revision = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+    revision = os.environ.get("HARU_REPO_REVISION")
+    if not revision:
+        revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
     schema_version = (
         root / "configurator" / "schema-version"
     ).read_text(encoding="utf-8").strip()

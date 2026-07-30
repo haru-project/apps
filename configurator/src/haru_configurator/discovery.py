@@ -47,6 +47,10 @@ def _resolves(host: str) -> str | None:
 def discover_robots(timeout: float = 2.0) -> list[str]:
     """Discover robots with mDNS services, then bounded hostname probing."""
     listener = _RobotListener()
+    for candidate in os.environ.get("HARU_DISCOVERED_ROBOTS", "").split(","):
+        match = ROBOT_PATTERN.fullmatch(candidate.strip())
+        if match:
+            listener.hosts.add(f"{match.group(1).lower()}.local")
     zeroconf = Zeroconf()
     browsers = [
         ServiceBrowser(zeroconf, service_type, listener)
@@ -59,10 +63,11 @@ def discover_robots(timeout: float = 2.0) -> list[str]:
             browser.cancel()
         zeroconf.close()
 
-    scan_max = int(os.environ.get("HARU_DISCOVERY_MAX_ID", "64"))
-    candidates = [f"haru-{index}.local" for index in range(1, scan_max + 1)]
-    with ThreadPoolExecutor(max_workers=32) as executor:
-        listener.hosts.update(filter(None, executor.map(_resolves, candidates)))
+    if not listener.hosts:
+        scan_max = int(os.environ.get("HARU_DISCOVERY_MAX_ID", "64"))
+        candidates = [f"haru-{index}.local" for index in range(1, scan_max + 1)]
+        with ThreadPoolExecutor(max_workers=32) as executor:
+            listener.hosts.update(filter(None, executor.map(_resolves, candidates)))
     return sorted(listener.hosts, key=lambda host: int(re.search(r"\d+", host).group()))
 
 

@@ -32,6 +32,37 @@ def test_simulator_keeps_configured_domain() -> None:
     assert answers.robot_domain_id == 7
 
 
+def test_kinect_perception_cannot_be_disabled() -> None:
+    with pytest.raises(ValidationError):
+        SetupAnswers(deployment=Deployment.SIMULATOR, kinect_enabled=False)
+
+
+def test_fixed_setup_choices_cannot_be_overridden() -> None:
+    with pytest.raises(ValidationError):
+        SetupAnswers(deployment=Deployment.SIMULATOR, groot_enabled=True)
+    with pytest.raises(ValidationError):
+        SetupAnswers(
+            deployment=Deployment.SIMULATOR,
+            timeline_compatibility_enabled=False,
+        )
+
+
+def test_at_least_one_speech_input_is_required() -> None:
+    with pytest.raises(ValidationError, match="At least one speech input"):
+        SetupAnswers(
+            deployment=Deployment.SIMULATOR,
+            zoom_h8_enabled=False,
+            kinect_transcription_enabled=False,
+        )
+
+    answers = SetupAnswers(
+        deployment=Deployment.SIMULATOR,
+        zoom_h8_enabled=False,
+        kinect_transcription_enabled=True,
+    )
+    assert answers.kinect_transcription_enabled is True
+
+
 @pytest.mark.parametrize(
     ("provider", "secret_name"),
     [
