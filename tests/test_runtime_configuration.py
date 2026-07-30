@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +46,80 @@ def test_downloaders_handle_profiled_and_root_owned_data() -> None:
     assert "--entrypoint chmod" in nlp_downloader
     assert '--project-name "haru-nlp-data-download-${BASHPID}"' in nlp_downloader
     assert "down --remove-orphans" in nlp_downloader
+
+
+def test_speech_configurator_accepts_already_updated_upstream_values(
+    tmp_path: Path,
+) -> None:
+    config = tmp_path / "haru_speech.yaml"
+    config.write_text(
+        """/**/speech_stack:
+  ros__parameters:
+    sources:
+      - source_id: "mic_0"
+        detect_active_channels: true  # now enabled upstream
+        process_active_channels_only: true
+        dynamic_capture_controlled: true
+        active_channel_rms_threshold: 0.003
+        # An upstream comment used to break the multiline replacement.
+        active_channel_warmup_secs: 2.0
+        exclude_channels: [10, 11]
+      - source_id: "mic_1"
+        enabled: false
+        capture_enabled: false
+        speech_enabled: false
+        localization_enabled: false
+
+/**/audio_monitor:
+  ros__parameters:
+    capture_device: "zoom_h8"
+    source_id: "mic_0"
+    input_topic: "/perception/sensor/audio/zoom_h8"
+    detect_active_channels: true
+    # Keep comments and tolerate non-adjacent policy settings.
+    active_channel_rms_threshold: 0.003
+    active_channel_warmup_secs: 2.0
+""",
+        encoding="utf-8",
+    )
+    configurator = ROOT / "scripts/configure_speech_data.py"
+
+    subprocess.run([sys.executable, configurator, config], check=True)
+    first_result = config.read_text(encoding="utf-8")
+    subprocess.run([sys.executable, configurator, config], check=True)
+
+    assert config.read_text(encoding="utf-8") == first_result
+    assert "# now enabled upstream" in first_result
+    assert "# An upstream comment" in first_result
+
+
+def test_image_downloader_includes_profiled_speech_base_image(
+    tmp_path: Path,
+) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_docker = fake_bin / "docker"
+    fake_docker.write_text(
+        """#!/usr/bin/env bash
+if [[ " $* " == *" --profile monolithic "* ]]; then
+    printf '%s\n' 'ghcr.io/haru-project/haru-speech-base:test'
+fi
+""",
+        encoding="utf-8",
+    )
+    fake_docker.chmod(0o755)
+    environment = os.environ.copy()
+    environment["PATH"] = f"{fake_bin}{os.pathsep}{environment['PATH']}"
+
+    result = subprocess.run(
+        [ROOT / "scripts/download_all_images.sh", "--dry-run", "speech"],
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+        env=environment,
+    )
+
+    assert "  ghcr.io/haru-project/haru-speech-base:test\n" in result.stdout
 
 
 def test_stop_enables_every_compose_profile() -> None:
