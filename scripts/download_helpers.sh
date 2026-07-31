@@ -17,8 +17,18 @@ copy_with_tar() {
   local image="$1"
   local src="$2"
   local dest="$3"
+
   mkdir -p "$dest"
-  docker run --rm --entrypoint tar "$image" -C "$src" -cf - . | tar xf - -C "$dest"
+
+  if docker run --rm --entrypoint test "$image" -d "$src"; then
+    docker run --rm --entrypoint tar "$image" \
+      -C "$src" -cf - . \
+      | tar -xf - -C "$dest"
+  else
+    docker run --rm --entrypoint tar "$image" \
+      -C "$(dirname "$src")" -cf - "$(basename "$src")" \
+      | tar -xf - -C "$dest"
+  fi
 }
 
 compose_service_image() {

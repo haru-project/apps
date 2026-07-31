@@ -62,6 +62,7 @@ services:
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
       - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
+      - ../data/tts/weight_refs_mixed.json:/ros2_ws/src/strawberry_tts/weight_refs_mixed.json
     depends_on:
       tts-client:
         condition: service_healthy
