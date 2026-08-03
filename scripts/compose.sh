@@ -7,12 +7,33 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
+    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
     exit 1
 fi
 shift
 
 stack_files=()
+nlp_profile="cpu"
+deployment_profile="${HARU_DEPLOYMENT:-}"
+case "${deployment_profile:-physical}" in
+    physical|simulator) ;;
+    *)
+        echo "HARU_DEPLOYMENT must be physical or simulator." >&2
+        exit 1
+    ;;
+esac
+case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
+    1|true|TRUE|True|yes|YES|Yes|on|ON|On)
+        nlp_profile="gpu"
+    ;;
+    0|false|FALSE|False|no|NO|No|off|OFF|Off|"")
+        nlp_profile="cpu"
+    ;;
+    *)
+        echo "HARU_NLP_SERVER_GPU_ENABLED must be true or false." >&2
+        exit 1
+    ;;
+esac
 
 case "${stack}" in
     domain-bridge)
@@ -57,7 +78,7 @@ case "${stack}" in
     ;;
     nlp)
         stack_files=("${APPS_DIR}/docker-compose-nlp.yaml")
-        env_file="${ROOT_DIR}/envs/nlp-cpu.env"
+        env_file="${ROOT_DIR}/envs/nlp-${nlp_profile}.env"
     ;;
     timeline-player)
         stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
@@ -79,7 +100,7 @@ esac
 
 should_ensure_domain_bridge=false
 case "${stack}" in
-    perception|speech|all)
+    perception|speech)
         if [[ "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "false" && "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "0" ]]; then
             for arg in "$@"; do
                 if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
@@ -103,5 +124,14 @@ for stack_file in "${stack_files[@]}"; do
     cmd+=(-f "${stack_file}")
 done
 cmd+=(--env-file "${env_file}")
+if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
+    cmd+=(--profile "${nlp_profile}")
+fi
+if [[ "${stack}" == "timeline-player" ]]; then
+    cmd+=(--profile timeline-compat)
+fi
+if [[ "${stack}" == "all" ]]; then
+    cmd+=(--profile all --profile "${deployment_profile:-physical}")
+fi
 
 exec "${cmd[@]}" "$@"

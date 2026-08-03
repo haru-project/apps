@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<root BTCPP_format="4" main_tree_to_execute="GazeControllerSimple">
+    <include path="bt_palettes/strawberry_palette.xml" ros_pkg="behavior_tree_strawberry"/>
+    <include path="bt_palettes/haru_palette.xml" ros_pkg="behavior_tree_haru"/>
+    <!-- ////////// -->
+    <BehaviorTree ID="BeliefGetClosestPerson">
+        <Sequence>
+            <Action ID="SetBlackboardEut" output_key="min_distance" value="99"/>
+            <Action ID="SetBlackboardEut" output_key="found_person" value="false"/>
+            <Action ID="SetBlackboardEut" output_key="closest_person" value=""/>
+            <Action ID="AccessJsonField" field="/header/frame_id" input="{people}" output="{people_frame_id}"/>
+            <Action ID="AccessJsonField" field="/persons" input="{people}" output="{people}"/>
+            <Decorator ID="ForEachLoopJson" break_on_child_failure="false" input="{people}" output_element="{person_element}" output_index="{person_idx}">
+                <Sequence>
+                    <SubTree ID="BeliefGetPersonDistance" distance="{new_distance}" frame_id="{people_frame_id}" person="{person_element}"/>
+                    <Condition ID="CompareNumbers" comparison_op="<" first="{new_distance}" second="{min_distance}" throws="false"/>
+                    <Action ID="SetBlackboardEut" output_key="min_distance" value="{new_distance}"/>
+                    <Action ID="SetBlackboardEut" output_key="closest_person" value="{person_element}"/>
+                    <Action ID="SetBlackboardEut" output_key="found_person" value="true"/>
+                    <Action ID="InfoLog" message="FOUND PERSON!"/>
+                </Sequence>
+            </Decorator>
+            <Condition ID="CheckBool" input="{found_person}"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="BeliefGetPersonDistance">
+        <Sequence>
+            <Action ID="SetBlackboardEut" output_key="haru_tf" value="haru2/base"/>
+            <Action ID="AccessJsonField" field="/detection/person_id" input="{person}" output="{person_id}"/>
+            <Action ID="ConcatenateStrings" first="person_" output="{tf_start}" second="{person_id}"/>
+            <Action ID="ConcatenateStrings" first="{tf_start}" output="{person_tf}" second="/body_frame"/>
+            <Action ID="LookupTransform" output="{transform}" source_frame="{haru_tf}" target_frame="{person_tf}" use_last_available="true"/>
+            <Action ID="GetTransformHorizontalDistance" input="{transform}" output="{distance}"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="GazeControllerSimple">
+        <ReactiveSequence>
+            <!-- Check the synchronized enable flag before refreshing an existing
+                 track. The packaged order refreshed oscillating_frame once per
+                 tick after scenario cancellation, overriding STOP_TRACKING. -->
+            <Condition ID="CheckBool" input="$${GazeControllerOn}"/>
+            <ForceSuccess>
+                <Sequence name="Update Tracking">
+                    <Condition ID="HaruMonitorTrack" consume_msgs="false" reinit="false" serialized_output="{track_status}" topic_name="/haru2/track_status"/>
+                    <Action ID="AccessJsonField" field="/tracking" input="{track_status}" output="{is_tracking}"/>
+                    <Condition ID="CheckBool" input="{is_tracking}"/>
+                    <IfThenElse>
+                        <SubTree ID="IsHaruRoutinePlaying" _autoremap="false"/>
+                        <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="true" disable_neck="true" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="$${GazeControllerTrackFrame}"/>
+                        <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="$${GazeControllerTrackFrame}"/>
+                    </IfThenElse>
+                </Sequence>
+            </ForceSuccess>
+            <Condition ID="PublishAutoStdString" data="$${GazeControllerMode}" topic_name="/haru2/gaze_mode"/>
+            <ForceSuccess>
+                <Switch5 case_1="group" case_2="individual" case_3="multi_individual" case_4="lookat" case_5="gaze_stop" variable="$${GazeControllerMode}">
+                    <Sequence name="GROUP">
+                        <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="oscillating_frame"/>
+                        <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value="oscillating_frame"/>
+                    </Sequence>
+                    <Sequence name="GAZE_INDIVIDUAL">
+                        <IfThenElse>
+                            <Condition ID="CompareStrings" comparison_op="<" first="$${GazeControllerPersonID}" second="1" throws="false"/>
+                            <Sequence>
+                                <Condition ID="BeliefMonitorPeople" consume_msgs="true" reinit="false" serialized_output="{people}" topic_name="/perception/fusion/persons"/>
+                                <SubTree ID="BeliefGetClosestPerson" closest_person="{closest_person}" people="{people}"/>
+                                <Action ID="AccessJsonField" field="/detection/person_id" input="{closest_person}" output="{track_person_id}"/>
+                            </Sequence>
+                            <SetBlackboard output_key="track_person_id" value="$${GazeControllerPersonID}"/>
+                        </IfThenElse>
+                        <SubTree ID="GazeIndividualSimpleBelief" _autoremap="false" gaze_op="START" person_id="{track_person_id}" track_frame="{track_frame}"/>
+                        <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value="{track_frame}"/>
+                    </Sequence>
+                    <Sequence name="GAZE_MULTI_INDIVIDUAL">
+                        <Decorator ID="ForEachLoopJson" break_on_child_failure="0" input="$${GazeControllerMultiPersonID}" output_element="{person_track}" output_index="{person_idx}">
+                            <Sequence>
+                                <Action ID="AccessJsonField" field="/user_id" input="{person_track}" output="{track_person_id}"/>
+                                <Action ID="AccessJsonField" field="/duration" input="{person_track}" output="{track_person_duration}"/>
+                                <SubTree ID="GazeIndividualSimpleBelief" _autoremap="false" gaze_op="START" person_id="{track_person_id}" track_frame="{track_frame}"/>
+                                <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value="{track_frame}"/>
+                                <Sleep msec="{track_person_duration}"/>
+                            </Sequence>
+                        </Decorator>
+                        <Fallback>
+                            <Condition ID="CheckBool" input="$${GazeControllerMultiPersonIDLoop}"/>
+                            <Sequence>
+                                <Action ID="SetBlackboardEut" output_key="GazeControllerMultiPersonID" value="[]"/>
+                                <Condition ID="HaruCommandTrack" command="2" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="empty"/>
+                            </Sequence>
+                        </Fallback>
+                    </Sequence>
+                    <SubTree ID="HaruLookAtSimple" _autoremap="true" pos_x="$${GazeControllerPosX}" pos_y="$${GazeControllerPosY}" pos_z="$${GazeControllerPosZ}"/>
+                    <Sequence name="STOP">
+                        <Condition ID="HaruCommandTrack" command="2" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="empty"/>
+                        <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value=""/>
+                    </Sequence>
+                    <Action ID="SetBlackboardEut" output_key="idle" value="GazeControllerMode"/>
+                </Switch5>
+            </ForceSuccess>
+            <Action ID="SetBlackboardEut" output_key="GazeControllerOn" value="false"/>
+        </ReactiveSequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="GazeGroupSimple">
+        <Fallback>
+            <Sleep msec="100"/>
+        </Fallback>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="GazeIndividualSimple">
+        <IfThenElse>
+            <Condition ID="CompareStrings" comparison_op="==" first="{gaze_op}" second="START" throws="false"/>
+            <Sequence>
+                <Action ID="Concatenate4Strings" first="strawberry/azure/skeletons/" output="{track_frame}" second="{person_id}" string_3="/" string_4="head"/>
+                <IfThenElse>
+                    <SubTree ID="IsHaruRoutinePlaying" _autoremap="false"/>
+                    <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="true" disable_neck="true" header.frame_id="world" name="HaruCommandTrack_Start" topic_name="/haru2/cmd_track" track_frame="{track_frame}"/>
+                    <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" name="HaruCommandTrack_Start" topic_name="/haru2/cmd_track" track_frame="{track_frame}"/>
+                </IfThenElse>
+            </Sequence>
+            <Condition ID="HaruCommandTrack" command="2" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" name="HaruCommandTrack_Start" topic_name="/haru2/cmd_track" track_frame="empty"/>
+        </IfThenElse>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="GazeIndividualSimpleBelief">
+        <IfThenElse>
+            <Condition ID="CompareStrings" comparison_op="==" first="{gaze_op}" second="START" throws="false"/>
+            <Sequence>
+                <Action ID="Concatenate4Strings" first="person_" output="{track_frame}" second="{person_id}" string_3="/" string_4="head_frame"/>
+                <IfThenElse>
+                    <SubTree ID="IsHaruRoutinePlaying" _autoremap="false"/>
+                    <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="true" disable_neck="true" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="{track_frame}"/>
+                    <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="{track_frame}"/>
+                </IfThenElse>
+            </Sequence>
+            <Condition ID="HaruCommandTrack" command="2" disable_base="false" disable_eyes="false" disable_neck="false" header.frame_id="world" topic_name="/haru2/cmd_track" track_frame="empty"/>
+        </IfThenElse>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="GazeIndividualSimpleWhileRoutinePlaying">
+        <Sequence>
+            <Condition ID="CompareStrings" comparison_op="==" first="{gaze_op}" second="START" throws="false"/>
+            <Action ID="Concatenate4Strings" first="strawberry/azure/skeletons/" output="{track_frame}" second="{person_id}" string_3="/" string_4="head"/>
+            <Condition ID="HaruCommandTrack" command="0" disable_base="false" disable_eyes="true" disable_neck="true" header.frame_id="world" name="HaruCommandTrack_Start" topic_name="/haru2/cmd_track" track_frame="{track_frame}"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="HaruLookAtSimple">
+        <SubTree ID="HaruLookAt" __shared_blackboard="false" _autoremap="false" base_vel_factor="10.0" disable_base="$${GazeControllerDisableBase}" disable_eyes="$${GazeControllerDisableEyes}" disable_head="$${GazeControllerDisableHead}" disable_neck="$${GazeControllerDisableNeck}" high="{pos_x}" horizontal="{pos_y}" proximity="{pos_z}"/>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <SubTree ID="BeliefGetClosestPerson" description="">
+            <output_port name="closest_person">Closest person to the robot</output_port>
+            <input_port name="people">People in scene</input_port>
+        </SubTree>
+        <SubTree ID="BeliefGetPersonDistance" description="">
+            <output_port name="distance">Horizontal distance to robot</output_port>
+            <input_port name="frame_id">Namespace of body parts</input_port>
+            <input_port name="person">Target person</input_port>
+        </SubTree>
+        <SubTree ID="GazeControllerSimple" description=""/>
+        <SubTree ID="GazeGroupSimple" description="">
+            <inout_port default="false" name="_autoremap"> Perform autoremap from father blackboard to child blackboard</inout_port>
+            <input_port default="0.3" name="frequency"/>
+        </SubTree>
+        <SubTree ID="GazeIndividualSimple" description="FUNCTIONAL TREE: gaze wrapper to gaze individual functionality, tracking directly the person with given strawberry people id">
+            <inout_port default="false" name="_autoremap"> Perform autoremap from father blackboard to child blackboard</inout_port>
+            <input_port default="STOP" name="gaze_op"/>
+            <input_port name="person_id">Id of the person you wanna track</input_port>
+            <output_port default="{track_frame}" name="track_frame">The tracked frame</output_port>
+        </SubTree>
+        <SubTree ID="GazeIndividualSimpleBelief" description="Simple indvidual gazing using haru belief">
+            <inout_port default="false" name="_autoremap">If false (default), the Subtree has an isolated blackboard and needs port remapping</inout_port>
+            <input_port default="START" name="gaze_op">The gaze operation</input_port>
+            <input_port name="person_id">The person_id to track</input_port>
+            <output_port name="track_frame">The frame being tracked</output_port>
+        </SubTree>
+        <SubTree ID="GazeIndividualSimpleWhileRoutinePlaying" description="FUNCTIONAL TREE: gaze wrapper to gaze individual while a routine is executing functionality, tracking directly the person with given strawberry people id">
+            <inout_port default="false" name="_autoremap"> Perform autoremap from father blackboard to child blackboard</inout_port>
+            <input_port default="START" name="gaze_op"/>
+            <input_port name="person_id">Id of the person you wanna track</input_port>
+        </SubTree>
+        <SubTree ID="HaruLookAtSimple" description="">
+            <inout_port default="false" name="_autoremap"> Perform autoremap from father blackboard to child blackboard</inout_port>
+            <input_port default="0.0" name="pos_x"/>
+            <input_port default="0.0" name="pos_y"/>
+            <input_port default="0.0" name="pos_z"/>
+        </SubTree>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>

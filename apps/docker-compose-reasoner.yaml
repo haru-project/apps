@@ -5,15 +5,15 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
-      "expressivity_controller_enabled:=true",
-      "gaze_controller_enabled:=true",
-      "ipad_students_controller_enabled:=false",
-      "ipad_teacher_controller_enabled:=false",
-      "unity_controller_enabled:=false",
-      "groot_monitor_enabled:=true",
+      "expressivity_controller_enabled:=${EXPRESSIVITY_CONTROLLER_ENABLED:-true}",
+      "gaze_controller_enabled:=${GAZE_CONTROLLER_ENABLED:-true}",
+      "ipad_students_controller_enabled:=${IPAD_STUDENTS_CONTROLLER_ENABLED:-false}",
+      "ipad_teacher_controller_enabled:=${IPAD_TEACHER_CONTROLLER_ENABLED:-false}",
+      "unity_controller_enabled:=${UNITY_CONTROLLER_ENABLED:-false}",
+      "groot_monitor_enabled:=${GROOT_MONITOR_ENABLED:-true}",
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
@@ -26,11 +26,11 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
-      "config_file:=/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json",
+      "config_file:=${REASONER_CONFIG_FILE:-/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json}",
       "enable_reactive:=true",
       "dev_autostart:=true",
     ]
@@ -44,7 +44,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -64,7 +64,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
@@ -75,12 +75,13 @@ services:
       - reasoner
       - context-manager
     restart: "no"
+    profiles: ["scenario"]
 
   execute-task-test:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment  
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
@@ -90,3 +91,4 @@ services:
     depends_on:
       - reasoner
     restart: "no"
+    profiles: ["test"]

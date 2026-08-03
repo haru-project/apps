@@ -8,9 +8,7 @@ source "${DIR}/download_helpers.sh"
 cleanup_data_dir "$DATA_FOLDER"
 
 COMPOSE_FILE="$DIR/../apps/docker-compose-llm.yaml"
-if [[ -f "$COMPOSE_FILE" ]]; then
-  IMAGE_TAG=$(awk '/^  action-args:/ {found=1} found && /image:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$COMPOSE_FILE")
-fi
+IMAGE_TAG="$(compose_service_image "$COMPOSE_FILE" "$DIR/../envs/llm.env" action-args)"
 
 # LLM data
 copy_with_tar "$IMAGE_TAG" \

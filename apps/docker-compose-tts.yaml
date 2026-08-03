@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:v0.3.2}
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -56,27 +56,34 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:v0.3.2}
     command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
       - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
+      - ../data/tts/weight_refs_mixed.json:/ros2_ws/src/strawberry_tts/weight_refs_mixed.json
     depends_on:
       tts-client:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -lc 'source /opt/ros/jazzy/setup.bash && source /ros2_ws/install/setup.bash && ros2 service list 2>/dev/null | grep -qx /strawberry/retrieve_tts_generation'"]
+      interval: 10s
+      timeout: 8s
+      retries: 6
+      start_period: 20s
     profiles: ["ros", "all"]
 
   cerevoice-api:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/strawberry-tts:v0.3.1-5090
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:v0.3.2}
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     env_file: ../envs/tts.env
     ports:
-      - "8015:8015"
+      - "${CEREVOICE_HOST_PORT:-8015}:8015"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "bash -c \"echo > /dev/tcp/127.0.0.1/8015\""]
@@ -89,7 +96,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/strawberry-tts-api:v0.3.1-5090
+    image: ${STRAWBERRY_TTS_API_IMAGE:-ghcr.io/strawberry-tts-api:v0.3.2-cu126}
     working_dir: /workspace/GPT-SoVITS
     volumes:
       - ../data/tts/configs/pronunciation_dict.rep:/workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep
@@ -97,12 +104,12 @@ services:
       - ../data/tts/GPT_weights_mixed:/tts/GPT_weights_mixed
       - ../data/tts/SoVITS_weights_mixed:/tts/SoVITS_weights_mixed
     ports:
-      - "9880:9880"
-      - "9871:9871"
-      - "9872:9872"
-      - "9873:9873"
-      - "9874:9874"
-      - "8022:8022"
+      - "${GPT_SOVITS_HOST_PORT:-9880}:9880"
+      - "${GPT_SOVITS_AUX1_HOST_PORT:-9871}:9871"
+      - "${GPT_SOVITS_AUX2_HOST_PORT:-9872}:9872"
+      - "${GPT_SOVITS_AUX3_HOST_PORT:-9873}:9873"
+      - "${GPT_SOVITS_AUX4_HOST_PORT:-9874}:9874"
+      - "${TTS_API_HOST_PORT:-8022}:8022"
     environment:
       - is_half=False
       - is_share=False

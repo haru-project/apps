@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/haru-episode-builder:latest
+    image: ${HARU_EPISODE_BUILDER_IMAGE:-ghcr.io/haru-project/haru-episode-builder:latest}
     env_file: ../envs/user.env
     environment:
       - PORT=${EPISODE_BUILDER_PORT:-8501}

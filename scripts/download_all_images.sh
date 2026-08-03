@@ -77,9 +77,16 @@ for stack in "${requested_stacks[@]}"; do
     env_file="${ENV_FILES[$stack]}"
 
     echo "Resolving images for ${stack}..."
-    # Enable the `all` profile and the stack-specific profile (if any)
+    # Enable the `all` profile and the stack-specific profile (if any).
     profiles_args=(--profile all)
-    if [[ "${stack}" != "all" ]]; then
+    if [[ "${stack}" == "timeline-player" ]]; then
+        profiles_args+=(--profile timeline-compat)
+    elif [[ "${stack}" == "speech" ]]; then
+        # The base image provides the config bundle consumed by
+        # download_speech_data.sh. Its Compose service is profile-gated, so it
+        # must be enabled explicitly even when the split speech stack is used.
+        profiles_args+=(--profile speech --profile monolithic)
+    elif [[ "${stack}" != "all" ]]; then
         profiles_args+=(--profile "${stack}")
     fi
 

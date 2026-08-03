@@ -178,7 +178,7 @@ docker pull ghcr.io/haru-project/haru-web-projector:latest
 
 ## Run Applications
 
-Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time.
+Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time. The Agent Memory downloader also aligns the copied Weaviate host and ports with the rendered Compose service so the mounted YAML cannot override the runtime connection settings with stale defaults.
 
 If you want to refresh every bundle in one shot, run `bash scripts/download_all_data.sh`. That wrapper runs each download script in sequence, removes the existing `data/` tree before copying, and leaves the final permissions in the state that the downstream services expect.
 
@@ -192,7 +192,7 @@ bash scripts/validate_compose.sh
 
 ### Perception image matrix
 
-The default perception stack is intended to run as a tested image set rather than a mix of floating branch lines:
+The default perception stack follows the branch and tag image lines used by this deployment:
 
 ```text
 azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
@@ -205,7 +205,7 @@ domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 
 Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
 
-`domain-bridge` uses a dedicated prebuilt image. This `apps` repository wires that image into a dedicated compose project, mounts `config/domain_bridge.yaml`, and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper automatically starts this single bridge project before `perception`, `speech`, or `all` stacks, so those stacks do not run duplicate bridge containers. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
+`domain-bridge` uses a dedicated prebuilt image. This `apps` repository mounts `config/domain_bridge.yaml` and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper starts the dedicated bridge project before standalone `perception` or `speech` stacks. The all-in-one stack owns its embedded bridge directly, which prevents a second Compose project from duplicating it. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
 
 The `belief` and `viz` services should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
 
@@ -234,6 +234,13 @@ by default. Camera, image-processing, speech, audio capture, belief, haru-viz,
 and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `200`).
 Robot/application services outside `/perception` continue to use
 `HARU_ROBOT_ROS_DOMAIN_ID` / `ROS_DOMAIN_ID` (default `0`).
+
+Set the robot domain once when a deployment does not use domain `0`; every
+standalone robot-side stack and the bridge target will inherit it:
+
+```bash
+HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh
+```
 
 Start the perception stack with:
 
@@ -265,13 +272,17 @@ bash scripts/compose.sh all up --force-recreate -d
 
 The `domain-bridge` container is the only default bridge between the
 perception and robot/application domains. It mirrors selected low-bandwidth
-speech and belief outputs from domain `200` into domain `0` for
+speech and belief outputs from domain `200` into the configured robot domain for
 robot-domain consumers. It runs in its own compose project and is started
 automatically by `scripts/compose.sh perception up`, `scripts/compose.sh speech
-up`, and `scripts/compose.sh all up`. Docker networking is unchanged.
+up`; the all-in-one stack embeds the same bridge. Docker networking is unchanged.
 The Azure Kinect container mounts only USB devices by default; `/dev/snd` stays
 with the speech stack so the Kinect microphone array is captured by
 `haru-speech`, not by the camera driver.
+
+`/perception/fusion/persons` is bridged directly on its canonical name using its
+reliable, volatile, keep-last depth 1 contract. No robot-domain QoS adapter is
+required.
 
 The bridge allowlist is tracked in `config/domain_bridge.yaml`.
 The topic bridge allowlist bridges only low-bandwidth topics:
@@ -300,16 +311,16 @@ Validation commands:
 
 ```bash
 # Existing robot/application domain should not see raw perception image topics.
-ROS_DOMAIN_ID=0 ros2 topic list | rg '/perception/sensor/camera/kinect/.*/(rgb|depth|ir)|ffmpeg|zdepth|depth_to_rgb'
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic list | rg '/perception/sensor/camera/kinect/.*/(rgb|depth|ir)|ffmpeg|zdepth|depth_to_rgb'
 
 # Existing domain should see only the selected low-bandwidth outputs mirrored back.
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/speech/asr/status_array
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/proc/speech/asr/result
-ROS_DOMAIN_ID=0 ros2 topic info /tf
-ROS_DOMAIN_ID=0 ros2 topic info /tf_static
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/persons
-ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/environment
-ROS_DOMAIN_ID=0 ros2 topic echo --once /strawberry/people
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/proc/speech/asr/status_array
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/proc/speech/asr/result
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic info /tf
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic info /tf_static
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/fusion/environment
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /strawberry/people
 
 # Perception domain should own speech, belief, camera, and audio topics.
 ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/proc/speech/asr/status_array
@@ -505,34 +516,46 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > `envs/llm.env` is the non-secret source of truth for config.
     > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
-    > You can change the LLM server configuration in `data/llm/configs/litellm_server.yaml`.
+    > The canonical LiteLLM mapping is tracked in `config/llm/litellm_server.yaml`
+    > and mounted read-only.
     > You can change the ROS nodes configuration in `data/llm/configs/haru_llm.yaml`.
     > You can change agent configs (prompts, settings) in `data/llm/agents/`.
 
-    > **Setting up API keys (required for cloud models):**
-    > The default configuration uses cloud-hosted models. To use them, you need to provide your API keys:
-    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`
-    > 2. Fill in your API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`)
+    > **Canonical Bedrock Mantle model:**
+    > All agents use the stable `haru:canonical` alias. By default it maps to
+    > Gemma 4 26B on Bedrock Mantle in the region selected by
+    > `BEDROCK_MANTLE_REGION`.
     >
-    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `data/llm/configs/litellm_server.yaml`.
+    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`.
+    > 2. Set `BEDROCK_MANTLE_API_KEY`.
+    >
+    > The configurator can generate an alternate local mapping for OpenAI,
+    > Anthropic, or a custom OpenAI-compatible endpoint without changing agent
+    > model identifiers.
     >
     > **Using local/self-hosted models:**
-    > If you want to run your own model server (e.g., vLLM, Ollama), add a new model entry to `data/llm/configs/litellm_server.yaml`:
+    > Add or generate a local LiteLLM mapping that preserves the
+    > `haru:canonical` alias:
     > ```yaml
-    > - model_name: custom-model
+    > - model_name: haru:canonical
     >   litellm_params:
     >     model: <provider>/<model-name>
     >     api_base: http://<server-host>:<server-port>/v1
+    >     api_key: "dummy-key"
+
     > ```
-    > Then set the corresponding `*_MODEL_ID` in `envs/llm.env` to `custom-model`.
     > For a full list of supported providers and configuration options, see the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers).
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
+    bash scripts/compose.sh llm up action-args --force-recreate -d
     ```
 
     **Optional profiles**:
+    - Dashboard:
+      ```bash
+      bash scripts/compose.sh llm --profile dashboard up dashboard --force-recreate -d
+      ```
     - Web UI:
       ```bash
       bash scripts/compose.sh llm --profile webui up webui --force-recreate -d
@@ -549,7 +572,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://127.0.0.1:8501
+    - LLM Dashboard is running at http://127.0.0.1:8501 only when its profile is started
     - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
@@ -636,10 +659,15 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
     ```
 
-    **Optional ROS bridge**:
+    **Required ROS bridge for expressive scenarios**:
     ```bash
     bash scripts/compose.sh tts --profile tts --profile ros up ros-node --force-recreate -d
     ```
+
+    > The bridge provides `/strawberry/retrieve_tts_generation`. Without it,
+    > expressive audio may be generated but cannot be retrieved by the reasoner.
+    > Keep this container healthy before starting an expressive scenario.
+    >
 
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.

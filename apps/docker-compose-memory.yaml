@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-t2v:latest
+    image: ${AGENT_MEMORY_T2V_IMAGE:-ghcr.io/haru-project/agent-memory-t2v:latest}
     environment:
       ENABLE_CUDA: "${AGENT_MEMORY_T2V_ENABLE_CUDA:-0}"
     restart: unless-stopped
@@ -14,7 +14,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: semitechnologies/weaviate:1.28.0
+    image: ${AGENT_MEMORY_WEAVIATE_IMAGE:-semitechnologies/weaviate:1.28.0}
     ports:
       - "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}:8080"
       - "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}:50051"
@@ -42,12 +42,12 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-ros:latest
+    image: ${AGENT_MEMORY_ROS_IMAGE:-ghcr.io/haru-project/agent-memory-ros:latest}
     network_mode: host
     stop_grace_period: 10s
     env_file: ../envs/memory.env
     environment:
-      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+      ROS_DOMAIN_ID: "${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
       RMW_IMPLEMENTATION: "${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
       FASTDDS_BUILTIN_TRANSPORTS: "${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}"
       WEAVIATE_HOST: "localhost"
@@ -65,7 +65,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/agent-memory-dashboard:latest
+    image: ${AGENT_MEMORY_DASHBOARD_IMAGE:-ghcr.io/haru-project/agent-memory-dashboard:latest}
     profiles: ["memory-dashboard"]
     ports:
       - "${AGENT_MEMORY_DASHBOARD_PORT:-8502}:8500"

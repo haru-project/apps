@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Keep every standalone robot-side stack on one configurable ROS domain. The
+# HARU-specific name is canonical; ROS_DOMAIN_ID remains a compatible fallback.
+export HARU_ROBOT_ROS_DOMAIN_ID="${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
+
 # Prevent double-starting stacks on the same host.
 require_stack_down() {
   local stack="$1"
@@ -85,5 +89,4 @@ bash scripts/compose.sh memory up --force-recreate -d
 
 # Reasoner services
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
-
 

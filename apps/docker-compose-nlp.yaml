@@ -1,108 +1,8 @@
-networks:
-  haru-nlp-server:
-    name: haru-nlp-server
+name: haru-nlp
 
 services:
-  loki:
-    image: 'grafana/loki:2.9.3'
-    command: '-config.file=/etc/loki/local-config.yaml'
-    ports:
-    - '3100:3100'
-    networks:
-    - haru-nlp-server
-    profiles: ["gpu", "cpu", "all"]
-
-  prometheus:
-    image: 'prom/prometheus:v2.48.1'
-    ports:
-    - '9090:9090'
-    volumes:
-    - './etc/prometheus:/workspace'
-    command:
-    - '--config.file=/workspace/prometheus.yml'
-    - '--enable-feature=exemplar-storage'
-    depends_on:
-    - loki
-    networks:
-    - haru-nlp-server
-    logging:
-      driver: loki
-      options:
-        loki-url: 'http://localhost:3100/api/prom/push'
-        loki-timeout: 3s
-        loki-max-backoff: 10s
-        loki-retries: 3
-        loki-pipeline-stages: |
-          - multiline:
-              firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-              max_wait_time: 3s
-          - regex:
-              expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
-    profiles: ["gpu", "all"]
-
-
-  tempo:
-    image: 'grafana/tempo:2.3.1'
-    command:
-    - '--target=all'
-    - '--storage.trace.backend=local'
-    - '--storage.trace.local.path=/var/tempo'
-    - '--auth.enabled=false'
-    ports:
-    - '4317:4317'
-    - '4318:4318'
-    networks:
-    - haru-nlp-server
-    depends_on:
-    - loki
-    logging:
-      driver: loki
-      options:
-        loki-url: 'http://localhost:3100/api/prom/push'
-        loki-timeout: 3s
-        loki-max-backoff: 10s
-        loki-retries: 3
-        loki-pipeline-stages: |
-          - multiline:
-              firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-              max_wait_time: 3s
-          - regex:
-              expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
-    profiles: ["gpu", "all"]
-
-
-  # grafana:
-  #   image: "grafana/grafana:10.2.3"
-  #   ports:
-  #   - "3000:3000"
-  #   volumes:
-  #   - "./etc/grafana/:/etc/grafana/provisioning/datasources"
-  #   - "./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml"
-  #   - "./etc/dashboards:/etc/grafana/dashboards"
-  #   - "./etc/grafana/grafana.ini:/etc/grafana/grafana.ini"
-  #   depends_on:
-  #   - loki
-  #   - prometheus
-  #   networks:
-  #   - haru-nlp-server
-  #   profiles: ["gpu", "all"]
-  #   logging:
-  #     driver: loki
-  #     options:
-  #       loki-url: "http://localhost:3100/api/prom/push"
-  #       loki-timeout: 3s
-  #       loki-max-backoff: 10s
-  #       loki-retries: 3
-  #       loki-pipeline-stages: |
-  #         - multiline:
-  #             firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-  #             max_wait_time: 3s
-  #         - regex:
-  #             expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
-
   redis:
     image: redis:7-alpine
-    hostname: haru_nlp_server-redis
     environment:
       REDIS_ARGS: "--appendonly no"
     healthcheck:
@@ -110,69 +10,69 @@ services:
       interval: 1s
       timeout: 3s
       retries: 50
-    profiles: ["gpu", "cpu", "all"]
+    profiles: ["cpu", "gpu"]
 
   haru-nlp-server-cpu:
+    extends:
+      file: compose.common.yaml
+      service: common-service
     image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
     env_file:
-    - ../envs/nlp-cpu.env
+      - ../envs/nlp-cpu.env
     environment:
       HARU_NLP_SERVER_HOST: "0.0.0.0"
       HARU_NLP_SERVER_GPU_ENABLED: "false"
       HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
       HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
-      # Use the ignored host cache; do not download models during startup.
       HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
       HARU_NLP_SERVER_WORKERS_COUNT: "1"
       HARU_NLP_SERVER_RELOAD: "false"
       HARU_NLP_HOME: /models
-      HARU_NLP_SERVER_REDIS_HOST: haru_nlp_server-redis
+      HARU_NLP_SERVER_REDIS_HOST: redis
     volumes:
-    - ../data/nlp/models:/models
+      - ../data/nlp/models:/models
     ports:
-    - "6565:6565"
+      - "${HARU_NLP_SERVER_HOST_PORT:-6565}:6565"
     depends_on:
       redis:
         condition: service_healthy
-    profiles: ["cpu", "all"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6565), 2).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    profiles: ["cpu"]
 
   haru-nlp-server-gpu:
-    image: ghcr.io/haru-project/haru-nlp-server:latest
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
     env_file:
-    - ../envs/nlp-gpu.env
+      - ../envs/nlp-gpu.env
+    environment:
+      HARU_NLP_SERVER_HOST: "0.0.0.0"
+      HARU_NLP_SERVER_GPU_ENABLED: "true"
+      HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
+      HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
+      HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
+      HARU_NLP_SERVER_WORKERS_COUNT: "1"
+      HARU_NLP_SERVER_RELOAD: "false"
+      HARU_NLP_HOME: /models
+      HARU_NLP_SERVER_REDIS_HOST: redis
     volumes:
       - ../data/nlp/models:/models
       - ../data/nlp/nltk_data:/root/nltk_data
     ports:
-      # Exposes application port.
-    - "6565:6565"
-    environment:
-      HARU_NLP_SERVER_HOST: "0.0.0.0"
-      HARU_NLP_SERVER_GPU_ENABLED: "false"
-      HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
-      HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
-      # Use the ignored host cache; do not download models during startup.
-      HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
-      HARU_NLP_SERVER_WORKERS_COUNT: "1"
-      HARU_NLP_SERVER_RELOAD: "false"
-      HARU_NLP_HOME: /models
-      HARU_NLP_SERVER_REDIS_HOST: haru_nlp_server-redis
+      - "${HARU_NLP_SERVER_HOST_PORT:-6565}:6565"
     depends_on:
-    - loki
-    - redis
-    logging:
-      driver: loki
-      options:
-        loki-url: 'http://localhost:3100/api/prom/push'
-        loki-timeout: 3s
-        loki-max-backoff: 10s
-        loki-retries: 3
-        loki-pipeline-stages: |
-          - multiline:
-              firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-              max_wait_time: 3s
-          - regex:
-              expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
-    networks:
-    - haru-nlp-server
-    profiles: ["gpu", "all"]
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6565), 2).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    profiles: ["gpu"]
