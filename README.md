@@ -103,6 +103,73 @@ Most applications require access to GPU resources, so ensure that your system ha
 
 With Docker and the NVIDIA Container Toolkit installed, you're ready to start downloading and running Haru applications.
 
+### Guided local setup (recommended)
+
+The repository includes a containerized configurator. It discovers nearby
+`haru-N.local` robots, configures either a physical robot or simulator,
+selects audio hardware and an LLM provider, writes ignored host-local
+overrides, validates the resulting Compose projects, and can launch the full
+deployment.
+
+```bash
+./setup.sh setup
+```
+
+The configurator image is `ghcr.io/haru-project/apps-configurator:demo-jiyugaoka`.
+The launcher mounts the Docker socket so the configurator can pull images and
+manage this repository's Compose projects. Access to that socket grants
+host-level Docker control; only run the trusted Haru image or set
+`HARU_CONFIGURATOR_IMAGE` to an image you built yourself.
+
+Immediately before pulling or launching, setup verifies access to a private
+Haru package without downloading its layers. Existing Docker credentials are
+copied into an ephemeral, helper-independent configuration. If they cannot
+access the package, setup tries the account authenticated by `gh auth login`;
+on an interactive terminal it then asks for a GitHub username and a token with
+`read:packages` access. The ephemeral credentials are removed when the
+containerized configurator exits.
+
+Generated non-secret configuration lives under `.haru/`. Provider keys remain
+in the ignored `envs/llm.secrets.env` with user-only permissions. Re-running
+setup is safe: downloaded `data/` is preserved unless refresh is explicitly
+requested. The generated configuration records its schema, repository
+revision, and Compose service inventory. Re-run `./setup.sh setup` after
+updating the checkout; stale or unknown services are rejected instead of being
+silently carried forward.
+
+Bedrock Mantle is the recommended provider. Setup asks for
+`BEDROCK_MANTLE_API_KEY` without echoing it and keeps every agent on the stable
+`haru:canonical` model alias. OpenAI, Anthropic, and custom OpenAI-compatible
+backends replace only the alias mapping, so agent configuration does not
+change. The selected robot and perception domains are written to
+`.haru/domain_bridge.yaml` rather than changing the tracked example.
+
+Host cache, recording, display, PulseAudio, device, and GPU settings are
+generated from absolute host paths. Physical setup enables the Kinect and
+expects robot action servers; simulator setup enables Unity and does not
+require robot hardware. The local timeline player is compatibility-only and
+must be selected explicitly when the robot driver does not provide
+`/haru2/play_timeline`.
+
+The local Haru NLP stack contains only Redis and one inference server. Setup
+sets `HARU_NLP_SERVER_GPU_ENABLED` from the detected GPU choice; `true` starts
+the GPU service and `false` starts the CPU service.
+
+Common commands:
+
+```bash
+./setup.sh doctor
+./setup.sh up
+./setup.sh scenario run data/reasoner/tasks/episodes/20260527.json
+./setup.sh scenario stop
+./setup.sh logs
+./setup.sh down
+```
+
+`start.sh`, `run.sh`, and `stop.sh` remain as compatibility wrappers. Scenario
+runs use a fresh task ID and fresh conversational state by default; pass
+`--continue-session` only when retaining previous context is intentional.
+
 1. Authenticate with the Private Registry
 
     Haru applications are hosted in a private registry on GitHub. To authorize your machine to access it, run the following in your terminal:
@@ -666,9 +733,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     > The bridge provides `/strawberry/retrieve_tts_generation`. Without it,
     > expressive audio may be generated but cannot be retrieved by the reasoner.
-    > Keep this container healthy before starting an expressive scenario.
+    > The guided setup starts and health-checks it automatically.
     >
-
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.
 
@@ -793,9 +859,11 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 3. LLMs Don't Connect
 
     If you cannot access the LLMs:
-    - If you are using LLMs that need an API key, make sure to provide it in the env file.
-    - Make sure you can chat with the LLMs you want to use. You can use the WebUI running at `http://0.0.0.0:8080`.
-    - For each LLM agent, you can set its LLM model by setting the following env variable `{AGENT_NAME}_MODEL_ID`.
+    - Run `./setup.sh doctor` and confirm that LiteLLM is healthy and advertises `haru:canonical`.
+    - Re-run `./setup.sh setup` if `.haru/compatibility.json` does not match the current checkout.
+    - For Bedrock Mantle, confirm `BEDROCK_MANTLE_API_KEY` is present in `envs/llm.secrets.env` and that `BEDROCK_MANTLE_REGION` matches the deployed model.
+    - Keep agent model variables set to `haru:canonical`; provider-specific model names belong only in the generated `.haru/litellm_server.yaml`.
+    - A real provider request is opt-in because it can incur cost.
 
 4. Face is Not Recognized
 

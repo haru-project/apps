@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "haru-apps-configurator"
+version = "1.0.0"
+description = "Guided local deployment and lifecycle manager for Haru apps"
+requires-python = ">=3.12"
+dependencies = [
+  "docker==7.1.0",
+  "pydantic==2.11.7",
+  "python-dotenv==1.1.1",
+  # questionary 2.1.0 relies on the pre-3.0.52 prompt layout structure.
+  "prompt-toolkit==3.0.51",
+  "questionary==2.1.0",
+  "rich==14.0.0",
+  "ruamel.yaml==0.18.14",
+  "typer==0.16.0",
+  "zeroconf==0.147.0",
+]
+
+[project.scripts]
+haru-local = "haru_configurator.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/haru_configurator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.optional-dependencies]
+test = ["pytest==8.4.1"]
