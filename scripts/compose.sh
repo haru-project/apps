@@ -98,25 +98,46 @@ case "${stack}" in
     ;;
 esac
 
+is_up_command=false
+user_passed_wait=false
+user_passed_detach=false
+for arg in "$@"; do
+    if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
+        is_up_command=true
+    fi
+    if [[ "${arg}" == "--wait" || "${arg}" == "--no-wait" ]]; then
+        user_passed_wait=true
+    fi
+    if [[ "${arg}" == "-d" || "${arg}" == "--detach" ]]; then
+        user_passed_detach=true
+    fi
+done
+
+wait_flags=()
+if [[ "${is_up_command}" == "true" && "${user_passed_detach}" == "true" && "${user_passed_wait}" == "false" && "${HARU_COMPOSE_NO_WAIT:-false}" != "true" ]]; then
+    # Generous default: some services (TTS model loads, faster-whisper, GPU warm-up)
+    # legitimately take minutes on first start. Override with HARU_COMPOSE_WAIT_TIMEOUT
+    # if needed.
+    wait_flags=(--wait --wait-timeout "${HARU_COMPOSE_WAIT_TIMEOUT:-600}")
+fi
+
 should_ensure_domain_bridge=false
 case "${stack}" in
     perception|speech)
         if [[ "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "false" && "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "0" ]]; then
-            for arg in "$@"; do
-                if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
-                    should_ensure_domain_bridge=true
-                    break
-                fi
-            done
+            if [[ "${is_up_command}" == "true" ]]; then
+                should_ensure_domain_bridge=true
+            fi
         fi
     ;;
 esac
 
 if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
+    echo "==> Ensuring domain-bridge is up and healthy before ${stack}..." >&2
     docker compose \
         -f "${APPS_DIR}/docker-compose-domain-bridge.yaml" \
         --env-file "${ROOT_DIR}/envs/domain-bridge.env" \
-        up -d --force-recreate
+        up -d --force-recreate "${wait_flags[@]}"
 fi
 
 cmd=(docker compose)
@@ -134,4 +155,8 @@ if [[ "${stack}" == "all" ]]; then
     cmd+=(--profile all --profile "${deployment_profile:-physical}")
 fi
 
-exec "${cmd[@]}" "$@"
+if [[ "${is_up_command}" == "true" && ${#wait_flags[@]} -gt 0 ]]; then
+    echo "==> ${stack}: waiting up to ${HARU_COMPOSE_WAIT_TIMEOUT:-600}s for services to be healthy..." >&2
+fi
+
+exec "${cmd[@]}" "$@" "${wait_flags[@]}"

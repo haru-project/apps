@@ -67,26 +67,30 @@ require_stack_down timeline-player
 # Projector services
 # bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
-# TTS services
+echo "===== [1/7] TTS ====="
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
 
-# Perception services
+echo "===== [2/7] Perception ====="
 HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh perception up --force-recreate -d
 
-# Speech services
+echo "===== [3/7] Speech ====="
 HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
 
 # Haru NLP services
 # bash scripts/compose.sh nlp --profile cpu up --force-recreate -d
 # bash scripts/compose.sh nlp --profile gpu up --force-recreate -d
 
-# Timeline Player services
+echo "===== [4/7] Timeline Player ====="
 bash scripts/compose.sh timeline-player up --force-recreate -d
-# LLM services
+
+echo "===== [5/7] LLM ====="
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
 
+echo "===== [6/7] Memory ====="
 bash scripts/compose.sh memory up --force-recreate -d
 
-# Reasoner services
+echo "===== [7/7] Reasoner ====="
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
+
+echo "===== All stacks up and healthy ====="
 
