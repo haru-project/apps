@@ -541,6 +541,8 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     >   litellm_params:
     >     model: <provider>/<model-name>
     >     api_base: http://<server-host>:<server-port>/v1
+    >     api_key: "dummy-key"
+
     > ```
     > For a full list of supported providers and configuration options, see the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers).
 
