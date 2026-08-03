@@ -124,15 +124,9 @@ fi
     assert "  ghcr.io/haru-project/haru-speech-base:test\n" in result.stdout
 
 
-def test_stop_enables_every_compose_profile() -> None:
+def test_stop_delegates_to_scoped_configurator_teardown() -> None:
     stop_script = (ROOT / "stop.sh").read_text()
-    compose_down_lines = [
-        line
-        for line in stop_script.splitlines()
-        if "scripts/compose.sh" in line and line.endswith(" down")
-    ]
-    assert compose_down_lines
-    assert all('--profile "*" down' in line for line in compose_down_lines)
+    assert 'setup.sh" down "$@"' in stop_script
     assert "docker system prune" not in stop_script
 
 
