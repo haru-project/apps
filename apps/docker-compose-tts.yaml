@@ -96,7 +96,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_API_IMAGE:-ghcr.io/strawberry-tts-api:v0.3.2-cu126}
+    image: ${STRAWBERRY_TTS_API_IMAGE:-ghcr.io/haru-project/strawberry-tts-api:v0.3.2-cu126}
     working_dir: /workspace/GPT-SoVITS
     volumes:
       - ../data/tts/configs/pronunciation_dict.rep:/workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep
