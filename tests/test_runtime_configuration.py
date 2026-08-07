@@ -91,6 +91,9 @@ def test_speech_configurator_accepts_already_updated_upstream_values(
     assert config.read_text(encoding="utf-8") == first_result
     assert "# now enabled upstream" in first_result
     assert "# An upstream comment" in first_result
+    assert "active_channel_warmup_secs: 0.3" in first_result
+    assert "exclude_channels: []" in first_result
+    assert "exclude_channels: [10, 11]" not in first_result
 
 
 def test_image_downloader_includes_profiled_speech_base_image(

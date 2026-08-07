@@ -105,8 +105,8 @@ def configure(path: Path) -> None:
         ("process_active_channels_only", "true"),
         ("dynamic_capture_controlled", "true"),
         ("active_channel_rms_threshold", "0.003"),
-        ("active_channel_warmup_secs", "2.0"),
-        ("exclude_channels", "[10, 11]"),
+        ("active_channel_warmup_secs", "0.3"),
+        ("exclude_channels", "[]"),
     ):
         set_key(lines, zoom_h8, key, value, "speech_stack source mic_0")
 
