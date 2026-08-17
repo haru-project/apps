@@ -37,13 +37,13 @@ Output lands in `profiling/out/<label>/` (gitignored).
 Domains default to this repo's own `HARU_ROBOT_ROS_DOMAIN_ID` / `HARU_PERCEPTION_ROS_DOMAIN_ID`,
 so a stack started with e.g. `HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh` is recorded correctly.
 Also reads `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL` (defaults `127.0.0.1:6379`,
-`haru_llm_dashboard`) and `HARU_PROFILING_GPU_INTERVAL` (default 1 s).
+`haru_llm_dashboard`).
 
 `LLM_ENDPOINT` should point at the OpenAI-compatible serve that actually answers completions.
 Against a hosted-model proxy rather than a local vLLM, the model-root/quant/engine fields come
 back empty and `errors` is populated — that is expected, not a failure.
 
-### Per-agent LLM spans (optional, three commented lines)
+### Per-agent LLM spans (optional, off by default)
 
 Spans are the one piece captured inside litellm, so they need the container to see the module:
 
@@ -54,8 +54,8 @@ Spans are the one piece captured inside litellm, so they need the container to s
 3. `bash scripts/compose.sh llm up server --force-recreate -d`
 
 The module is **mounted** from `profiling/`, never copied — there is no second copy to drift.
-Keep one stable `PROFILING_SPANS_PATH` across sessions: changing it requires an LLM service
-restart, and every row carries `ts_start`/`ts_end`, so a session's spans are selected by time.
+Use one stable `PROFILING_SPANS_PATH` across sessions and select a session's spans by time; the
+module docstring explains why.
 
 ## Artifacts produced
 
@@ -81,6 +81,5 @@ No other code path imports anything from this directory.
 
 ## Non-goals
 
-No in-agent tracing, no behaviour change, no data leaves the host. The sidecars only read ROS
-topics, subscribe to redis, sample `nvidia-smi`, and append LLM spans — nothing is published
-into the ROS graph.
+No in-agent tracing. The sidecars only read ROS topics, subscribe to redis, sample `nvidia-smi`,
+and append LLM spans — nothing is published into the ROS graph and no data leaves the host.

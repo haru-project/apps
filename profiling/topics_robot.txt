@@ -1,6 +1,6 @@
-# Reasoner-side bag allowlist (reasoner / agents-aggregate / actions / tts / perception / transcript).
+# Robot-side bag allowlist (reasoner / agents-aggregate / actions / tts / perception / transcript).
 # Explicit allowlist, not -a: intentional + bandwidth-controlled.
-# The reasoner/robot runs on ROS domain 0 in this deployment (record_session.sh --reasoner-domain).
+# Recorded on HARU_ROBOT_ROS_DOMAIN_ID.
 # ASR result/status also appear here (bridged from 200); domain 200 additionally has *_inner + raw audio.
 # NOTE: topic names are re-verified against the LIVE stack before first use — fix from observed names,
 # not assumptions (some may differ across image tags).
@@ -19,7 +19,6 @@
 /agent_memory_backend/transcript
 /agent_memory_backend/interaction_processed
 /agent_memory/session_id
-/profiling/session_label
 /agent_memory/scene_snapshot
 /haru2/routine_status
 /haru2/played_audio_text
@@ -39,9 +38,8 @@
 /simple_gaze_controller/execution_status
 /expressivity_controller/execution_status
 /perception/fusion/persons
-
-# Deliberately NOT recorded: raw camera frames (/camera/color/image_raw). At ~1.7 GB/min they
-# would dominate the capture and add a heavyweight subscriber to the running robot, and no
-# artifact in the README table needs them — /perception/fusion/persons carries person state.
 /tf
 /tf_static
+
+# Not recorded: /camera/color/image_raw (~1.7 GB/min; person state comes from
+# /perception/fusion/persons instead).

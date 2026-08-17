@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Usage: bash profiling/record_session.sh <label>          (run from the repo root)
 #
-# Records one live session read-only: two ROS-bag recorders (robot domain + perception domain,
-# because a single-domain recorder misses the other half), serve-identity provenance, the
+# Records one live session read-only: two ROS-bag recorders, serve-identity provenance, the
 # goal-eval redis stream, and per-service GPU memory. Everything is keyed by <label> and stops
 # together on Ctrl-C. Nothing is published into the ROS graph and no pipeline config changes.
 #
@@ -25,7 +24,7 @@ if ! command -v ros2 >/dev/null 2>&1; then
 fi
 
 out_dir="${script_dir}/out/${label}"
-mkdir -p "${out_dir}" || { echo "cannot mkdir ${out_dir}" >&2; exit 1; }
+mkdir -p "${out_dir}"
 
 pids=()
 
@@ -33,8 +32,7 @@ pids=()
 #     A single-domain recorder silently misses the other half of the session. ---
 record_domain() {  # <domain> <name> <topic_file>
   local domain="$1" name="$2" topic_file="$3" topics=()
-  # tr -d '\r': a CRLF-saved topic file would otherwise yield names with a trailing carriage
-  # return, which subscribe to nothing and produce an EMPTY bag with no error.
+  # tr -d '\r': a CRLF-saved topic file yields names that subscribe to nothing — an empty bag.
   mapfile -t topics < <(grep -vE '^\s*#|^\s*$' "${topic_file}" | tr -d '\r')
   if [[ ${#topics[@]} -eq 0 ]]; then
     echo "error: no topics parsed from ${topic_file}" >&2
@@ -69,8 +67,7 @@ pids+=($!)
 
 # --- per-service GPU memory sampler (host-side; see the header in gpu_apps_sampler.sh) ---
 if command -v nvidia-smi >/dev/null 2>&1; then
-  bash "${script_dir}/gpu_apps_sampler.sh" "${out_dir}/gpu_${label}.csv" \
-    "${HARU_PROFILING_GPU_INTERVAL:-1}" &
+  bash "${script_dir}/gpu_apps_sampler.sh" "${out_dir}/gpu_${label}.csv" &
   pids+=($!)
 else
   echo "warn: nvidia-smi not found on this host — GPU sampler skipped" >&2

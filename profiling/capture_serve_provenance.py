@@ -49,7 +49,7 @@ def main():
     host = urlparse(base if "//" in base else "http://" + base).hostname
     prov = {"session_label": a.label, "endpoint_url": base, "endpoint_host": host,
             "capture_unix": time.time(), "errors": []}
-    rtts = []  # round-trip samples, seeded by the /v1/models call below
+    rtts = []
     # /v1/models — resolved root + alias + context
     try:
         t0 = time.time()
@@ -70,8 +70,7 @@ def main():
     except (requests.RequestException, ValueError) as e:
         prov["errors"].append(f"/version: {e}")
 
-    # Round-trip stamp — a few more /v1/models pings, so a remote-serve network hop is on the
-    # record alongside the timings it inflates.
+    # A few more pings so a remote-serve network hop is on the record.
     for _ in range(3):
         try:
             t0 = time.time()
@@ -80,8 +79,8 @@ def main():
         except requests.RequestException:
             break
     if rtts:
-        prov["rtt_ms"] = {"median": round(statistics.median(rtts), 1), "min": round(min(rtts), 1),
-                          "max": round(max(rtts), 1), "n": len(rtts)}
+        prov["rtt_ms_median"] = round(statistics.median(rtts), 1)
+        prov["rtt_samples"] = len(rtts)
 
     with open(a.out, "w") as fh:
         json.dump(prov, fh, indent=2)

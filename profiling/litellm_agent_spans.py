@@ -13,6 +13,11 @@ Output path = env PROFILING_SPANS_PATH (default ./agent_spans.jsonl), read once 
 ONE stable path for all sessions rather than a per-session file: changing it means restarting the
 LLM service (a model reload), and a forgotten restart silently files spans under the previous
 session. Every row carries ts_start/ts_end, so a session's spans are selected by time window.
+
+ts_start/ts_end come from litellm. If it hands back naive datetimes they are read in the
+container's local zone, so each row also carries t_logged — an epoch stamp taken here, on the
+same clock as the other sidecars — which makes any offset visible rather than silently shifting
+the whole span timeline.
 """
 
 import json
@@ -22,7 +27,6 @@ import time
 from litellm.integrations.custom_logger import CustomLogger
 
 _OUT = os.environ.get("PROFILING_SPANS_PATH", "agent_spans.jsonl")
-_FH = None
 
 
 class AgentSpanLogger(CustomLogger):
@@ -35,11 +39,7 @@ class AgentSpanLogger(CustomLogger):
             row = {
                 "ts_start": start_time.timestamp(),
                 "ts_end": end_time.timestamp(),
-                # Unambiguous epoch taken here, on the same clock as the other sidecars.
-                # ts_start/ts_end come from litellm; if it hands back NAIVE datetimes they are
-                # read in the container's local zone, so t_logged is the reference that makes
-                # any offset visible instead of silently shifting the whole span timeline.
-                "t_logged": time.time(),
+                "t_logged": time.time(),  # epoch on the sidecars' clock; see the docstring
                 "latency_s": (end_time - start_time).total_seconds(),
                 "model": kwargs.get("model"),
                 "agent": meta.get("agent") or meta.get("tags"),
@@ -47,12 +47,8 @@ class AgentSpanLogger(CustomLogger):
                 "tokens_in": getattr(usage, "prompt_tokens", None),
                 "tokens_out": getattr(usage, "completion_tokens", None),
             }
-            # Line-buffered handle opened once: rows stay crash-visible without an
-            # open/close cycle on the proxy's event loop for every completion.
-            global _FH
-            if _FH is None:
-                _FH = open(_OUT, "a", buffering=1)
-            _FH.write(json.dumps(row) + "\n")
+            with open(_OUT, "a") as fh:
+                fh.write(json.dumps(row) + "\n")
         except Exception:
             # A profiling hook must never turn a successful model call into a failure.
             pass

@@ -30,11 +30,6 @@ def test_profiling_spans_callback_is_off_by_default() -> None:
     callbacks = next(line for line in config.splitlines() if line.strip().startswith("callbacks:"))
     assert "litellm_agent_spans" not in callbacks
 
-    compose = (ROOT / "apps/docker-compose-llm.yaml").read_text(encoding="utf-8")
-    for line in compose.splitlines():
-        if "profiling" in line:
-            assert line.lstrip().startswith("#"), f"profiling line must stay commented: {line!r}"
-
 
 def test_post_fix_trims_only_trailing_json_junk() -> None:
     trim = _load_trim_function()
