@@ -1,65 +1,86 @@
-# profiling/ — deployment session profiling (passive)
+# profiling/ — session profiling tooling (off by default)
 
-Five **passive observers** that reconstruct a live session's turn anatomy + GPU load. **Nothing
-in the robot pipeline changes** — merged, this directory does nothing until an operator enables it.
+Optional tooling for recording what a live session actually did and how long each part took.
+It runs alongside the stack as an observer: **merged, this directory does nothing** until an
+operator starts it, and it changes no pipeline behaviour.
 
 ## Why
 
-Wall-clock at the **same breakpoints as the simulation profiling waterfall**, so demo sessions
-are directly comparable to harness arms:
+Records wall-clock timestamps at fixed points in a turn, so sessions can be compared against
+each other and against offline runs of the same pipeline:
 
-- **t0** = ASR result on the reasoner domain
-- **per-agent LLM spans** = one row per completion (start/end/tokens)
-- **TTFR** = first TTS "playing" edge after t0
-- **turn anatomy** = the reply chain across ASR → agent outputs → TTS
-- plus **per-service GPU memory** attribution (co-tenancy on a shared card)
+- **t0** — the ASR result that starts a turn
+- **per-agent LLM spans** — one row per completion (start/end/tokens)
+- **TTFR** (time to first response) — the first TTS "playing" edge after t0
+- **turn anatomy** — the reply chain across ASR → agent outputs → TTS
+- **per-service GPU memory** — which container holds what on a shared card
 
 ## Prerequisites
 
-Runs on the deployment host. Needs: a **ROS 2 environment** on the host (`ros2 bag record` +
-`ros2 topic pub` — if the host is containers-only, run `record_session.sh` inside a ROS container
-that shares the host network/domains), `uv` (the two `.py` sidecars are PEP-723 self-contained),
-and `nvidia-smi` for the GPU sampler (skipped with a warning if absent).
+Runs on the host where the stack is running, with the stack already up. Needs a **ROS 2
+environment** (`ros2 bag record`), **`uv`** (the two `.py` sidecars are PEP-723 self-contained),
+and **`nvidia-smi`** for the GPU sampler (skipped with a warning if absent).
+
+If the host has no ROS 2 install, run `record_session.sh` inside a ROS container that shares the
+host's network and domains — but run `gpu_apps_sampler.sh` **separately on the host**, since
+`nvidia-smi` inside a container cannot see other containers' GPU processes.
 
 ## How
 
-One command starts every sidecar and stops them together on Ctrl-C:
-
 ```bash
-LLM_ENDPOINT=http://<serve-host>:<port> profiling/record_session.sh <label> [--reasoner-domain N]
+LLM_ENDPOINT=http://<serve-host>:<port> bash profiling/record_session.sh <label>
 ```
 
-`--reasoner-domain` defaults to **0** (this deployment). `<label>` names the output under
-`profiling/out/<label>/` (gitignored) and is stamped into every artifact + a
-`/profiling/session_label` topic.
+Run from the repo root. One command starts every sidecar and stops them together on Ctrl-C.
+Output lands in `profiling/out/<label>/` (gitignored).
 
-Per-agent LLM spans are the one piece captured inside litellm. Enable them by registering the
-callback in `config/llm/litellm_server.yaml` — the line is already present, **commented out**:
+Domains default to this repo's own `HARU_ROBOT_ROS_DOMAIN_ID` / `HARU_PERCEPTION_ROS_DOMAIN_ID`,
+so a stack started with e.g. `HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh` is recorded correctly.
+Also reads `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL` (defaults `127.0.0.1:6379`,
+`haru_llm_dashboard`) and `HARU_PROFILING_GPU_INTERVAL` (default 1 s).
 
-```yaml
-  # callbacks: [litellm_post_fix.proxy_handler_instance, litellm_agent_spans.proxy_handler_instance]
-```
+`LLM_ENDPOINT` should point at the OpenAI-compatible serve that actually answers completions.
+Against a hosted-model proxy rather than a local vLLM, the model-root/quant/engine fields come
+back empty and `errors` is populated — that is expected, not a failure.
 
-Copy `profiling/litellm_agent_spans.py` next to the litellm config, set
-`PROFILING_SPANS_PATH=profiling/out/<label>/agent_spans.jsonl`, and restart the llm service.
+### Per-agent LLM spans (optional, three commented lines)
+
+Spans are the one piece captured inside litellm, so they need the container to see the module:
+
+1. In `apps/docker-compose-llm.yaml`, uncomment the two `server` volume lines and the
+   `environment:` block (all marked, all pointing at `profiling/`).
+2. In `config/llm/litellm_server.yaml`, add `litellm_agent_spans.proxy_handler_instance` to the
+   existing `callbacks:` list.
+3. `bash scripts/compose.sh llm up server --force-recreate -d`
+
+The module is **mounted** from `profiling/`, never copied — there is no second copy to drift.
+Keep one stable `PROFILING_SPANS_PATH` across sessions: changing it requires an LLM service
+restart, and every row carries `ts_start`/`ts_end`, so a session's spans are selected by time.
 
 ## Artifacts produced
 
-| file | sidecar | answers |
+| file | source | answers |
 |---|---|---|
-| `<label>_reasoner_d0/` (mcap bag) | record_session.sh | t0, TTS edges, actions, reply chain, transcript |
-| `<label>_perception_d200/` (mcap bag) | record_session.sh | ASR inner results, raw audio (re-ASR) |
-| `goal_eval.jsonl` | redis_goaleval_logger.py | goal status incl. TIMEDOUT + criteria + elapsed |
-| `provenance.json` | capture_serve_provenance.py | which serve answered (root/engine/quant/RTT) |
-| `gpu_<label>.csv` | gpu_apps_sampler.sh | per-service GPU memory over the session |
-| `agent_spans.jsonl` | litellm_agent_spans.py (callback) | per-agent LLM spans (start/end/tokens) |
+| `<label>_robot_d<N>/` (mcap bag) | `topics_robot.txt` | t0, TTS edges, actions, reply chain, transcript |
+| `<label>_perception_d<N>/` (mcap bag) | `topics_perception.txt` | ASR inner results, raw audio (re-ASR) |
+| `goal_eval.jsonl` | `redis_goaleval_logger.py` | goal status incl. TIMEDOUT + criteria + elapsed |
+| `provenance.json` | `capture_serve_provenance.py` | which serve answered (root/engine/quant/RTT) |
+| `gpu_<label>.csv` | `gpu_apps_sampler.sh` | per-service GPU memory over the session |
+| `agent_spans.jsonl` | `litellm_agent_spans.py` (callback) | per-agent LLM spans (start/end/tokens) |
+
+**Disk and privacy.** The perception bag records raw audio — budget roughly a gigabyte per
+minute and check free space before starting. Captures contain participants' voices (and any
+person state the robot published), so treat `profiling/out/` as personal data: it is gitignored
+and nothing is uploaded anywhere.
 
 ## Turn it off
 
-Delete the callback line (or leave it commented) and don't run `record_session.sh`. Nothing else
-references this directory.
+Remove `litellm_agent_spans.proxy_handler_instance` from the `callbacks:` list, re-comment the
+`docker-compose-llm.yaml` lines, restart the llm service, and don't run `record_session.sh`.
+No other code path imports anything from this directory.
 
 ## Non-goals
 
-No in-agent tracing, no behavior change, no data leaves the host — the sidecars only read topics /
-subscribe to redis / sample nvidia-smi / append the litellm span.
+No in-agent tracing, no behaviour change, no data leaves the host. The sidecars only read ROS
+topics, subscribe to redis, sample `nvidia-smi`, and append LLM spans — nothing is published
+into the ROS graph.

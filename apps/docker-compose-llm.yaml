@@ -84,6 +84,12 @@ services:
     volumes:
       - ../config/llm/litellm_server.yaml:/app/config.yaml:ro
       - ../config/llm/litellm_post_fix.py:/app/litellm_post_fix.py:ro
+      # Optional per-agent LLM span logging (OFF). Uncomment these two with the callback in
+      # config/llm/litellm_server.yaml and PROFILING_SPANS_PATH below. See profiling/README.md.
+      # - ../profiling/litellm_agent_spans.py:/app/litellm_agent_spans.py:ro
+      # - ../profiling/out:/profiling-out:rw
+    # environment:
+    #   - PROFILING_SPANS_PATH=/profiling-out/agent_spans.jsonl
     restart: unless-stopped
     healthcheck:  # Defines the health check configuration for the container
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=2).read()" ]  # Use python (wget/curl not installed)

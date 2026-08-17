@@ -23,8 +23,6 @@ import time
 
 import redis
 
-SLOT_STATUS_PATH = ("evaluation", "status")  # where TIMEDOUT lives per action dict
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -54,13 +52,9 @@ def main():
     for m in ps.listen():
         if m.get("type") != "message":
             continue
-        payload = _safe_json(m.get("data"))
-        write("update", payload)
-        # surface goal-eval statuses (incl. TIMEDOUT) to stdout for live verification
-        for act in payload if isinstance(payload, list) else []:
-            st = (act or {}).get("evaluation", {}).get("status") if isinstance(act, dict) else None
-            if st:
-                print(f"[goal-eval] id={act.get('id')} status={st}", flush=True)
+        # Record which channel it came from — the two carry different payloads.
+        channel = (m.get("channel") or "").rsplit(":", 1)[-1]
+        write(channel or "update", _safe_json(m.get("data")))
 
 
 def _safe_json(s):

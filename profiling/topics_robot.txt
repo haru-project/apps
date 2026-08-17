@@ -39,6 +39,9 @@
 /simple_gaze_controller/execution_status
 /expressivity_controller/execution_status
 /perception/fusion/persons
-/camera/color/image_raw
+
+# Deliberately NOT recorded: raw camera frames (/camera/color/image_raw). At ~1.7 GB/min they
+# would dominate the capture and add a heavyweight subscriber to the running robot, and no
+# artifact in the README table needs them — /perception/fusion/persons carries person state.
 /tf
 /tf_static

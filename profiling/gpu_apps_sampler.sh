@@ -13,18 +13,15 @@
 # attribution.
 #
 # Usage: bash gpu_apps_sampler.sh [out_csv] [interval_s]
-set -uo pipefail
-OUT="${1:-gpu-apps.csv}"
-INT="${2:-0.5}"
-mkdir -p "$(dirname "${OUT}")"
-echo "timestamp,pid,process_name,used_memory_mib" > "${OUT}"
-trap 'exit 0' TERM INT
-while true; do
-  ts="$(date -u +%Y-%m-%dT%H:%M:%S.%2N)"
-  nvidia-smi --query-compute-apps=pid,process_name,used_memory \
-    --format=csv,noheader,nounits 2>/dev/null \
-    | while IFS=',' read -r pid name mem; do
-        printf '%s,%s,%s,%s\n' "${ts}" "$(echo "${pid}" | xargs)" "$(echo "${name}" | xargs)" "$(echo "${mem}" | xargs)"
-      done >> "${OUT}"
-  sleep "${INT}"
-done
+set -euo pipefail
+out="${1:-gpu-apps.csv}"
+interval="${2:-1}"
+mkdir -p "$(dirname "${out}")"
+echo "timestamp,pid,process_name,used_memory_mib" > "${out}"
+
+# One long-lived nvidia-smi doing its own polling: no per-sample process spawns, one open file.
+# This samples the host it is measuring, so a shell loop respawning date/nvidia-smi/awk twice a
+# second would be load the profiled system does not otherwise carry. Per-process GPU memory
+# moves on model-load timescales, so 1 s is ample.
+exec nvidia-smi --query-compute-apps=timestamp,pid,process_name,used_memory \
+  --format=csv,noheader,nounits -l "${interval}" >> "${out}"
