@@ -18,6 +18,12 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 robot_domain="${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
 perception_domain="${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}"
 
+if ! command -v ros2 >/dev/null 2>&1; then
+  echo "error: ros2 not found — source a ROS 2 environment, or run this inside a ROS container" >&2
+  echo "       (see Prerequisites in profiling/README.md)" >&2
+  exit 1
+fi
+
 out_dir="${script_dir}/out/${label}"
 mkdir -p "${out_dir}" || { echo "cannot mkdir ${out_dir}" >&2; exit 1; }
 
@@ -27,7 +33,13 @@ pids=()
 #     A single-domain recorder silently misses the other half of the session. ---
 record_domain() {  # <domain> <name> <topic_file>
   local domain="$1" name="$2" topic_file="$3" topics=()
-  mapfile -t topics < <(grep -vE '^\s*#|^\s*$' "${topic_file}")
+  # tr -d '\r': a CRLF-saved topic file would otherwise yield names with a trailing carriage
+  # return, which subscribe to nothing and produce an EMPTY bag with no error.
+  mapfile -t topics < <(grep -vE '^\s*#|^\s*$' "${topic_file}" | tr -d '\r')
+  if [[ ${#topics[@]} -eq 0 ]]; then
+    echo "error: no topics parsed from ${topic_file}" >&2
+    exit 1
+  fi
   ( export ROS_DOMAIN_ID="${domain}"
     exec ros2 bag record --storage mcap \
       -o "${out_dir}/${label}_${name}_d${domain}" "${topics[@]}" ) &
