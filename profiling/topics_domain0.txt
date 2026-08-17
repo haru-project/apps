@@ -1,0 +1,44 @@
+# Reasoner-side bag allowlist (reasoner / agents-aggregate / actions / tts / perception / transcript).
+# Explicit allowlist, not -a: intentional + bandwidth-controlled.
+# The reasoner/robot runs on ROS domain 0 in this deployment (record_session.sh --reasoner-domain).
+# ASR result/status also appear here (bridged from 200); domain 200 additionally has *_inner + raw audio.
+# NOTE: topic names are re-verified against the LIVE stack before first use — fix from observed names,
+# not assumptions (some may differ across image tags).
+/perception/proc/speech/asr/result
+/perception/proc/speech/asr/result_revision
+/perception/proc/speech/asr/status_array
+/stt_transcript
+/agent_thought
+/haru_agent/generated_actions_arguments
+/haru_agent/executing_task
+/haru_context/add_conversation_item
+/haru_context/actions_execution
+/haru_context/add_fact
+/haru_context/remove_fact
+/haru_context/simple_context
+/agent_memory_backend/transcript
+/agent_memory_backend/interaction_processed
+/agent_memory/session_id
+/profiling/session_label
+/agent_memory/scene_snapshot
+/haru2/routine_status
+/haru2/played_audio_text
+/haru2/cmd_audio
+/haru2/tts_status
+/haru2/tts_performed
+/haru2/tts_phonemes
+/haru2/streamed_tts_audio
+/strawberry/tts_status
+/strawberry/tts_ready
+/strawberry/cmd_tts
+/haru2/motor_status
+/haru2/motor_error_status
+/haru2/gaze_mode
+/haru2/track_status
+/haru2/audio_status
+/simple_gaze_controller/execution_status
+/expressivity_controller/execution_status
+/perception/fusion/persons
+/camera/color/image_raw
+/tf
+/tf_static

@@ -1,0 +1,21 @@
+# Perception/speech bag allowlist (domain 200): ASR inner results, status, raw audio, localization.
+# These are the 200-only measurands a reasoner-domain recorder would miss.
+# Raw audio is high-bandwidth but is the one thing you cannot regenerate from a live session
+# (enables re-ASR / acoustic re-analysis) — keep it.
+# NOTE: topic names are re-verified against the LIVE stack before first use.
+/perception/proc/speech/asr/result
+/perception/proc/speech/asr/result_inner
+/perception/proc/speech/asr/result_revision
+/perception/proc/speech/asr/status
+/perception/proc/speech/asr/status_array
+/perception/proc/speech/asr/status_inner
+/perception/proc/speech/control/state
+/perception/proc/speech/localization
+/perception/sensor/audio/kinect/cam_1/asr_downmix
+/perception/sensor/audio/kinect/cam_1/array
+/perception/sensor/audio/kinect/cam_1/array/noise_floor_rms
+/perception/sensor/audio/zoom_h8
+/perception/sensor/audio_capture/state
+/perception/status/audio/status
+/perception/status/audio/info
+/profiling/session_label
