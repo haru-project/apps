@@ -18,8 +18,8 @@ each other and against offline runs of the same pipeline:
 ## Prerequisites
 
 Runs on the host where the stack is running, with the stack already up. Needs a **ROS 2
-environment** (`ros2 bag record`), **`uv`** (the two `.py` sidecars are PEP-723 self-contained),
-and **`nvidia-smi`** for the GPU sampler (skipped with a warning if absent).
+environment** (`ros2 bag record`), **`uv`** (the redis sidecar is a PEP-723 script), and
+**`nvidia-smi`** for the GPU sampler. Missing prerequisites are reported before anything starts.
 
 If the host has no ROS 2 install, run `record_session.sh` inside a ROS container that shares the
 host's network and domains — but run `gpu_apps_sampler.sh` **separately on the host**, since
@@ -27,21 +27,25 @@ host's network and domains — but run `gpu_apps_sampler.sh` **separately on the
 
 ## How
 
+Run from the repo root, with the same environment the stack was started with:
+
 ```bash
-LLM_ENDPOINT=http://<serve-host>:<port> bash profiling/record_session.sh <label>
+bash profiling/record_session.sh <label>
 ```
 
-Run from the repo root. One command starts every sidecar and stops them together on Ctrl-C.
-Output lands in `profiling/out/<label>/` (gitignored).
+One command starts every sidecar and stops them together on Ctrl-C, then prints an OK/EMPTY line
+per artifact and exits non-zero if anything came back empty. Output lands in
+`profiling/out/<label>/` (gitignored; override with `HARU_PROFILING_OUT_DIR`).
 
-Domains default to this repo's own `HARU_ROBOT_ROS_DOMAIN_ID` / `HARU_PERCEPTION_ROS_DOMAIN_ID`,
-so a stack started with e.g. `HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh` is recorded correctly.
-Also reads `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL` (defaults `127.0.0.1:6379`,
-`haru_llm_dashboard`).
+Configuration is read from this repo's own variables, so a stack started with e.g.
+`HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh` is recorded correctly: `HARU_ROBOT_ROS_DOMAIN_ID` /
+`HARU_PERCEPTION_ROS_DOMAIN_ID` (domains), `HARU_TOPIC_PREFIX` (prepended to every recorded
+topic), `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL`, and `LLM_SERVER_BASE_URL` (the serve to
+capture identity from; override with `HARU_PROFILING_LLM_ENDPOINT`).
 
-`LLM_ENDPOINT` should point at the OpenAI-compatible serve that actually answers completions.
-Against a hosted-model proxy rather than a local vLLM, the model-root/quant/engine fields come
-back empty and `errors` is populated — that is expected, not a failure.
+The endpoint should be the OpenAI-compatible serve that actually answers completions. Against a
+hosted-model proxy rather than a local vLLM, the model-root/quant/engine fields come back empty
+and `errors` is populated — that is expected, not a failure.
 
 ### Per-agent LLM spans (optional, off by default)
 
@@ -59,14 +63,21 @@ module docstring explains why.
 
 ## Artifacts produced
 
+All under `profiling/out/<label>/`:
+
 | file | source | answers |
 |---|---|---|
-| `<label>_robot_d<N>/` (mcap bag) | `topics_robot.txt` | t0, TTS edges, actions, reply chain, transcript |
-| `<label>_perception_d<N>/` (mcap bag) | `topics_perception.txt` | ASR inner results, raw audio (re-ASR) |
+| `session.json` + `session_end.json` | `record_session.sh` | when the session ran and under what config — the window everything else is sliced by |
+| `robot_d<N>/` (mcap bag) | `topics_robot.txt` | t0, TTS edges, actions, reply chain, transcript |
+| `perception_d<N>/` (mcap bag) | `topics_perception.txt` | ASR inner results, raw audio (re-ASR) |
 | `goal_eval.jsonl` | `redis_goaleval_logger.py` | goal status incl. TIMEDOUT + criteria + elapsed |
 | `provenance.json` | `capture_serve_provenance.py` | which serve answered (root/engine/quant/RTT) |
-| `gpu_<label>.csv` | `gpu_apps_sampler.sh` | per-service GPU memory over the session |
+| `gpu.csv` | `gpu_apps_sampler.sh` | per-service GPU memory over the session |
 | `agent_spans.jsonl` | `litellm_agent_spans.py` (callback) | per-agent LLM spans (start/end/tokens) |
+
+Timestamps are Unix epoch everywhere except `gpu.csv`, which carries nvidia-smi's own formatted
+column — forced to UTC so it joins without a timezone assumption. `agent_spans.jsonl` is the one
+file that accumulates across sessions; use `session.json`'s start/end to select a session's rows.
 
 **Disk and privacy.** The perception bag records raw audio — budget roughly a gigabyte per
 minute and check free space before starting. Captures contain participants' voices (and any

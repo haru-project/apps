@@ -2,9 +2,9 @@
 
 A litellm CustomLogger (same machinery as the sibling litellm_post_fix.py). Its success hook
 carries the call's start/end times, so it emits the per-agent LLM span the deployment waterfall
-needs: {ts_start, ts_end, latency_s, model, agent, tokens_in/out, sys_fingerprint}. All agents
-share one model alias, so `agent` is taken from request metadata when present and a short system-
-prompt fingerprint is included so downstream attribution can disambiguate.
+needs: {ts_start, ts_end, t_logged, latency_s, model, agent, tokens_in/out, sys_fingerprint}.
+All agents share one model alias, so `agent` is taken from request metadata when present and a
+short system-prompt fingerprint is included so downstream attribution can disambiguate.
 
 PASSIVE + fail-safe: it only appends to a file and must never turn a successful call into a
 failure. It is off unless an operator registers the callback — see profiling/README.md.

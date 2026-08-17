@@ -25,7 +25,6 @@ def test_canonical_model_is_bedrock_mantle() -> None:
 
 
 def test_profiling_spans_callback_is_off_by_default() -> None:
-    """The optional profiling callback must stay unregistered until an operator enables it."""
     config = (ROOT / "config/llm/litellm_server.yaml").read_text(encoding="utf-8")
     callbacks = next(line for line in config.splitlines() if line.strip().startswith("callbacks:"))
     assert "litellm_agent_spans" not in callbacks
