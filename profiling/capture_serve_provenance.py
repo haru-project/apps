@@ -2,8 +2,8 @@
 """Capture the LLM serve identity for a profiling session.
 
 Records what is needed to know exactly which serve answered this session (and to replicate it):
-resolved model root, alias, engine name+version, quant, endpoint URL + host, and a round-trip
-latency stamp (matters when the serve is remote — the network hop is on the record).
+resolved model root, alias, whatever /version returns, quant, endpoint URL + host, and a
+round-trip latency stamp (matters when the serve is remote — the network hop is on the record).
 
 The endpoint must be given explicitly (--endpoint, or the caller's LLM_SERVER_BASE_URL): there is
 no localhost default, so a run cannot silently pin the wrong serve when the real one is elsewhere.
@@ -67,10 +67,10 @@ def main() -> None:
     except HTTP_ERRORS as exc:
         prov["errors"].append(f"/v1/models: {exc}")
 
-    # engine name + version (vLLM exposes /version; a hosted-model proxy will not)
+    # /version, if the serve exposes one. Recorded verbatim — do NOT label it, since a proxy may
+    # answer here too and asserting an engine name would put a false provenance claim on record.
     try:
-        version, _ = get_json(f"{base}/version", timeout=5)
-        prov["engine"] = {"name": "vllm", "version": version.get("version")}
+        prov["version_endpoint"], _ = get_json(f"{base}/version", timeout=5)
     except HTTP_ERRORS as exc:
         prov["errors"].append(f"/version: {exc}")
 

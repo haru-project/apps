@@ -1,7 +1,7 @@
-"""Per-agent LLM span logger — one JSONL row per completion, for waterfall reconstruction.
+"""Per-agent LLM span logger — one row per completion, so each call sits on the session timeline.
 
 A litellm CustomLogger (same machinery as the sibling litellm_post_fix.py). Its success hook
-carries the call's start/end times, so it emits the per-agent LLM span the deployment waterfall
+carries the call's start/end times, so it emits the per-agent span the session timeline
 needs: {ts_start, ts_end, t_logged, latency_s, model, agent, tokens_in/out, sys_fingerprint}.
 All agents share one model alias, so `agent` is taken from request metadata when present and a
 short system-prompt fingerprint is included so downstream attribution can disambiguate.

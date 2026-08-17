@@ -43,9 +43,10 @@ Configuration is read from this repo's own variables, so a stack started with e.
 topic), `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL`, and `LLM_SERVER_BASE_URL` (the serve to
 capture identity from; override with `HARU_PROFILING_LLM_ENDPOINT`).
 
-The endpoint should be the OpenAI-compatible serve that actually answers completions. Against a
-hosted-model proxy rather than a local vLLM, the model-root/quant/engine fields come back empty
-and `errors` is populated — that is expected, not a failure.
+The endpoint is the base URL of the OpenAI-compatible serve — this repo's is
+`LLM_SERVER_BASE_URL` minus its `/v1` suffix. Behind the litellm proxy the model-root and quant
+fields come back empty and `errors` records what was unavailable; only a serve that exposes model
+metadata (e.g. a local vLLM) fills them in.
 
 ### Per-agent LLM spans (optional, off by default)
 
@@ -57,9 +58,14 @@ Spans are the one piece captured inside litellm, so they need the container to s
    existing `callbacks:` list.
 3. `bash scripts/compose.sh llm up server --force-recreate -d`
 
-The module is **mounted** from `profiling/`, never copied — there is no second copy to drift.
-Use one stable `PROFILING_SPANS_PATH` across sessions and select a session's spans by time; the
-module docstring explains why.
+The module is mounted from `profiling/`, so there is no copy to keep in sync. Keep
+`PROFILING_SPANS_PATH` stable across sessions and select a session's spans by time — the module
+docstring explains why.
+
+Two things to expect while spans are on: `test_profiling_spans_callback_is_off_by_default` fails
+by design (it asserts the callback is unregistered), and if `agent_spans.jsonl` never appears,
+check the container can write the mounted directory — the hook swallows its own errors so that it
+can never fail a real completion.
 
 ## Artifacts produced
 
@@ -72,23 +78,28 @@ All under `profiling/out/<label>/`:
 | `perception_d<N>/` (mcap bag) | `topics_perception.txt` | ASR inner results, raw audio (re-ASR) |
 | `goal_eval.jsonl` | `redis_goaleval_logger.py` | goal status incl. TIMEDOUT + criteria + elapsed |
 | `provenance.json` | `capture_serve_provenance.py` | which serve answered (root/engine/quant/RTT) |
-| `gpu.csv` | `gpu_apps_sampler.sh` | per-service GPU memory over the session |
-| `agent_spans.jsonl` | `litellm_agent_spans.py` (callback) | per-agent LLM spans (start/end/tokens) |
+| `gpu.csv` | `gpu_apps_sampler.sh` | GPU memory per process over the session |
+
+Plus one file **outside** the label directory: `profiling/out/agent_spans.jsonl`
+(`litellm_agent_spans.py`) — per-agent LLM spans, appended across *all* sessions because the
+container writes to a fixed path. Select one session's rows using `session.json`'s start/end.
 
 Timestamps are Unix epoch everywhere except `gpu.csv`, which carries nvidia-smi's own formatted
-column — forced to UTC so it joins without a timezone assumption. `agent_spans.jsonl` is the one
-file that accumulates across sessions; use `session.json`'s start/end to select a session's rows.
+column, forced to UTC so it joins without a timezone assumption. The GPU rows identify processes
+by PID and process name; mapping those to containers is not done for you.
 
-**Disk and privacy.** The perception bag records raw audio — budget roughly a gigabyte per
-minute and check free space before starting. Captures contain participants' voices (and any
-person state the robot published), so treat `profiling/out/` as personal data: it is gitignored
-and nothing is uploaded anywhere.
+**Disk and privacy.** The perception bag records raw multi-channel audio, which dominates the
+capture — check free space, and time a one-minute trial to size your own rate. Captures contain
+what people said near the robot: audio in the perception bag, and utterance text in
+`goal_eval.jsonl` (the dashboard conversation channel). Treat `profiling/out/` as personal data —
+it is gitignored and nothing is uploaded anywhere.
 
 ## Turn it off
 
 Remove `litellm_agent_spans.proxy_handler_instance` from the `callbacks:` list, re-comment the
 `docker-compose-llm.yaml` lines, restart the llm service, and don't run `record_session.sh`.
-No other code path imports anything from this directory.
+No other code path imports anything from this directory. Turning it off does not delete captures
+already in `profiling/out/` — remove those when you are done with them.
 
 ## Non-goals
 

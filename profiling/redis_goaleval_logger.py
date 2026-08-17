@@ -5,15 +5,16 @@
 # ///
 """Redis subscriber-logger: persist the goal-eval / TIMEDOUT stream for one profiling session.
 
-The haru-llm pipeline publishes per-turn action + goal-eval state to redis (`DashboardPublisher`,
-constructed in `action_args.py`). The payload carries `evaluation.status` (GoalStatus enum incl.
-TIMEDOUT), per-criterion CriterionStatus, timeout config, and turns/time elapsed. The goal
-TIMEOUT signal is computed post-LLM by the pipeline, so it lives here, NOT in the litellm stream.
-That pub/sub stream is EPHEMERAL — this logger persists it to a labeled JSONL so it survives.
+The reasoner publishes per-turn action + goal-eval state to redis for its dashboard. The payload
+carries the goal's evaluation status (including TIMEDOUT), per-criterion status, timeout config,
+and turns/time elapsed. Goal timeouts are decided by the pipeline after the LLM returns, so they
+appear here and not in the LLM call stream. That pub/sub stream is EPHEMERAL — this logger
+persists it to a labelled JSONL so it survives the session.
 
-Runs on the host (redis 6379 is host-exposed). Subscribes to the real-time `<channel>:updates`
-pub/sub; each message is written with a receive timestamp and the session label. Also snapshots
-the current state key at startup. Read-only: subscribes, never publishes.
+Runs on the host (redis 6379 is host-exposed). Subscribes to `<channel>:updates` and
+`<channel>:conversation`; each message is written with a receive timestamp, the session label,
+and which channel it came from. Also snapshots the current state key at startup. Note the
+conversation channel carries utterance text. Read-only: subscribes, never publishes.
 
 Usage: redis_goaleval_logger.py <label> <out.jsonl> [--host H] [--port P] [--channel C]
 """

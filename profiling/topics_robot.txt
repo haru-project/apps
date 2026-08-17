@@ -2,8 +2,8 @@
 # Explicit allowlist, not -a: intentional + bandwidth-controlled.
 # Recorded on HARU_ROBOT_ROS_DOMAIN_ID.
 # ASR result/status also appear here (bridged from 200); domain 200 additionally has *_inner + raw audio.
-# NOTE: topic names are re-verified against the LIVE stack before first use — fix from observed names,
-# not assumptions (some may differ across image tags).
+# Names follow the default topic layout (HARU_TOPIC_PREFIX empty). Check `ros2 topic list` if
+# your deployment differs — a name that matches nothing records nothing, silently.
 /perception/proc/speech/asr/result
 /perception/proc/speech/asr/result_revision
 /perception/proc/speech/asr/status_array
@@ -41,5 +41,5 @@
 /tf
 /tf_static
 
-# Not recorded: /camera/color/image_raw (~1.7 GB/min; person state comes from
-# /perception/fusion/persons instead).
+# Camera streams are deliberately not recorded — they would dominate the bag, and person state
+# comes from /perception/fusion/persons instead.
