@@ -13,14 +13,22 @@
 # attribution.
 #
 # Usage: bash gpu_apps_sampler.sh [out_csv] [interval_s]
+#
+# Output is nvidia-smi's own CSV, so fields carry a leading space after each comma
+# (read it with skipinitialspace=True, or equivalent).
 set -euo pipefail
 out="${1:-gpu-apps.csv}"
 interval="${2:-1}"
 mkdir -p "$(dirname "${out}")"
-echo "timestamp,pid,process_name,used_memory_mib" > "${out}"
+echo "timestamp_utc,pid,process_name,used_memory_mib" > "${out}"
+
+# TZ=UTC because nvidia-smi stamps LOCAL time with no offset marker. Every other artifact here
+# is Unix-epoch (ROS bags, LLM spans, redis), so a local-time column would silently misalign
+# this file by the host's UTC offset when the timelines are joined.
+export TZ=UTC
 
 # One long-lived nvidia-smi doing its own polling: no per-sample process spawns, one open file.
-# This samples the host it is measuring, so a shell loop respawning date/nvidia-smi/awk twice a
+# This samples the host it is measuring, so a shell loop respawning date/nvidia-smi twice a
 # second would be load the profiled system does not otherwise carry. Per-process GPU memory
 # moves on model-load timescales, so 1 s is ample.
 exec nvidia-smi --query-compute-apps=timestamp,pid,process_name,used_memory \

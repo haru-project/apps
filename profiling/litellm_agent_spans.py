@@ -17,6 +17,7 @@ session. Every row carries ts_start/ts_end, so a session's spans are selected by
 
 import json
 import os
+import time
 
 from litellm.integrations.custom_logger import CustomLogger
 
@@ -34,6 +35,11 @@ class AgentSpanLogger(CustomLogger):
             row = {
                 "ts_start": start_time.timestamp(),
                 "ts_end": end_time.timestamp(),
+                # Unambiguous epoch taken here, on the same clock as the other sidecars.
+                # ts_start/ts_end come from litellm; if it hands back NAIVE datetimes they are
+                # read in the container's local zone, so t_logged is the reference that makes
+                # any offset visible instead of silently shifting the whole span timeline.
+                "t_logged": time.time(),
                 "latency_s": (end_time - start_time).total_seconds(),
                 "model": kwargs.get("model"),
                 "agent": meta.get("agent") or meta.get("tags"),
