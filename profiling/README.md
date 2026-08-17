@@ -14,6 +14,13 @@ are directly comparable to harness arms:
 - **turn anatomy** = the reply chain across ASR → agent outputs → TTS
 - plus **per-service GPU memory** attribution (co-tenancy on a shared card)
 
+## Prerequisites
+
+Runs on the deployment host. Needs: a **ROS 2 environment** on the host (`ros2 bag record` +
+`ros2 topic pub` — if the host is containers-only, run `record_session.sh` inside a ROS container
+that shares the host network/domains), `uv` (the two `.py` sidecars are PEP-723 self-contained),
+and `nvidia-smi` for the GPU sampler (skipped with a warning if absent).
+
 ## How
 
 One command starts every sidecar and stops them together on Ctrl-C:
