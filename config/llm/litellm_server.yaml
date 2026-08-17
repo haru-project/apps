@@ -9,3 +9,5 @@ model_list:
 litellm_settings:
   drop_params: true
   callbacks: [litellm_post_fix.proxy_handler_instance]
+  # Deployment profiling (OFF by default). To capture per-agent LLM spans, add
+  # litellm_agent_spans.proxy_handler_instance to the callbacks list above. See profiling/README.md.
