@@ -6,14 +6,20 @@ operator starts it, and it changes no pipeline behaviour.
 
 ## Why
 
-Records wall-clock timestamps at fixed points in a turn, so sessions can be compared against
-each other and against offline runs of the same pipeline:
+Records timestamped evidence of what a session did, so sessions can be compared against each
+other and against offline runs of the same pipeline. What it captures:
 
-- **t0** — the ASR result that starts a turn
+- **speech recognition events** — ASR results and their revisions, on both domains
 - **per-agent LLM spans** — one row per completion (start/end/tokens)
-- **TTFR** (time to first response) — the first TTS "playing" edge after t0
-- **turn anatomy** — the reply chain across ASR → agent outputs → TTS
-- **per-service GPU memory** — which container holds what on a shared card
+- **speech output events** — TTS status, playback, and phoneme timing
+- **action and goal state** — routines, action execution, and goal evaluation including timeouts
+- **GPU memory per process** — how a shared card is divided while the session runs
+
+Turn-level measures — when a turn starts, time to first response, the reply chain — are
+**derived from these recordings during analysis**, not computed here. Which topic marks the
+start of a turn depends on how your pipeline is wired, so confirm that mapping against your own
+deployment before quoting a latency number; this directory's job is to make sure the evidence
+needed to derive it was captured.
 
 ## Prerequisites
 
@@ -74,7 +80,7 @@ All under `profiling/out/<label>/`:
 | file | source | answers |
 |---|---|---|
 | `session.json` + `session_end.json` | `record_session.sh` | when the session ran and under what config — the window everything else is sliced by |
-| `robot_d<N>/` (mcap bag) | `topics_robot.txt` | t0, TTS edges, actions, reply chain, transcript |
+| `robot_d<N>/` (mcap bag) | `topics_robot.txt` | ASR results, TTS events, actions, agent outputs, transcript |
 | `perception_d<N>/` (mcap bag) | `topics_perception.txt` | ASR inner results, raw audio (re-ASR) |
 | `goal_eval.jsonl` | `redis_goaleval_logger.py` | goal status incl. TIMEDOUT + criteria + elapsed |
 | `provenance.json` | `capture_serve_provenance.py` | which serve answered (root/engine/quant/RTT) |
