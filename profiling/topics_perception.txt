@@ -16,6 +16,13 @@
 /perception/sensor/audio/kinect/cam_1/array
 /perception/sensor/audio/kinect/cam_1/array/noise_floor_rms
 /perception/sensor/audio/zoom_h8
-/perception/sensor/audio/capture/state
+/perception/sensor/audio_capture/state
 /perception/status/audio/status
 /perception/status/audio/info
+
+# Robot-hardware status stream — lives on the perception domain, not the robot domain
+# (verified live 2026-08-18); listing these on the robot side records nothing.
+/haru2/tts_status
+/haru2/motor_moving_status
+/haru2/audio_status
+/haru2/timeline_status

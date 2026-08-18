@@ -23,23 +23,20 @@
 /haru2/routine_status
 /haru2/played_audio_text
 /haru2/cmd_audio
-/haru2/tts_status
 /haru2/tts_performed
 /haru2/tts_phonemes
 /haru2/streamed_tts_audio
 /strawberry/tts_status
 /strawberry/tts_ready
 /strawberry/cmd_tts
-/haru2/motor_status
-/haru2/motor_error_status
 /haru2/gaze_mode
 /haru2/track_status
-/haru2/audio_status
 /simple_gaze_controller/execution_status
 /expressivity_controller/execution_status
 /perception/fusion/persons
 /tf
 /tf_static
 
-# Camera streams are deliberately not recorded — they would dominate the bag, and person state
-# comes from /perception/fusion/persons instead.
+# /camera/color/image_raw is live on this domain but deliberately NOT recorded: raw frames would
+# dominate the bag and add a heavyweight subscriber to a running robot. Person state comes from
+# /perception/fusion/persons instead. Add it back only if you actually need video.
