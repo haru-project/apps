@@ -16,10 +16,21 @@ other and against offline runs of the same pipeline. What it captures:
 - **GPU memory per process** — how a shared card is divided while the session runs
 
 Turn-level measures — when a turn starts, time to first response, the reply chain — are
-**derived from these recordings during analysis**, not computed here. Which topic marks the
-start of a turn depends on how your pipeline is wired, so confirm that mapping against your own
-deployment before quoting a latency number; this directory's job is to make sure the evidence
-needed to derive it was captured.
+**derived from these recordings during analysis**, not computed here.
+
+For deriving turn start, the chain we observed on a running stack is:
+
+```
+/perception/proc/speech/asr/result   (SpeechToTextResult, reaches the robot domain via the bridge)
+  → perception_postprocessors_node
+  → /haru_context/add_conversation_item → context_translator_node
+  → /haru_context/simple_context       → reasoner agents
+```
+
+So the ASR result is the utterance-in edge that begins a turn, but no reasoner agent subscribes
+to it directly — a two-hop context translation sits in between, and all of those topics are
+recorded. This was traced from the live pub/sub graph, not from timings; confirm it against your
+own deployment before quoting a latency number.
 
 ## Prerequisites
 
