@@ -22,6 +22,8 @@ bash profiling/record_session.sh session_id
 bash run.sh
 ```
 
+7. Rename the most recent files in ```/data/llm/logs```, ```/data/llm/conversation_logs```, ```/data/llm/profiling``` to correspond with the Session ID
+
 6. For subsequent runs, configure the task, register the participants, start the profiling record, and then run
 
 ```
