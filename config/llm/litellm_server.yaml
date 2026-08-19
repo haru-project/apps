@@ -9,3 +9,7 @@ model_list:
 litellm_settings:
   drop_params: true
   callbacks: [litellm_post_fix.proxy_handler_instance]
+  # Session profiling (OFF by default). To capture per-agent LLM spans, add
+  # litellm_agent_spans.proxy_handler_instance to the callbacks list above AND uncomment the
+  # profiling mount in apps/docker-compose-llm.yaml — the module comes from there.
+  # See profiling/README.md.

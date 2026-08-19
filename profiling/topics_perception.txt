@@ -1,0 +1,28 @@
+# Perception/speech bag allowlist: ASR inner results, status, raw audio, localization.
+# These are the measurands only this domain carries; the robot-side recorder cannot see them.
+# Raw audio is high-bandwidth but is the one thing you cannot regenerate from a live session
+# (enables re-ASR / acoustic re-analysis) — keep it.
+# Names follow the default topic layout (HARU_TOPIC_PREFIX empty). Check `ros2 topic list` if
+# your deployment differs — a name that matches nothing records nothing, silently.
+/perception/proc/speech/asr/result
+/perception/proc/speech/asr/result_inner
+/perception/proc/speech/asr/result_revision
+/perception/proc/speech/asr/status
+/perception/proc/speech/asr/status_array
+/perception/proc/speech/asr/status_inner
+/perception/proc/speech/control/state
+/perception/proc/speech/localization
+/perception/sensor/audio/kinect/cam_1/asr_downmix
+/perception/sensor/audio/kinect/cam_1/array
+/perception/sensor/audio/kinect/cam_1/array/noise_floor_rms
+/perception/sensor/audio/zoom_h8
+/perception/sensor/audio_capture/state
+/perception/status/audio/status
+/perception/status/audio/info
+
+# Robot-hardware status stream — lives on the perception domain, not the robot domain
+# (verified live 2026-08-18); listing these on the robot side records nothing.
+/haru2/tts_status
+/haru2/motor_moving_status
+/haru2/audio_status
+/haru2/timeline_status
