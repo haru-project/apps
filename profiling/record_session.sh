@@ -110,9 +110,25 @@ echo "stop with Ctrl-C" >&2
 # exit before the summary below runs.
 wait "${pids[@]}" || true
 
-# Close the session and report what actually landed. "Captured nothing" is only observable at
-# the end, so a silently-empty artifact must not exit 0.
 printf '{"t_end_unix": %s}\n' "$(date +%s.%N)" > "${out_dir}/session_end.json"
+
+# --- collect the stack's own logs for this session ---
+# The LLM stack writes logs, conversation logs and its own profiling output to shared directories
+# that are NOT session-scoped — they accumulate across runs. Selecting by modification time within
+# this session's window files them by session automatically, so the copies here belong to <label>
+# and only <label>. The originals are left untouched.
+app_logs=0
+app_data="${HARU_PROFILING_APP_DATA:-${script_dir}/../data/llm}"
+for sub in logs conversation_logs profiling profling; do
+  [[ -d "${app_data}/${sub}" ]] || continue
+  while IFS= read -r -d '' f; do
+    mkdir -p "${out_dir}/app_logs/${sub}"
+    cp -p "${f}" "${out_dir}/app_logs/${sub}/" && app_logs=1
+  done < <(find "${app_data}/${sub}" -type f -newermt "@${t_start%.*}" -print0 2>/dev/null)
+done
+
+# Report what actually landed. "Captured nothing" is only observable at the end, so a
+# silently-empty artifact must not exit 0.
 status=0
 check() {  # <description> <test-result>
   if [[ "$2" == "ok" ]]; then echo "  OK    $1" >&2; else echo "  EMPTY $1" >&2; status=1; fi
@@ -127,5 +143,11 @@ if command -v nvidia-smi >/dev/null 2>&1; then
 fi
 if [[ -n "${endpoint}" ]]; then
   [[ -s "${out_dir}/provenance.json" ]] && check provenance.json ok || check provenance.json empty
+fi
+# Not a failure if absent — the stack may be configured without these mounts.
+if [[ "${app_logs}" -eq 1 ]]; then
+  echo "  OK    app_logs/ ($(find "${out_dir}/app_logs" -type f | wc -l) files from ${app_data})" >&2
+else
+  echo "  none  app_logs/ (nothing written under ${app_data} during the session)" >&2
 fi
 exit "${status}"

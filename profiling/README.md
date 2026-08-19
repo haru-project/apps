@@ -97,9 +97,15 @@ All under `profiling/out/<label>/`:
 | `provenance.json` | `capture_serve_provenance.py` | which serve answered (root/engine/quant/RTT) |
 | `gpu.csv` | `gpu_apps_sampler.sh` | GPU memory per process over the session |
 
+| `app_logs/` | the LLM stack's own output | copies of whatever the stack wrote to `data/llm/{logs,conversation_logs,profiling}` during this session |
+
 Plus one file **outside** the label directory: `profiling/out/agent_spans.jsonl`
 (`litellm_agent_spans.py`) — per-agent LLM spans, appended across *all* sessions because the
 container writes to a fixed path. Select one session's rows using `session.json`'s start/end.
+
+`app_logs/` is copied at session end: the stack writes those directories continuously and they are
+not session-scoped, so files are selected by modification time inside this session's window. The
+originals are left in place. Override the source root with `HARU_PROFILING_APP_DATA`.
 
 Timestamps are Unix epoch everywhere except `gpu.csv`, which carries nvidia-smi's own formatted
 column, forced to UTC so it joins without a timezone assumption. The GPU rows identify processes
