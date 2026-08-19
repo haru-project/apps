@@ -2,6 +2,32 @@
 
 This guide is intended for **non-developers** and walks you through installing, setting up, and running the Haru system.
 
+## Experiment start guide
+1. Configure the task to use in ```envs/reasoner.env```
+2. Start the main stacks
+```
+bash start.sh
+```
+
+3. Then go to http://localhost:5173/ and register the participants
+4. Start the profiling recording 
+
+```
+bash profiling/record_session.sh session_id
+```
+
+5. Run the demo
+
+```
+bash run.sh
+```
+
+6. For subsequent runs, configure the task, register the participants, start the profiling record, and then run
+
+```
+bash restart_demo.sh
+```
+
 ## Prerequisites
 
 Before you begin, make sure you're installing the system on a machine running either Ubuntu 20.04 or 24.04.
