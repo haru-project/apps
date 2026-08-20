@@ -22,7 +22,7 @@ bash profiling/record_session.sh session_id
 bash run.sh
 ```
 
-7. Rename the most recent files in ```/data/llm/logs```, ```/data/llm/conversation_logs```, ```/data/llm/profiling``` to correspond with the Session ID
+7. Make sure Haru has gone to sleep and has woken up, confirm that there is a new entry in ```/data/llm/conversation_logs```, *and then* use ```ctrl + c``` on the ```record_session.sh``` to finish the recording.
 
 6. For subsequent runs, configure the task, register the participants, start the profiling record, and then run
 
