@@ -18,8 +18,21 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 robot_domain="${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
 perception_domain="${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}"
 topic_prefix="${HARU_TOPIC_PREFIX:-}"
+# Read a variable straight out of the repo's env files. docker-compose consumes these via
+# env_file, which does NOT export them into the operator's shell, and the top-level README's
+# procedure (written for non-developers) never asks for an export. Relying on the environment
+# alone is what silently skipped provenance for 12 sessions on 2026-08-20.
+env_file_value() {  # <VAR_NAME> -> value, or empty
+  local var="$1" f v
+  for f in "${script_dir}/../envs/all.env" "${script_dir}/../envs/llm.env"; do
+    [[ -r "${f}" ]] || continue
+    v="$(sed -n "s/^${var}=//p" "${f}" 2>/dev/null | head -n1)"
+    if [[ -n "${v}" ]]; then printf '%s' "${v}"; return; fi
+  done
+}
+
 # LLM_SERVER_BASE_URL is the repo's own name for the serve; strip its /v1 suffix.
-endpoint="${HARU_PROFILING_LLM_ENDPOINT:-${LLM_SERVER_BASE_URL:-}}"
+endpoint="${HARU_PROFILING_LLM_ENDPOINT:-${LLM_SERVER_BASE_URL:-$(env_file_value LLM_SERVER_BASE_URL)}}"
 endpoint="${endpoint%/v1}"
 out_dir="${HARU_PROFILING_OUT_DIR:-${script_dir}/out}/${label}"
 
@@ -33,7 +46,11 @@ if [[ ${#missing[@]} -gt 0 ]]; then
   exit 1
 fi
 command -v nvidia-smi >/dev/null 2>&1 || echo "warn: nvidia-smi not found — GPU sampler will be skipped" >&2
-[[ -n "${endpoint}" ]] || echo "warn: no LLM endpoint (set LLM_SERVER_BASE_URL or HARU_PROFILING_LLM_ENDPOINT) — skipping serve provenance" >&2
+if [[ -z "${endpoint}" ]]; then
+  echo "warn: no LLM endpoint found in the environment OR in envs/all.env, envs/llm.env." >&2
+  echo "      This session will record NO model identity and cannot be attributed to a model" >&2
+  echo "      afterwards. Set LLM_SERVER_BASE_URL or HARU_PROFILING_LLM_ENDPOINT to fix." >&2
+fi
 
 mkdir -p "${out_dir}"
 
@@ -139,10 +156,26 @@ for d in "${out_dir}"/*_d*/; do
 done
 [[ -s "${out_dir}/goal_eval.jsonl" ]] && check goal_eval.jsonl ok || check goal_eval.jsonl empty
 if command -v nvidia-smi >/dev/null 2>&1; then
-  [[ "$(wc -l < "${out_dir}/gpu.csv" 2>/dev/null || echo 0)" -gt 1 ]] && check gpu.csv ok || check gpu.csv empty
+  # Count DISTINCT timestamps, not rows: the property that matters is that the sampler SURVIVED
+  # the session. A row count passes a sampler that wrote one snapshot and died -- which is
+  # exactly what sessions a2/01 and a2/02 did on 2026-08-20 (7 rows, one timestamp, while the
+  # session ran for many minutes), and they reported OK.
+  stamps="$(cut -d, -f1 "${out_dir}/gpu.csv" 2>/dev/null | tail -n +2 | sort -u | wc -l || echo 0)"
+  if [[ "${stamps}" -gt 1 ]]; then
+    check "gpu.csv (${stamps} samples)" ok
+  else
+    check "gpu.csv (${stamps} distinct timestamp — sampler died at startup?)" empty
+  fi
 fi
-if [[ -n "${endpoint}" ]]; then
-  [[ -s "${out_dir}/provenance.json" ]] && check provenance.json ok || check provenance.json empty
+# Unconditional. Gating this on a non-empty endpoint means the single condition that loses model
+# identity is also the condition under which nobody is told -- how 12 sessions exited 0 with no
+# attribution on 2026-08-20.
+if [[ -s "${out_dir}/provenance.json" ]]; then
+  check provenance.json ok
+elif [[ -z "${endpoint}" ]]; then
+  check "provenance.json — NO ENDPOINT, session is UNATTRIBUTABLE to a model" empty
+else
+  check "provenance.json — endpoint ${endpoint} unreachable?" empty
 fi
 # Not a failure if absent — the stack may be configured without these mounts.
 if [[ "${app_logs}" -eq 1 ]]; then
