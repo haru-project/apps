@@ -106,7 +106,7 @@ def configure(path: Path) -> None:
         ("dynamic_capture_controlled", "true"),
         ("active_channel_rms_threshold", "0.003"),
         ("active_channel_warmup_secs", "0.3"),
-        ("exclude_channels", "[]"),
+        ("exclude_channels", "[10, 11]"),
     ):
         set_key(lines, zoom_h8, key, value, "speech_stack source mic_0")
 
@@ -129,6 +129,15 @@ def configure(path: Path) -> None:
         ("active_channel_warmup_secs", "2.0"),
     ):
         set_key(lines, audio_monitor, key, value, "audio_monitor")
+
+    speech_to_text = section_bounds(lines, "speech_to_text")
+    set_key(
+        lines,
+        speech_to_text,
+        "min_segment_silent_ms",
+        "800",
+        "speech_to_text",
+    )
 
     path.write_text("".join(lines), encoding="utf-8")
 

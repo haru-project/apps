@@ -13,8 +13,7 @@ STRAWBERRY_TTS_IMAGE = (
     "sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa"
 )
 REASONER_IMAGE = (
-    "ghcr.io/haru-project/haru-agent-reasoner:hotfix-demo-issues@"
-    "sha256:a0d374d7f4cce3b42302aaf9df42159fe65bd063ddaef1e1919cee8add2ccabd"
+    "ghcr.io/haru-project/haru-agent-reasoner:feature-dynamic_group_gaze"
 )
 STRAWBERRY_TTS_API_IMAGE = (
     "ghcr.io/haru-project/strawberry-tts-api:v0.3.2-cu126"
@@ -65,7 +64,7 @@ def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
     "service",
     ("bt-forest", "reasoner", "context-manager", "execute-task-scenario", "execute-task-test"),
 )
-def test_reasoner_services_use_validated_hotfix_digest(service: str) -> None:
+def test_reasoner_services_use_dynamic_group_gaze_image(service: str) -> None:
     assert (
         compose_image(
             "apps/docker-compose-reasoner.yaml",
