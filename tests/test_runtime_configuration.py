@@ -63,7 +63,7 @@ def test_speech_configurator_accepts_already_updated_upstream_values(
         active_channel_rms_threshold: 0.003
         # An upstream comment used to break the multiline replacement.
         active_channel_warmup_secs: 2.0
-        exclude_channels: [10, 11]
+        exclude_channels: []
       - source_id: "mic_1"
         enabled: false
         capture_enabled: false
@@ -79,6 +79,11 @@ def test_speech_configurator_accepts_already_updated_upstream_values(
     # Keep comments and tolerate non-adjacent policy settings.
     active_channel_rms_threshold: 0.003
     active_channel_warmup_secs: 2.0
+
+/**/speech_to_text:
+  ros__parameters:
+    # Preserve this comment while replacing the stale image default.
+    min_segment_silent_ms: 300  # stale apps override
 """,
         encoding="utf-8",
     )
@@ -92,8 +97,9 @@ def test_speech_configurator_accepts_already_updated_upstream_values(
     assert "# now enabled upstream" in first_result
     assert "# An upstream comment" in first_result
     assert "active_channel_warmup_secs: 0.3" in first_result
-    assert "exclude_channels: []" in first_result
-    assert "exclude_channels: [10, 11]" not in first_result
+    assert "exclude_channels: [10, 11]" in first_result
+    assert "# Preserve this comment" in first_result
+    assert "min_segment_silent_ms: 800  # stale apps override" in first_result
 
 
 def test_image_downloader_includes_profiled_speech_base_image(
