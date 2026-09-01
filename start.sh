@@ -57,7 +57,7 @@ require_stack_down simulator
 require_stack_down ipad
 require_stack_down perception
 require_stack_down speech
-require_stack_down llm
+#require_stack_down llm
 require_stack_down reasoner
 require_stack_down timeline-player
 
@@ -65,7 +65,7 @@ require_stack_down timeline-player
 # bash scripts/compose.sh ipad up server --force-recreate -d
 
 # Projector services
-# bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
+#bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
 echo "===== [1/7] TTS ====="
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
@@ -84,7 +84,9 @@ echo "===== [4/7] Timeline Player ====="
 bash scripts/compose.sh timeline-player up --force-recreate -d
 
 echo "===== [5/7] LLM ====="
-bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
+#bash scripts/compose.sh llm --profile vllm up vllm --force-recreate -d
+#bash scripts/compose.sh llm --profile vllm up --force-recreate -d
+#bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
 
 echo "===== [6/7] Memory ====="
 bash scripts/compose.sh memory up --force-recreate -d

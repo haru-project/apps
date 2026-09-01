@@ -5,7 +5,7 @@ set -euo pipefail
 # services (for example the LLM dashboard or speech localization) are included.
 bash scripts/compose.sh perception --profile "*" down
 bash scripts/compose.sh speech --profile "*" down
-bash scripts/compose.sh llm --profile "*" down
+#bash scripts/compose.sh llm --profile "*" down
 bash scripts/compose.sh reasoner --profile "*" down
 bash scripts/compose.sh tts --profile "*" down
 bash scripts/compose.sh ipad --profile "*" down

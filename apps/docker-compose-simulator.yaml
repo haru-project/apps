@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
+    image: ghcr.io/haru-project/hve-simulator:feature-ci
     working_dir: /ros2_ws
     command:
       - /bin/bash
@@ -37,7 +37,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ghcr.io/haru-project/hve-simulator@sha256:fb89b358b9c69ea34fedda4781d42158ef392af2ca96debb12d4344a8b81031d
+    image: ghcr.io/haru-project/hve-simulator:feature-ci
     working_dir: /app/haru2_web/
     command: ["/bin/bash", "-c", "bash run_web.sh"]
     env_file: ../envs/simulator.env

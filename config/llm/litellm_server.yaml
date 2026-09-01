@@ -1,15 +1,55 @@
-model_list:
+# model_list: # remote host
+#   - model_name: haru:canonical
+#     litellm_params:
+#       model: openai/gemma-4-26b
+#       api_base: http://172.24.36.28:4000/v1
+#       api_key: unused          # the dgx02 proxy is keyless; litellm still wants the field
+#       temperature: 1.0
+#       top_p: 0.95
+# model_list: #vllm host
+#   - model_name: haru:canonical
+#     litellm_params:
+#       model: hosted_vllm/Emova-ollm/emova-qwen-2-5-7b-hf
+#       api_base: http://vllm:8000/v1
+#       api_key: unused
+#       temperature: 1.0
+#       top_p: 0.95
+# model_list: #ollama host
+#   - model_name: haru:canonical
+#     litellm_params:
+#       model: ollama_chat/https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf
+#       api_base: http://ollama:11434
+#       api_key: unused
+#       temperature: 1.0
+#       top_p: 0.95
+#       drop_params: true
+#       modify_params: true
+#       additional_drop_params: ["reasoning[*].effort", "reasoning", "thinking", "reasoning_effort"]
+model_list: #llama.cpp host
   - model_name: haru:canonical
     litellm_params:
-      model: bedrock_mantle/google.gemma-4-26b-a4b
-      api_key: os.environ/BEDROCK_MANTLE_API_KEY
+      # model: openai/google/gemma-4-12B-it-qat-q4_0-gguf
+      model: openai/unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL
+      api_base: http://llamacpp:8000
+      api_key: unused
       temperature: 1.0
       top_p: 0.95
+      drop_params: true
+      modify_params: true
+      # additional_drop_params: ["reasoning[*].effort", "reasoning", "thinking", "reasoning_effort"]
+
 
 litellm_settings:
   drop_params: true
+  modify_params: true
+  additional_drop_params: ["reasoning[*].effort", "reasoning", "thinking", "reasoning_effort"]
   callbacks: [litellm_post_fix.proxy_handler_instance]
+<<<<<<< Updated upstream
   # Session profiling (OFF by default). To capture per-agent LLM spans, add
   # litellm_agent_spans.proxy_handler_instance to the callbacks list above AND uncomment the
   # profiling mount in apps/docker-compose-llm.yaml — the module comes from there.
   # See profiling/README.md.
+=======
+  environment:
+  - DROPPED_PARAMS=thinking,reasoning_effort,thinking_budget_tokens
+>>>>>>> Stashed changes

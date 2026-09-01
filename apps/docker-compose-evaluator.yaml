@@ -1,0 +1,10 @@
+name: haru-evaluator
+
+services:
+  evaluator:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ${HARU_OS_IMAGE:-ghcr.io/haru-project/haru-os:feature-haru2-core}
+    env_file: ../envs/evaluator.env
+    restart: unless-stopped

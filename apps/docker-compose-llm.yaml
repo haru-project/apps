@@ -139,9 +139,29 @@ services:
       file: compose.common.yaml
       service: common-gpu
     image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
+    # entrypoint: ["/bin/sh", "-c"]
+    # command: >
+    #   "pip install vllm[audio] && 
+    #    vllm serve openai/whisper-large-v3 --port 8000 --gpu-memory-utilization=0.6"
+    # command: # remote config
+    #   - "--model=${VLLM_MODEL_NAME}"
+    #   - "--gpu-memory-utilization=0.9"
     command:
       - "--model=${VLLM_MODEL_NAME}"
-      - "--gpu-memory-utilization=0.9"
+      - "--quantization=compressed-tensors"
+      - "--limit-mm-per-prompt"
+      - '{"image":0,"audio":0,"video":0}'
+      - "--reasoning-parser=gemma4"
+      - "--tool-call-parser=gemma4"
+      - "--served-model-name=gemma4"
+      - "--enable-auto-tool-choice"
+      - "--no-enforce-eager"
+      - "--async-scheduling"
+      - "--kv-cache-dtype=fp8_e4m3"
+      - "--gpu-memory-utilization=0.6"
+      - "--max-model-len=32768"
+      - "--max-num-seqs=4"
+      - "--tensor-parallel-size=1"
     env_file:
       - ../envs/llm.env
       - path: ../envs/llm.secrets.env
@@ -152,3 +172,46 @@ services:
       - ${HARU_HF_CACHE_HOST_DIR:-${HOME}/.cache/huggingface}:/root/.cache/huggingface:rw
     restart: unless-stopped
     profiles: ["vllm"]
+
+  llamacpp:
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
+    image: ${OLLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-cuda13}
+    ports:
+      - "8000:8000"
+      # google/gemma-4-12B-it-qat-q4_0-gguf
+      #reduce --spec-draft-n-max 4 to 2 if quality is sub-par
+    command: >
+      --hf-repo unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL
+      --spec-type draft-mtp --spec-draft-n-max 4
+      --chat-template-kwargs '{"enable_thinking":false}'
+      --host 0.0.0.0 
+      --port 8000 
+      --n-gpu-layers 99 
+      --ctx-size 32000
+     
+      --no-mmap
+      --batch-size 16384
+      --ubatch-size 8192
+      --parallel 1
+
+
+      --cache-type-k q4_0 
+      --cache-type-v q4_0 
+      --warmup 
+      --flash-attn on
+
+      --no-prefill-assistant
+      --dry-multiplier 0.5
+      -lv 3
+      --reasoning off
+      --reasoning-budget 0
+    # --no-mmproj
+    environment:
+      - GGML_CUDA_GRAPH_OPT=1
+      
+    volumes:
+      - ${HARU_HF_CACHE_HOST_DIR:-${HOME}/.cache/huggingface}:/root/.cache/huggingface:rw
+    restart: unless-stopped
+    profiles: ["llamacpp"]

@@ -92,3 +92,15 @@ services:
       - reasoner
     restart: "no"
     profiles: ["test"]
+
+  evaluate:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    tty: true
+    stdin_open: true
+    command: sleep infinity
+    image: ${ROS:-ghcr.io/haru-project/haru-os:feature-haru2-core}
+    env_file: ../envs/reasoner.env
+    restart: "no"
+    profiles: ["evaluation"]
