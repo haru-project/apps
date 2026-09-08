@@ -180,8 +180,6 @@ services:
     image: ${OLLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-cuda13}
     ports:
       - "8000:8000"
-      # google/gemma-4-12B-it-qat-q4_0-gguf
-      #reduce --spec-draft-n-max 4 to 2 if quality is sub-par
     command: >
       --hf-repo unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL
       --spec-type draft-mtp --spec-draft-n-max 4
@@ -210,7 +208,6 @@ services:
       --reasoning-budget 4096
     environment:
       - GGML_CUDA_GRAPH_OPT=1
-      
     volumes:
       - ${HARU_HF_CACHE_HOST_DIR:-${HOME}/.cache/huggingface}:/root/.cache/huggingface:rw
     restart: unless-stopped
