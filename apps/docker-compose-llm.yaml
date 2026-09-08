@@ -185,16 +185,15 @@ services:
     command: >
       --hf-repo unsloth/gemma-4-12B-it-qat-GGUF:UD-Q4_K_XL
       --spec-type draft-mtp --spec-draft-n-max 4
-      --chat-template-kwargs '{"enable_thinking":false}'
       --host 0.0.0.0 
       --port 8000 
       --n-gpu-layers 99 
-      --ctx-size 32000
+      --ctx-size 64000
      
-      --no-mmap
+      --load-mode mlock
       --batch-size 16384
       --ubatch-size 8192
-      --parallel 1
+      --parallel 8
 
 
       --cache-type-k q4_0 
@@ -205,9 +204,10 @@ services:
       --no-prefill-assistant
       --dry-multiplier 0.5
       -lv 3
-      --reasoning off
-      --reasoning-budget 0
-    # --no-mmproj
+
+      --reasoning on
+      --chat-template-kwargs '{"reasoning_effort": "high"}'
+      --reasoning-budget 4096
     environment:
       - GGML_CUDA_GRAPH_OPT=1
       
