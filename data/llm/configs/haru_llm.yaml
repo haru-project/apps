@@ -1,0 +1,44 @@
+/**/agent:
+  ros__parameters:
+    agent_config: assistant.yaml                              # Agent configuration file name (resolved via HARU_LLM_AGENTS_DIR)
+    agent_name: assistant                                     # Name used to identify this agent in the system
+
+
+/**/conversate:
+  ros__parameters:
+    context_topic: /haru_context/simple_context                 # ROS topic where conversation context is published/received
+    tts_agent_name: tts                                         # Name of the TTS agent to use when speaking responses
+    max_listen_secs: 10                                         # Maximum duration (seconds) to listen for user input before timing out
+
+
+/**/action_args:
+  ros__parameters:
+    context_topic: /haru_context/simple_context                 # Context topic shared with action modules
+    summary_service_topic: /haru_context/summarize_conversation  # ROS service topic for conversation summarization
+
+    goal_evaluation_agent_config: goal.yaml                     # Agent config for full goal evaluation
+    goal_inference_agent_config: goal_inference.yaml            # Agent config for fast goal inference
+    express_agent_config: haru.yaml                             # Agent config for expressive reactions/emotional responses
+    tts_agent_config: tts.yaml                                  # Agent config for text-to-speech generation
+    gaze_agent_config: gazing.yaml                              # Agent config for gaze and attention behaviors
+    summary_agent_config: summary.yaml                           # Agent config for conversation summarization (empty = disabled)
+
+    enable_memory_retrieval: false                              # When true, Haru will attempt to retrieve memory for participants
+    enable_multi_individual: false                              # When true, Haru will look at participants sequentially when multiple people are mentioned and there is a primary addressee. 
+    ignore_unknown_participants: true                           # Whether to ignore participants with unknown names (identified as "human") when evaluating criteria
+    emoji_vocal_gestures: false                                 # Whether to add vocal gestures to TTS output via emojis (e.g. 😂 -> Laughing voice gesture)
+    express_focus_secs: 40                                      # Time to maintain expressive focus/actions before releasing attention
+    express_timeout_secs: 60                                    # Maximum duration allowed for expressive actions before forced stop
+    enable_haru_nlp_emotions: false                                          # Use Haru NLP for voice genre tagging instead of an LLM agent
+    enable_expressive_tts: true                                # Enables TTS that includes emotional prosody/expressiveness
+    enable_micro_routines: true                                 # Enables micro routines
+    allow_interruption: true                                    # When true, robot always listens and can be interrupted while speaking
+    monotonic_criteria: true                                    # When true, criteria marked "reached" can never be reverted to "not reached" (monotonic progression)
+    enforce_criteria_order: true                                # When true, criteria can only be marked "reached" if all preceding criteria are reached (sequential ordering)
+    goal_instructions_first: true                               # When true, goal/criteria/status sent as system message before conversation; when false, sent as user message after
+    enable_gaze_goal_intent: true                               # When true, pass goal/intent information to gaze agent; when false, gaze is goal-independent
+    use_semantic_cospeech: false                                # When true, uses semantic cospeech models for micro routines
+    max_turns_per_criterion: -1                                 # Max turns per criterion before skip (-1 = disabled)
+    max_time_per_criterion_secs: 90                             # Max seconds per criterion before skip (-1 = disabled)
+    content_delay_secs: 1.0                                     # Seconds to hold generated content before publishing (0 = no delay). LLM runs async during delay.
+    react_to_persons: ".*"                                      # Regex pattern matched against person name (".*" = all, "^(alice|bob)$" = exact match, "^(?!bob$).*" = exclude bob)

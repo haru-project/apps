@@ -1,0 +1,104 @@
+model_list:
+
+  - model_name: gpt-4.1
+    litellm_params:
+      model: openai/gpt-4.1
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-5.1
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-5.2
+    litellm_params:
+      model: openai/gpt-5.2
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: llama-3.3-70b
+    litellm_params:
+      model: litellm_proxy/llama-3.3-70b
+      api_base: http://dgx02:4000/v1
+  
+  - model_name: gpt-oss-20b
+    litellm_params:
+      model: litellm_proxy/gpt-oss-20b
+      api_base: http://dgx02:4000/v1
+
+  - model_name: gpt-oss-120b
+    litellm_params:
+      model: litellm_proxy/gpt-oss-120b
+      api_base: http://dgx02:4000/v1
+  
+  - model_name: llama-3.3-70b-hf
+    litellm_params:
+      model: huggingface/meta-llama/Llama-3.3-70B-Instruct:fastest
+      api_key: os.environ/HF_TOKEN
+
+  - model_name: gpt-oss-20b-hf
+    litellm_params:
+      model: huggingface/openai/gpt-oss-20b:fastest
+      api_key: os.environ/HF_TOKEN
+  
+  - model_name: gpt-oss-120b-hf
+    litellm_params:
+      model: huggingface/openai/gpt-oss-120b:fastest
+      api_key: os.environ/HF_TOKEN
+  
+  - model_name: gpt-oss-20b-levko
+    litellm_params:
+      model: hosted_vllm/openai/gpt-oss-20b
+      api_base: https://llm-ua.haru-project.com/v1
+
+  - model_name: gemma-4-26b-hri
+    litellm_params:
+      model: litellm_proxy/gemma-4-26b
+      api_base: http://dgx02:4000/v1
+
+
+  # Gemma 4 26B via AWS Bedrock serverless (bedrock-mantle, OpenAI-compatible).
+  # All 4 regions hosting the model as of 2026-07-14 (probed live); region is explicit
+  # in the group name — pick the closest one in your llm.env *_MODEL_ID bindings.
+  # AWS-recommended sampling for Gemma 4; also lowers the trailing-junk rate
+  # (5/25 -> 2/25 measured). Agents that set their own temperature override this.
+  - model_name: gemma-4-26b-bedrock-eu-central-1
+    litellm_params:
+      model: openai/google.gemma-4-26b-a4b
+      api_base: https://bedrock-mantle.eu-central-1.api.aws/openai/v1
+      api_key: os.environ/BEDROCK_API_KEY
+      temperature: 1.0
+      top_p: 0.95
+
+  - model_name: gemma-4-26b-bedrock-us-east-1
+    litellm_params:
+      model: openai/google.gemma-4-26b-a4b
+      api_base: https://bedrock-mantle.us-east-1.api.aws/openai/v1
+      api_key: os.environ/BEDROCK_API_KEY
+      temperature: 1.0
+      top_p: 0.95
+
+  - model_name: gemma-4-26b-bedrock-us-east-2
+    litellm_params:
+      model: openai/google.gemma-4-26b-a4b
+      api_base: https://bedrock-mantle.us-east-2.api.aws/openai/v1
+      api_key: os.environ/BEDROCK_API_KEY
+      temperature: 1.0
+      top_p: 0.95
+
+  - model_name: gemma-4-26b-bedrock-us-west-2
+    litellm_params:
+      model: openai/google.gemma-4-26b-a4b
+      api_base: https://bedrock-mantle.us-west-2.api.aws/openai/v1
+      api_key: os.environ/BEDROCK_API_KEY
+      temperature: 1.0
+      top_p: 0.95
+
+litellm_settings:
+  drop_params: True
+  # litellm_post_fix trims mantle Gemma-4 trailing junk after complete JSON (see that file)
+  callbacks: ["langfuse", litellm_post_fix.proxy_handler_instance]

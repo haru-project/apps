@@ -1,0 +1,261 @@
+/**/speech_stack:
+  ros__parameters:
+    source_defaults:
+      chunk_secs: 0.02
+      publish_opus: true
+      channel_frames_parent: ""
+      channel_frames: ""
+      channels_mode: "split"
+      model_rate: 16000
+    sources:
+      - source_id: "mic_0"
+        capture_device: "zoom_h8"
+        device: "ZOOM H8"
+        kind: "mic"
+        enabled: true
+        frame_id: "mic_0"
+        # Bootstrap the full H8 interface capacity before PortAudio discovery.
+        # Channels 10/11 are always removed as synthetic aggregates; runtime
+        # activity determines which physical channels 0-9 reach ASR.
+        channels: 12
+        asr_priority: 100
+        detect_active_channels: true
+        process_active_channels_only: true
+        dynamic_capture_controlled: true
+        active_channel_rms_threshold: 0.003              # Upper bound for the adaptive RMS gate
+        adaptive_channel_activity: true
+        active_channel_min_rms_threshold: 0.0002         # Remain above the measured low-gain H8 electronic floor
+        active_channel_noise_floor_ratio: 3.0            # Require clear separation from each channel's own noise floor
+        active_channel_noise_floor_rise_alpha: 0.01      # Follow gradual room-noise increases without learning speech as noise
+        active_channel_noise_floor_fall_alpha: 0.2       # Adapt quickly when the room becomes quieter
+        active_channel_dominance_ratio: 0.35             # Suppress weak cross-talk while retaining comparably strong simultaneous speakers
+        active_channel_evidence_decay_ratio: 0.5         # Quiet phonemes decay evidence instead of resetting it
+        active_channel_warmup_secs: 0.3                 # Leaky accumulated activity; onset remains protected by ASR pre-roll
+        active_channel_inactive_secs: 0.6                # Retire stale channels promptly during participant handoffs
+        duplicate_channel_correlation: 0.995
+        duplicate_channel_rms_ratio: 0.15
+        exclude_channels: [10, 11]                            # Additional exclusions; synthetic H8 channels 10/11 are removed automatically
+      - source_id: "mic_1"
+        capture_device: "kinect/cam_1"
+        device: "Azure Kinect Microphone Array"
+        kind: "array"
+        # Keep this source in the inventory so it can be explicitly re-enabled
+        # for array-localization experiments, but never start or subscribe to it
+        # in the default Zoom H8 speech deployment.
+        enabled: false
+        capture_enabled: false
+        speech_enabled: false
+        muted: false
+        frame_id: "mic_1"
+        audio_topic: "/perception/sensor/audio/kinect/cam_1/array"
+        channels: 7
+        asr_priority: 20
+        channels_mode: "mix"
+        channel_order: [0, 1, 2, 3, 4, 5, 6]
+        channel_labels: ["center", "+x", "+x_-y", "-x_-y", "-x", "-x_+y", "+x_+y"]
+        channel_positions: "[[0.0, 0.0, 0.0], [0.04, 0.0, 0.0], [0.02, -0.034641, 0.0], [-0.02, -0.034641, 0.0], [-0.04, 0.0, 0.0], [-0.02, 0.034641, 0.0], [0.02, 0.034641, 0.0]]"
+        localization_enabled: false
+        localization_profile: "azure_kinect_7ch"
+
+/**/audio_capture:
+  ros__parameters:
+    capture_mode: "multi_device"                        # multi_device, single_device, or manager
+    state_file: ""                                      # Empty uses ${ROS_HOME:-~/.ros}/haru_speech/audio_capture_state.yaml
+    state_topic: ""                                     # Empty uses /perception/sensor/audio_capture/state
+    model_rate: 16000                                  # Mono Kinect ASR downmix rate
+    active_channel_rms_threshold: 0.003
+    publish_hz: 10.0                                    # Propagate channel handoffs without adding up to 500 ms of state latency
+
+
+/**/audio_monitor:
+  ros__parameters:
+    capture_device: "zoom_h8"
+    source_id: "mic_0"
+    input_topic: "/perception/sensor/audio/zoom_h8"      # Keep direct monitor launches aligned with the active source
+    detect_active_channels: true
+    active_channel_rms_threshold: 0.003                 # Diagnostic monitor only; capture state owns adaptive ASR authorization
+    active_channel_warmup_secs: 2.0
+
+
+/**/speech_to_text:
+  ros__parameters:
+    capture_device: "zoom_h8"
+    audio_topic: "/perception/sensor/audio/zoom_h8"      # Direct launches use the Zoom H8 source inventory
+    # The capture-state inventory exposes only sustained, non-duplicate active
+    # H8 channels to ASR.
+    channels_mode: "split"
+    audio_ingress_queue_depth: 512                       # Keep a deeper DDS ingress queue so short callback stalls do not immediately drop audio
+    audio_ingress_worker_queue_size: 4096                # Preserve authoritative playback audio instead of dropping stale chunks during ASR decode spikes
+    audio_ingress_flush_secs: 0.2                        # Keep ingress batching short enough that VAD end markers do not lag behind speech
+    channel_activation_preroll_ms: 1000                  # Retain onset audio while a physical channel passes activity warmup/state propagation
+    processing_timer_secs: 0.2                           # Process VAD, commits, and deferred streaming at 5 Hz to reduce idle CPU churn
+    vad_idle_scan_window_secs: 4.0                       # In idle/no-open-speech state, scan enough context for normal conversational turns
+    min_buffer_msecs: 20                                 # Minimum buffered audio before processing (ms)
+    min_segment_silent_ms: 800                           # Close short live replies faster while keeping brief clause pauses in one utterance
+    min_verify_ms: 250                                   # Verify short live utterances; very short clips below this remain too unreliable
+    min_register_ms: 2500                                # Keep normal auto-enrollment conservative so short unmatched clips do not create duplicate voice_ids
+    unassigned_register_ms: 500                          # Assign a first live_reid voice quickly so ASR results are not published unattributed
+    self_intro_register_ms: 1000                         # Allow concise explicit self-introductions to register faster than ordinary unmatched speech
+    status_register_ms: 3000                             # Legacy mid-speech registration ceiling; unassigned_register_ms wins for first live_reid assignment
+    min_reassign_ms: 2500                                # Require a substantial turn before considering a live re-ID away from the source voice
+    verify_threshold_unassigned: 0.70                    # Raw cosine speaker-match threshold for unassigned speaker verification
+    verify_threshold_assigned: 0.82                      # Stricter raw cosine threshold once a source/channel is assigned
+    reassign_immediate_ms: 3000                          # Reserved compatibility threshold for older live re-ID tuning
+    reassign_confirmations: 4                            # Consecutive unmatched long segments required before live_reid creates a replacement voice_id
+    status_verify_retry_secs: 0.8                        # Retry mid-speech ID verification this often while channel is still unassigned
+    clear_voice_database_on_startup: false               # Leave false; benchmark cold-start clear is handled by speaker_verification
+
+    vad_model: "silero"                                  # Voice Activity Detection model to detect speech presence
+    vad_thresh: 0.50                                     # Keep Silero sensitive enough to catch quiet speech starts
+    vad_padding_ms: 60                                   # Keep minimal context around detected speech without extending noise tails
+    vad_onset_preroll_ms: 1500                           # Recover audible leading words when VAD triggers late on a louder final word
+    vad_min_speech_ms: 80                                # Accept short speech onsets instead of waiting through the first syllable
+    vad_min_silence_ms: 250                              # Release speech shortly after sustained silence
+    vad_speech_hold_ms: 120                              # Smooth brief dropouts without holding the end marker open
+    vad_prefilter_enabled: false                          # Drop only near-silence before Silero; thresholds must stay below quiet Zoom H8 speech
+    vad_prefilter_rms_threshold: 0.0008                   # Low RMS floor so quiet single-channel utterances are still handed to Silero
+    vad_prefilter_peak_threshold: 0.004                   # Low peak floor; 0004 has valid speech below the old 0.01 peak threshold
+    vad_prefilter_window_ms: 30                           # Match WebRTC/Silero frame scale for the cheap prefilter
+    vad_prefilter_min_active_frames: 1                    # One active frame is enough to hand the buffer to Silero
+    vad_prefilter_webrtc_enabled: false                    # Confirm RMS candidates with cheaper WebRTC VAD before Silero
+    vad_prefilter_webrtc_aggressiveness: 1                # Keep WebRTC permissive to avoid dropping quiet speech
+    vad_prefilter_energy_sample_limit: 4096               # Cap callback-side RMS samples; full-buffer peak still protects transients
+    vad_prefilter_probe_interval_secs: 0.08               # Reuse quiet prefilter decisions briefly to avoid per-chunk float RMS scans
+
+    enable_agc: false                                    # Disable AGC for A/B isolation; compare against the clipped live-path run
+    agc_target_rms: 0.03                                 # Back off AGC target so quiet room noise is not amplified toward speech levels
+    agc_max_gain_db: 12.0                                # Limit boost so the mic front-end does not pull distant/background speech forward
+    agc_min_input_rms: 0.003                             # Do not boost very quiet chunks at all
+    agc_noise_floor_ratio: 6.0                           # Require speech to be well above the measured room noise before AGC boosts it
+    agc_attack_secs: 0.08                                # Slightly slower attack reduces aggressive noise pumping on transient sounds
+    agc_release_secs: 0.40                               # Hold gain reduction a bit longer so the room does not get re-amplified between words
+    agc_clip_peak: 0.80                                  # Keep more headroom after AGC
+
+    enable_asr: true                                     # Keep ASR on so benchmarking also exercises live transcription
+    enable_name_learning_asr: false                      # Registration-only ASR fallback is unnecessary when full ASR is enabled
+    enable_streaming_asr: false                          # Keep authoritative final ASR from competing with provisional streaming work
+    asr_model: "faster-whisper-distil-large-v3"          # Trial the distilled large-v3 faster-whisper backend for lower latency
+    asr_prompt: ""                                       # Leave empty; prompting short clips made Whisper more eager to hallucinate
+    asr_min_transcribe_ms: 150                           # Let very short live-mic greetings reach ASR; the sanitizer still filters unsupported one-word noise
+    asr_short_utterance_ms: 800                          # Below this, keep multi-word phrases but restrict single-word outputs to known acknowledgements
+    asr_min_short_allowed_ms: 300                        # Suppress all non-introduction transcripts from ultra-short VAD fragments below this duration
+    asr_speech_pad_ms: 100                               # Keep minimal ASR-side context padding to cut latency on short utterances
+    asr_long_chunk_enabled: true                         # Keep long-form chunking on by default for monologues that exceed one Whisper window
+    asr_long_chunk_threshold_secs: 25.0                  # Start chunking before one continuous turn reaches the model's native 30s window
+    asr_long_chunk_overlap_secs: 2.0                     # Preserve a small overlap so chunk merges can deduplicate repeated boundary words
+    asr_long_chunk_prompt_words: 32                      # Feed the trailing transcript tail into the next chunk for local continuity only
+    asr_final_beam_size: 1                               # Prefer fastest final faster-whisper decode; raise for accuracy experiments
+    asr_long_chunk_condition_on_previous_text: false     # Leave false by default; enable only for controlled experiments
+    asr_force_segment_after_secs: 20.0                   # Force a mid-turn batch boundary when one speaker keeps talking without a long pause
+    asr_force_segment_search_back_secs: 5.0              # Search a bit farther backward near the forced boundary for a pause or low-energy cut
+    asr_vad_filter: false                                # Keep faster-whisper's internal VAD off by default; benchmark this before changing defaults
+    asr_commit_fast_text_merge: true                     # Decode final commits without word timestamps to cut live ASR CPU/GPU load
+    asr_stream_min_duration_ms: 3000                     # Let streaming ASR start earlier so live mic feedback appears before long monologues
+    asr_stream_interval_secs: 4.0                        # Refresh streaming transcript less aggressively while speech is ongoing
+    asr_stream_online_chunk_secs: 1.0                    # Internal online-ASR chunk cadence; avoids competing with final ASR every timer tick
+    asr_stream_max_audio_secs: 6.0                       # Stream only the recent tail of an ongoing utterance instead of re-decoding the full buffer
+    asr_stream_buffer_trimming_secs: 30.0                # Keep a fuller Whisper-sized rolling context before trimming the online decoder buffer
+    asr_stream_trim_guard_secs: 0.5                      # Never trim closer than this to the latest committed streaming word boundary
+    streaming_backpressure_high_watermark: 0.75          # Shed provisional streaming work before ingress backlog grows large enough to drop authoritative audio
+    streaming_backpressure_low_watermark: 0.35           # Resume auto-paused streaming only after the ingress queue stays below this pressure
+    streaming_backpressure_pause_secs: 1.0               # Sustained high ingress pressure required before auto-pausing streaming ASR
+    streaming_backpressure_resume_secs: 5.0              # Sustained low ingress pressure required before auto-resuming streaming ASR
+    adaptive_streaming_backpressure_enabled: true        # Pause/resume streaming ASR around sustained ingress overload
+    ingress_backpressure_channel_limit: 0                # Do not shed authoritative per-channel audio under pressure; streaming ASR is disabled for this path
+    audio_ingress_inactive_probe_secs: 0.5               # Under pressure, sample known-inactive channels at this cadence so new speech can still be detected
+    suppress_lower_priority_sources: true                # While a preferred ASR source is active, avoid duplicate lower-priority source transcription work
+    source_suppression_hold_secs: 8.0                    # Keep lower-priority source suppression through ASR latency after preferred-source speech
+    cross_channel_dedup_enabled: true                    # Suppress duplicate interim/final transcripts caused by one speaker bleeding into multiple live channels
+    cross_channel_dedup_window_secs: 2.0                 # Revisions/results within this timing window can be treated as the same physical utterance
+    cross_channel_dedup_similarity: 0.92                 # Normalized transcript similarity required for cross-channel duplicate suppression
+    debug_capture_enabled: false                         # Disable capture for throughput isolation; compare against the instrumented runs
+    debug_capture_root: "/tmp/haru_speech_debug"         # Root directory used for live-path capture bundles and sidecars
+    debug_capture_write_post_decode: false               # Dump decoded ingress chunks before channel split/mix and AGC
+    debug_capture_write_post_agc: false                  # Dump per-channel chunks after AGC and before VAD/ASR buffering
+    debug_capture_write_asr_input: false                 # Dump the exact padded audio passed into final ASR
+    debug_capture_write_streaming_windows: false         # Dump rolling streaming windows when a revision is emitted
+    debug_trace_publish: false                           # Publish JSON trace events on speech_to_text/debug_trace_inner
+    debug_capture_max_utterances: 20                     # 0 keeps every utterance; otherwise limit capture sidecars to the first N utterances
+    asr_langs:                                           # Keep benchmark ASR English-only to avoid multilingual misfires on short utterances
+      - "en"
+    diarization_model: "none"                            # Optional post-ASR diarization backend: "none", "pyannote", or reserved "speechbrain"
+    diarization_model_name: "pyannote/speaker-diarization-community-1" # Default self-hosted pyannote pipeline name
+    diarization_hf_token_env: "HF_TOKEN"                 # Environment variable read at startup for gated pyannote model access
+    diarization_device: "auto"                           # "auto" prefers CUDA when available, otherwise CPU
+    diarization_use_exclusive: true                      # Prefer exclusive speaker turns when pyannote exposes them
+
+    exclude_channels: []                                # Channel indices to skip; Zoom H8 channels 10/11 are ignored by source inventory
+    channel_to_voice_id: null                           # Mapping from audio channels to stable voice IDs (e.g. '{"0": "voice_a", "1": "voice_b"}')
+
+    censor: true                                         # If true, censor sensitive or disallowed content from transcripts
+    enable_verif: true                                   # Enables speaker verification features
+    enable_regis: true                                   # Enables speaker registration for learning voice identities
+    voice_id_mode: "live_reid"                           # Reuse the current source/channel identity and only reassign with stronger evidence
+    verify_speaker_topic: ""                             # Empty uses the source-layout default identity service path
+    register_voice_topic: ""                             # Empty uses the source-layout default identity service path
+    update_voice_metadata_topic: ""                      # Empty uses the source-layout default identity service path
+
+
+/**/speaker_verification:
+  ros__parameters:
+    sv_model: "redimnet"                                 # Default back to ReDimNet for live speaker matching
+    intent_model: "hri-self-intro-setfit-ft-balanced"    # Model used to detect self-introduction/intents
+    verification_pad_ms: 100                             # Add a small, shared verification pad around both verify and register clips
+    registration_threshold: 0.70                         # Raw cosine threshold used when registration decides whether to refresh an existing voice
+    registration_uncertain_margin: 0.15                  # Skip new voice creation when the best existing voice is plausibly the same speaker
+    clear_references_on_startup: true                    # If true, benchmark launches start from an empty voice reference store
+    verify_speaker_topic: ""                             # Empty uses the source-layout default identity service path
+    register_voice_topic: ""                             # Empty uses the source-layout default identity service path
+    update_voice_metadata_topic: ""                      # Empty uses the source-layout default identity service path
+
+
+/**/sound_localization:
+  ros__parameters:
+    array_audio_topic: "/perception/sensor/audio/kinect/cam_1/array" # Canonical Kinect microphone-array topic
+    verify_speaker_topic: "verify_speaker"               # Service topic for speaker verification
+    channels: 7                                          # Number of microphone channels in the array
+    channel_order: [0, 1, 2, 3, 4, 5, 6]                # Neural SRP Kinect branch used the incoming Kinect channel order directly.
+    loop_hz: 50.0                                        # Processing loop frequency (Hz)
+    channels_mode: "split"                               # "split": keep channels separate; required for localization
+    min_buffer_msecs: 30                                 # Minimum audio buffer before processing (ms)
+    min_segment_silent_ms: 800                           # VAD hold time used to smooth short speech gaps (ms)
+
+    vad_model: "silero"                                  # VAD model used in localization pipeline
+    vad_thresh: 0.5                                      # Confidence threshold for speech detection during localization
+    vad_input_mode: "max_rms_channel"                    # Pick the strongest array channel for VAD; avoids phase-cancelled channel averaging
+    vad_input_channel: -1                                # Fixed VAD channel only when vad_input_mode is "channel"
+    vad_evaluation_stride: 4                             # Run inactive VAD once every 4 SRP hops; speech-active frames still evaluate every hop
+
+    localization_model: "srp_phat"                       # Kinect 360 debug/viz backend; neural_srp remains available explicitly
+    json_path: ""                                        # Used only when localization_model is neural_srp
+    checkpoint_path: ""                                  # Used only when localization_model is neural_srp
+
+    vad_cooldown: 1.0                                    # Deprecated: accepted for compatibility, not used by the live SRP-PHAT path
+    noise_cooldown: 0.5                                  # Deprecated: accepted for compatibility, not used by the live SRP-PHAT path
+    model_rate: 16000                                    # Sample rate expected by the localization model (Hz)
+    frame_size: 4096                                     # Short SRP-PHAT window for responsive full-360 azimuth testing
+    hop_size: 512                                        # Frequent updates without carrying a long neural-SRP window
+    search_resolution_deg: 1.0                           # One-degree azimuth steering grid
+    max_sources: 1                                       # Publish a single dominant DOA ray for belief/viz
+    peak_nms_deg: 25.0                                   # Angular suppression radius between peaks
+    tracker_ema_alpha: 0.50                              # Smooth noisy SRP-PHAT azimuth while preserving debug-ray responsiveness
+    tracker_max_idle_secs: 0.75                          # Keep brief speech-localization tracks alive long enough to publish
+    tracker_association_gate_deg: 45.0                   # Reuse IDs only for nearby frame-to-frame detections
+    tracker_azimuth_deadband_deg: 6.0                    # Suppress room/reverb-induced azimuth wobble by default
+    tracker_max_update_deg: 14.0                         # Limit frame-to-frame direction jumps without hiding real movement
+    tracker_azimuth_history_size: 5                      # Median window to reject single-frame azimuth outliers
+    tracker_confirmation_hits: 1                         # Publish first valid speech rays; use the slider to make this stricter
+    azimuth_offset_deg: 0.0                              # Keep raw calibrated Kinect azimuth; do not apply a fixed yaw offset
+    confidence_threshold: 0.30                           # Minimum SRP confidence required for publication
+    localize_without_speech: true                        # Publish SSL rays for live perception testing even when VAD is inactive
+    force_horizontal_directions: true                    # Publish azimuth-only rays with z=0 and elevation=0
+    non_speech_min_rms: 0.010                            # Gate room noise before SRP-PHAT while keeping audible debug events
+    non_speech_min_peak: 0.030                           # Gate quiet transients before SRP-PHAT while preserving audible debug rays
+    speech_localization_stride: 4                        # Decimate active-speech SRP-PHAT to bound CPU while holding visible tracks between updates
+    non_speech_localization_stride: 4                    # Decimate inactive non-speech SRP-PHAT with the same visible-track holdover
+    publish_during_speech_only: false                    # Keep SSL vectors visible for audio/debug views outside speech turns
+    noise_threshold: 3.5                                 # Deprecated: accepted for compatibility, not used by the live SRP-PHAT path
+    track_noise: true                                    # Deprecated: accepted for compatibility, not used by the live SRP-PHAT path
+    track_speech: false                                  # Deprecated TF publisher; haru-belief publishes attributed speech sources
+    gain: 1.0                                            # Gain applied to the input audio signal
+    save_audio: false                                    # If true, save raw audio data to disk for debugging or analysis

@@ -1,0 +1,20 @@
+name: example_agent
+
+model:
+  id: Llama-3.2-1B-Instruct
+  api_key: none
+  base_url: http://0.0.0.0:4000
+  settings:   
+    temperature: 0.7
+
+instructions: You are a helpful assistant.
+
+handoff_description: Handles requests.
+
+output_type: calendar_output
+
+tools:
+  - fetch_weather_tool
+
+handoffs:
+  - spanish_agent
