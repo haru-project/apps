@@ -61,9 +61,24 @@ topic), `REDIS_HOST` / `REDIS_PORT` / `REDIS_CHANNEL`, and `LLM_SERVER_BASE_URL`
 capture identity from; override with `HARU_PROFILING_LLM_ENDPOINT`).
 
 The endpoint is the base URL of the OpenAI-compatible serve — this repo's is
-`LLM_SERVER_BASE_URL` minus its `/v1` suffix. Behind the litellm proxy the model-root and quant
-fields come back empty and `errors` records what was unavailable; only a serve that exposes model
-metadata (e.g. a local vLLM) fills them in.
+`LLM_SERVER_BASE_URL` minus its `/v1` suffix.
+
+**You do not need to export anything.** If neither variable is in the environment, the endpoint is
+read directly from `envs/all.env` / `envs/llm.env`. This matters because docker-compose consumes
+those files via `env_file`, which does *not* export them into your shell, and the top-level
+README's procedure never asks you to — so relying on the environment alone silently produced 12
+sessions with no recorded model identity (2026-08-20). If the endpoint cannot be resolved at all,
+the run now says so loudly and the exit summary fails, rather than passing quietly.
+
+Two serve shapes are handled differently, on purpose:
+
+- **A direct serve** (one model, e.g. a local vLLM) fills in `llm_served_root`, `llm_alias`,
+  `max_model_len` and `quant`.
+- **A litellm proxy** (many models) sets `multi_model_endpoint` and records `alias_routes` — the
+  alias→backend table from `/model/info`. That endpoint is the only place a proxy reveals what an
+  alias actually routes to; `/v1/models` returns the alias by itself. The single-model fields are
+  deliberately left unset rather than filled from the first entry, because the first entry is an
+  arbitrary model that answered nothing. **An alias is a request; the route is the observation.**
 
 ### Per-agent LLM spans (optional, off by default)
 

@@ -5,6 +5,10 @@ Records what is needed to know exactly which serve answered this session (and to
 resolved model root, alias, whatever /version returns, quant, endpoint URL + host, and a
 round-trip latency stamp (matters when the serve is remote — the network hop is on the record).
 
+When the endpoint is a litellm proxy, /v1/models returns only the ALIAS (e.g. "haru:canonical"),
+which says nothing about the weights behind it. /model/info is queried as well because that is
+the only place the routing table is exposed. An alias is a request; the route is the observation.
+
 The endpoint must be given explicitly (--endpoint, or the caller's LLM_SERVER_BASE_URL): there is
 no localhost default, so a run cannot silently pin the wrong serve when the real one is elsewhere.
 
@@ -59,13 +63,40 @@ def main() -> None:
     # /v1/models — resolved root + alias + context length
     try:
         payload, rtt = get_json(f"{base}/v1/models", timeout=10)
-        served = payload["data"][0]
-        prov.update(llm_served_root=served.get("root"), llm_alias=served.get("id"),
-                    max_model_len=served.get("max_model_len"),
-                    quant=derive_quant(served.get("root", "")))
+        models = payload.get("data") or []
+        prov["models_exposed"] = [m.get("id") for m in models]
+        if len(models) == 1:
+            # A direct serve: the single entry IS the model that answered.
+            served = models[0]
+            prov.update(llm_served_root=served.get("root"), llm_alias=served.get("id"),
+                        max_model_len=served.get("max_model_len"),
+                        quant=derive_quant(served.get("root", "")))
+        else:
+            # A gateway fronting many models. Taking data[0] would put an arbitrary model on
+            # record as "the" serve — on the dgx02 litellm gateway that is gpt-4o-mini, which
+            # answered nothing. Leave the single-model fields unset; alias_routes below is the
+            # honest record of what this endpoint can reach.
+            prov["multi_model_endpoint"] = True
         rtts.append(rtt)
     except HTTP_ERRORS as exc:
         prov["errors"].append(f"/v1/models: {exc}")
+
+    # /model/info — a litellm proxy resolves its aliases here, and ONLY here. /v1/models returns
+    # the alias by itself, so a session fronted by a proxy otherwise records "haru:canonical" and
+    # nothing about which weights actually answered — the gap that left 12 sessions on 2026-08-20
+    # unattributable. A 404 is normal and expected against a direct vLLM serve.
+    try:
+        info, _ = get_json(f"{base}/model/info", timeout=10)
+        prov["alias_routes"] = {
+            entry["model_name"]: {
+                "model": (entry.get("litellm_params") or {}).get("model"),
+                "api_base": (entry.get("litellm_params") or {}).get("api_base"),
+            }
+            for entry in (info.get("data") or [])
+            if entry.get("model_name")
+        }
+    except HTTP_ERRORS as exc:
+        prov["errors"].append(f"/model/info (normal if not a litellm proxy): {exc}")
 
     # /version, if the serve exposes one. Recorded verbatim — do NOT label it, since a proxy may
     # answer here too and asserting an engine name would put a false provenance claim on record.
