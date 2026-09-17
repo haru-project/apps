@@ -13,6 +13,7 @@ unset \
   TO_DOMAIN_ID
 
 stacks=(
+  "recorder:envs/recorder.env:docker-compose-recorder.yaml:"
   "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
   "perception:envs/perception.env:docker-compose-perception.yaml:"
   "speech:envs/speech.env:docker-compose-speech.yaml:"
@@ -168,6 +169,8 @@ grep -Fqx "  ${timeline_image}" <<< "${timeline_download_output}" || {
 
 # Standalone stacks must share one robot/application ROS domain while
 # perception publishers remain isolated on their own domain.
+# Compare with the checked-in demo default, which may select a physical robot.
+default_robot_domain="$(compose_service_value all action-args ROS_DOMAIN_ID)"
 for service_entry in \
   "tts:tts-client" \
   "llm:action-args" \
@@ -177,7 +180,7 @@ for service_entry in \
 do
   IFS=":" read -r stack service <<< "${service_entry}"
   assert_equal \
-    "0" \
+    "${default_robot_domain}" \
     "$(compose_service_value "${stack}" "${service}" ROS_DOMAIN_ID)" \
     "Default ROS domain for ${stack}/${service}"
   assert_equal \
@@ -237,14 +240,14 @@ assert_equal \
   "$(ROS_DOMAIN_ID=27 compose_service_value all action-args ROS_DOMAIN_ID)" \
   "Legacy all-in-one ROS domain fallback"
 
-bash "${ROOT_DIR}/scripts/compose.sh" reasoner config --format json bt-forest |
+GROOT_MONITOR_ENABLED=false bash "${ROOT_DIR}/scripts/compose.sh" reasoner config --format json bt-forest |
   python3 -c '
 import json
 import sys
 
 service = json.load(sys.stdin)["services"]["bt-forest"]
 if "groot_monitor_enabled:=false" not in service["command"]:
-    raise SystemExit("bt-forest enables the Groot GUI monitor by default")
+    raise SystemExit("bt-forest ignores the explicit Groot GUI monitor opt-out")
 '
 
 core_services="$(
