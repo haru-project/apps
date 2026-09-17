@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
+    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | profiling | all" >&2
     exit 1
 fi
 shift
@@ -87,6 +87,10 @@ case "${stack}" in
     memory)
         stack_files=("${APPS_DIR}/docker-compose-memory.yaml")
         env_file="${ROOT_DIR}/envs/memory.env"
+    ;;
+    profiling)
+        stack_files=("${APPS_DIR}/docker-compose-profiling.yaml")
+        env_file="${ROOT_DIR}/envs/profiling.env"
     ;;
     all)
         stack_files=("${APPS_DIR}/docker-compose-all.yaml")

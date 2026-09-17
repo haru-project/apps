@@ -1,0 +1,24 @@
+name: haru-profiling
+
+volumes:
+  haru-reasoner_ros_install_share:
+    external: true
+services:
+  profiling:
+    extends:
+      file: compose.common.yaml
+      service: common-ros-gpu
+    image: ${HARU_PROFILING_IMAGE:-ghcr.io/haru-project/haru-profiling:latest}
+    env_file: ../envs/profiling.env
+    command: >
+      bash -c " 
+      source /ros2_ws/install/setup.bash &&
+      cd /ros2_ws/src/haru-profiling &&
+      ./record_session.sh ${RECORDING_SESSION_ID:-0}
+      "
+    environment:
+      - LLM_SERVER_BASE_URL=http://127.0.0.1:${LLM_SERVER_HOST_PORT:-4050}/v1
+    volumes:
+      - ../data/profiling/results:/ros2_ws/src/haru-profiling/out:rw
+      - haru-reasoner_ros_install_share:/ros2_ws/install:ro
+    # tty: true

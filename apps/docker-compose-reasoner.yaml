@@ -1,5 +1,8 @@
 name: haru-reasoner
 
+
+
+
 services:
   bt-forest:
     extends:
@@ -38,6 +41,7 @@ services:
     volumes:
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
+      - ros_install_share:/opt/ros/jazzy/workspace/install
     restart: unless-stopped
 
   context-manager:
@@ -92,3 +96,7 @@ services:
       - reasoner
     restart: "no"
     profiles: ["test"]
+
+
+volumes:
+  ros_install_share:

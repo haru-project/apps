@@ -25,6 +25,7 @@ if [[ ${#requested_stacks[@]} -eq 0 ]]; then
         user
         timeline-player
         memory
+        profiling
         all
     )
 fi
@@ -42,6 +43,7 @@ declare -A COMPOSE_FILES=(
     [user]="${APPS_DIR}/docker-compose-user.yaml"
     [timeline-player]="${APPS_DIR}/docker-compose-timeline-player.yaml"
     [memory]="${APPS_DIR}/docker-compose-memory.yaml"
+    [profiling]="${APPS_DIR}/docker-compose-profiling.yaml"
     [all]="${APPS_DIR}/docker-compose-all.yaml"
 )
 
@@ -58,6 +60,7 @@ declare -A ENV_FILES=(
     [user]="${ROOT_DIR}/envs/user.env"
     [timeline-player]="${ROOT_DIR}/envs/timeline-player.env"
     [memory]="${ROOT_DIR}/envs/memory.env"
+    [profiling]="${ROOT_DIR}/envs/profiling.env"
     [all]="${ROOT_DIR}/envs/all.env"
 )
 
