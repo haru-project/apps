@@ -35,3 +35,21 @@ credentials; missing cloud credentials must not prevent local recording.
 Live integration evidence and linked draft PRs are maintained in haru-recorder's
 release qualification notes. Do not treat a feature image or local test pass as
 approval for a robot/school rollout.
+
+## Optional ROS test workspace
+
+The external `ros/haru_recording_bringup` package provides recorder-only,
+Viz-only, combined and synthetic test launch files. It stays outside both
+product repositories. In a ROS workspace containing the recorder, Viz and
+message dependencies, symlink this package directly into `src`:
+
+```sh
+ln -s /path/to/apps/ros/haru_recording_bringup src/haru_recording_bringup
+colcon build --packages-select haru_recording_bringup
+source install/setup.bash
+ros2 launch haru_recording_bringup both.launch.py domains:='[0,200]' control_domain:=200
+```
+
+The apps root has `COLCON_IGNORE` so only the explicit package link is built.
+Synthetic load checks use isolated domains 93–96; never point them at live robot
+or perception domains. Launching the combined stack does not start a recording.
