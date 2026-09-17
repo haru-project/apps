@@ -53,3 +53,15 @@ ros2 launch haru_recording_bringup both.launch.py domains:='[0,200]' control_dom
 The apps root has `COLCON_IGNORE` so only the explicit package link is built.
 Synthetic load checks use isolated domains 93–96; never point them at live robot
 or perception domains. Launching the combined stack does not start a recording.
+
+From the isolated workspace root, run the serial qualification suite with:
+
+```sh
+python3 src/apps/scripts/qualify-recording-release.py --workspace "$PWD" --output "$PWD/data/release-candidate"
+```
+
+The 4x gate uses an independent subscriber process (`--peer-local`), matching
+standalone ROS deployment. The embedded subscriber stress test shares Python's
+GIL with replay and has shown delivery loss; it remains documented separately,
+not a claim of supported same-process 4x throughput. This local peer check does
+not replace cross-host qualification.
