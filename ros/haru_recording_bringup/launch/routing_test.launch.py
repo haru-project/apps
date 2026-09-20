@@ -21,7 +21,7 @@ def setup(context):
       SetEnvironmentVariable("ROS_DOMAIN_ID",str(target)),
       Node(package='domain_bridge',executable='domain_bridge',arguments=[str(config)],output='screen'),
       IncludeLaunchDescription(PythonLaunchDescriptionSource(str(recorder)),launch_arguments={'mode':'worker','domains':json.dumps([source,target]),'recording_root':str(root)}.items()),
-      Node(package='haru_recorder',executable='haru_recorder_coordinator',additional_env={'ROS_DOMAIN_ID':str(target)},parameters=[{'recording_root':str(root),'domains_json':json.dumps([source,target]),'discovery_domains_json':json.dumps([source,target])}],output='screen'),
+      Node(package='haru_recorder',executable='haru_recorder_coordinator',additional_env={'ROS_DOMAIN_ID':str(target)},parameters=[{'recording_root':str(root),'domains':[source,target],'discovery_domains':[source,target]}],output='screen'),
       *[Node(package='haru_recording_bringup',executable='routing_test_publisher.py',arguments=['--role',role],additional_env={'ROS_DOMAIN_ID':str(domain)},output='screen') for domain,role in ((source,'source'),(target,'robot'))],
       IncludeLaunchDescription(PythonLaunchDescriptionSource(str(viz)),launch_arguments={'rosbridge_port':'19391','rosbridge_rgb_port':'19392','rosbridge_depth_port':'19393','rosbridge_depth_to_rgb_port':'19394','web_ui_port':'15183','web_ui_mode':'production','launch_web_ui':'true','web_ui_host':'127.0.0.1','launch_recorder':'false','discovery_enabled':'false','opus_decode_enabled':'false'}.items()),
     ]
