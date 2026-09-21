@@ -7,7 +7,7 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
+    echo "Stacks: recorder | domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
     exit 1
 fi
 shift
@@ -36,6 +36,10 @@ case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
 esac
 
 case "${stack}" in
+    recorder)
+        stack_files=("${APPS_DIR}/docker-compose-recorder.yaml")
+        env_file="${ROOT_DIR}/envs/recorder.env"
+    ;;
     domain-bridge)
         stack_files=("${APPS_DIR}/docker-compose-domain-bridge.yaml")
         env_file="${ROOT_DIR}/envs/domain-bridge.env"
