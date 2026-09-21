@@ -15,3 +15,5 @@ services:
       HARU_RECORDER_RECORDING_ROOT: /recordings
     volumes:
       - ${HARU_RECORDER_HOST_RECORDINGS_DIR:-${HOME}/.local/share/haru-recorder}:/recordings:rw
+      - ${HARU_RECORDER_HOST_LEGACY_VIZ_DIR:-${HOME}/.local/share/haru_viz/recordings}:/recordings/legacy-haru-viz:rw
+      - ${HARU_RECORDER_HOST_LEGACY_DIR:-${HOME}/.local/share/haru_recorder}:/recordings/legacy-haru-recorder:rw
