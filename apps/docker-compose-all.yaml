@@ -130,6 +130,11 @@ services:
       file: docker-compose-memory.yaml
       service: agent-memory-weaviate
 
+  agent-memory-ollama:
+    extends:
+      file: docker-compose-memory.yaml
+      service: agent-memory-ollama
+
   agent-memory:
     extends:
       file: docker-compose-memory.yaml
@@ -286,3 +291,4 @@ services:
 
 volumes:
   agent_memory_weaviate_data:
+  agent_memory_ollama_models:

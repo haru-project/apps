@@ -38,6 +38,31 @@ services:
       - agent-memory-t2v
     restart: unless-stopped
 
+  # LLM server for agent-memory's summaries, importance scoring and fact extraction, reached at
+  # localhost:${AGENT_MEMORY_OLLAMA_PORT:-11434}; agent-memory is told the same port through
+  # OLLAMA_BASE_URL, so change the port here only. On first start agent-memory pulls and loads the
+  # configured model (qwen3.5:4b, ~3.4 GB) into the volume below; look for "MEMORY_METRIC llm_ready".
+  agent-memory-ollama:
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
+    image: ${AGENT_MEMORY_OLLAMA_IMAGE:-ollama/ollama:latest}
+    ports:
+      - "${AGENT_MEMORY_OLLAMA_PORT:-11434}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: "30m"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "2"
+    volumes:
+      - agent_memory_ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
   agent-memory:
     extends:
       file: compose.common.yaml
@@ -54,11 +79,14 @@ services:
       WEAVIATE_PORT: "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}"
       WEAVIATE_GRPC_PORT: "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}"
       CONFIG_FILE: "${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}"
+      OLLAMA_BASE_URL: "http://localhost:${AGENT_MEMORY_OLLAMA_PORT:-11434}"
     volumes:
       - "../data/memory/configs/agent_memory.yaml:${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}:ro"
     depends_on:
       agent-memory-weaviate:
         condition: service_healthy
+      agent-memory-ollama:
+        condition: service_started  # agent-memory retries until Ollama answers
     restart: unless-stopped
 
   agent-memory-dashboard:
@@ -78,3 +106,4 @@ services:
 
 volumes:
   agent_memory_weaviate_data:
+  agent_memory_ollama_models:
