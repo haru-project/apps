@@ -186,12 +186,12 @@ services:
       --host 0.0.0.0 
       --port 8000 
       --n-gpu-layers 99 
-      --ctx-size 64000
+      --ctx-size 16000
      
       --load-mode mlock
-      --batch-size 16384
-      --ubatch-size 8192
-      --parallel 8
+      --batch-size 4096
+      --ubatch-size 2048
+      --parallel 3
 
 
       --cache-type-k q4_0 
@@ -203,9 +203,9 @@ services:
       --dry-multiplier 0.5
       -lv 3
 
-      --reasoning on
-      --chat-template-kwargs '{"reasoning_effort": "high"}'
-      --reasoning-budget 4096
+      --reasoning off
+      --chat-template-kwargs '{"reasoning_effort": "none"}'
+      --reasoning-budget 0
     environment:
       - GGML_CUDA_GRAPH_OPT=1
     volumes:
