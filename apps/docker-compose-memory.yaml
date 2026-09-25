@@ -38,11 +38,13 @@ services:
       - agent-memory-t2v
     restart: unless-stopped
 
-  # LLM server for agent-memory's summaries, importance scoring and fact extraction, reached at
-  # localhost:${AGENT_MEMORY_OLLAMA_PORT:-11434}; agent-memory is told the same port through
-  # OLLAMA_BASE_URL, so change the port here only. On first start agent-memory pulls and loads the
-  # configured model (qwen3.5:4b, ~3.4 GB) into the volume below; look for "MEMORY_METRIC llm_ready".
+  # Local LLM service for agent-memory jobs, bound to localhost:${AGENT_MEMORY_OLLAMA_PORT:-11434}
+  # (propagated to agent-memory via OLLAMA_BASE_URL). First launch auto-pulls and loads qwen3.5:4b
+  # (~3.4 GB) into the volume, emitting "MEMORY_METRIC llm_ready".
+  # Gated by AGENT_MEMORY_LLM_BACKEND=ollama (triggers the "memory-ollama" Compose profile in
+  # scripts/compose.sh); skipped by default under litellm profile.
   agent-memory-ollama:
+    profiles: ["memory-ollama"]
     extends:
       file: compose.common.yaml
       service: common-gpu
@@ -69,7 +71,10 @@ services:
       service: common-service
     image: ${AGENT_MEMORY_ROS_IMAGE:-ghcr.io/haru-project/agent-memory-ros:latest}
     network_mode: host
-    stop_grace_period: 10s
+    # The node waits up to 20 s on shutdown for an in-flight fact extraction to land, so anything
+    # shorter than that SIGKILLs it mid-extraction and loses the last session's facts. A node with
+    # nothing in flight still exits immediately, so this costs nothing in the common case.
+    stop_grace_period: 25s
     env_file: ../envs/memory.env
     environment:
       ROS_DOMAIN_ID: "${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
@@ -79,14 +84,23 @@ services:
       WEAVIATE_PORT: "${AGENT_MEMORY_WEAVIATE_HTTP_PORT:-8082}"
       WEAVIATE_GRPC_PORT: "${AGENT_MEMORY_WEAVIATE_GRPC_PORT:-50052}"
       CONFIG_FILE: "${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}"
+      # Ignored unless the effective provider is Ollama, so it can stay set in either backend.
       OLLAMA_BASE_URL: "http://localhost:${AGENT_MEMORY_OLLAMA_PORT:-11434}"
+      # Overrides the mounted YAML's memory_optimization configuration.
+      # Under AGENT_MEMORY_LLM_BACKEND=ollama, scripts/compose.sh exports these as empty strings;
+      # the "-" (not ":-") default ensures set-but-empty values preserve YAML endpoints rather
+      # than falling through to proxy defaults. Direct definitions in envs/memory.env take precedence.
+      MEMORY_LLM_PROVIDER: "${MEMORY_LLM_PROVIDER-openai}"
+      MEMORY_LLM_SERVER_URL: "${MEMORY_LLM_SERVER_URL-${AGENT_MEMORY_LITELLM_URL:-http://127.0.0.1:4050/v1}}"
+      MEMORY_LLM_MODEL: "${MEMORY_LLM_MODEL-${AGENT_MEMORY_LITELLM_MODEL:-haru:canonical}}"
     volumes:
       - "../data/memory/configs/agent_memory.yaml:${AGENT_MEMORY_CONFIG_FILE:-/shared/configs/agent_memory.yaml}:ro"
+    # Omits depends_on for agent-memory-ollama to prevent Compose validation errors
+    # when the service is profile-disabled under the litellm backend.
+    # Safe to omit: agent-memory retries the LLM endpoint every 30s until ready.
     depends_on:
       agent-memory-weaviate:
         condition: service_healthy
-      agent-memory-ollama:
-        condition: service_started  # agent-memory retries until Ollama answers
     restart: unless-stopped
 
   agent-memory-dashboard:
