@@ -98,6 +98,40 @@ case "${stack}" in
     ;;
 esac
 
+# Parses a KEY=value setting from a stack env file before invoking Docker Compose
+# (last assignment wins, matching Compose precedence).
+env_file_value() {
+    local key="$1" file="$2"
+    [[ -f "${file}" ]] || return 0
+    sed -n "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*//p" "${file}" \
+        | tail -n 1 \
+        | sed -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'\$/\1/"
+}
+
+# LLM backend selection for agent-memory (summaries, importance, fact extraction):
+# - "litellm" (default): Uses the shared LiteLLM proxy; skips Ollama to save GPU VRAM.
+# - "ollama": Starts the bundled agent-memory-ollama container using mounted YAML configs.
+# Evaluated via ${MEMORY_LLM_*-...}: unset routes to proxy defaults; set-but-empty falls back
+# to YAML. Shell exports take precedence over env file settings for one-off overrides.
+memory_profile_flags=()
+case "${stack}" in
+    memory|all)
+        case "${AGENT_MEMORY_LLM_BACKEND:-$(env_file_value AGENT_MEMORY_LLM_BACKEND "${env_file}")}" in
+            litellm|"")
+                export MEMORY_LLM_PROVIDER="openai"
+            ;;
+            ollama)
+                memory_profile_flags=(--profile memory-ollama)
+                export MEMORY_LLM_PROVIDER="" MEMORY_LLM_SERVER_URL="" MEMORY_LLM_MODEL=""
+            ;;
+            *)
+                echo "AGENT_MEMORY_LLM_BACKEND must be ollama or litellm." >&2
+                exit 1
+            ;;
+        esac
+    ;;
+esac
+
 is_up_command=false
 user_passed_wait=false
 user_passed_detach=false
@@ -154,6 +188,7 @@ fi
 if [[ "${stack}" == "all" ]]; then
     cmd+=(--profile all --profile "${deployment_profile:-physical}")
 fi
+cmd+=("${memory_profile_flags[@]}")
 
 if [[ "${is_up_command}" == "true" && ${#wait_flags[@]} -gt 0 ]]; then
     echo "==> ${stack}: waiting up to ${HARU_COMPOSE_WAIT_TIMEOUT:-600}s for services to be healthy..." >&2
