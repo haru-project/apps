@@ -117,7 +117,7 @@ services:
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:setup_oct_upo}
     env_file:
       - ../envs/perception.env
     environment:
