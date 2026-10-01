@@ -56,13 +56,14 @@ PY
 # Fetch ReDimNet before the verification node starts.  The node uses this same
 # persistent TORCH_HOME mount, so startup never needs to reach GitHub's
 # releases/latest endpoint (which can intermittently return HTTP 504).
+# Keep the image entrypoint so it sources the ROS overlay containing haru_speech.
 mkdir -p "$MODELS_FOLDER"
 for attempt in 1 2 3 4; do
   if docker run --rm \
-    --entrypoint /opt/ros/jazzy/workspace/package_venv/bin/python3 \
     -e TORCH_HOME=/shared/models/torch \
     -v "$MODELS_FOLDER:/shared/models:rw" \
     "$VERIFICATION_IMAGE" \
+    /opt/ros/jazzy/workspace/package_venv/bin/python3 \
     -c 'from haru_speech.models.sv import ReDimNetSv; ReDimNetSv.download()'; then
     break
   fi
