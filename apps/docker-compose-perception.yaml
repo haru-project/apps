@@ -40,7 +40,7 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:setup_oct_upo}
     env_file:
       - ../envs/perception.env
     environment:
@@ -68,7 +68,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:setup_oct_upo}
     env_file:
       - ../envs/perception.env
     environment:
@@ -93,7 +93,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:setup_oct_upo}
     env_file:
       - ../envs/perception.env
     environment:
@@ -139,7 +139,7 @@ services:
 
   # viz service: haru-viz browser UI + rosbridge runtime
   viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:setup_oct_upo}
     env_file:
       - ../envs/perception.env
     environment:

@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:latest}
+    image: ${PERCEPTION_DOMAIN_BRIDGE_IMAGE:-ghcr.io/haru-project/haru-domain-bridge-jazzy:setup_oct_upo}
     env_file:
       - ../envs/domain-bridge.env
     environment:
