@@ -33,6 +33,16 @@ def host_sample():
                          for name in ('cpu', 'memory', 'io')}}
 
 
+def observe(topic, types):
+    if (topic.startswith('/haru_recorder') or topic in ('/rosout', '/parameter_events')
+            or len(types) != 1 or types[0] in (
+                'sensor_msgs/msg/Image', 'sensor_msgs/msg/PointCloud', 'sensor_msgs/msg/PointCloud2')):
+        return False
+    return ('/sensor/' not in topic
+            or topic.endswith(('/ffmpeg', '/zdepth', '/opus', '/flac', '/compressed', '/state'))
+            or (topic.startswith('/perception/sensor/audio/') and '/channels/' not in topic))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--profile', choices=['off', 'idle', 'default', 'full_perception'], required=True)
@@ -95,7 +105,8 @@ def main():
             row = next((r for r in status.recordings if r.id == recording_id), None)
             if row and row.capture_state in wanted:
                 return row
-            if row and row.capture_state in ('failed', 'error'):
+            if row and (row.capture_state in ('failed', 'error')
+                        or (row.capture_state == 'degraded' and 'recording' in wanted)):
                 raise RuntimeError(str(row))
             spin()
         raise RuntimeError('Timed out waiting for recording state ' + str(wanted))
@@ -110,10 +121,7 @@ def main():
         report['graphs'] = graphs
         for domain, n in nodes.items():
             for topic, types in graphs[str(domain)]:
-                if (topic.startswith('/haru_recorder') or topic in ('/rosout', '/parameter_events')
-                        or len(types) != 1):
-                    continue
-                if '/sensor/' in topic and not topic.endswith(('/ffmpeg', '/zdepth', '/opus', '/flac', '/compressed', '/state')):
+                if not observe(topic, types):
                     continue
                 key = str(domain) + ':' + topic
                 samples[key] = []
