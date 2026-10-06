@@ -47,12 +47,13 @@ def main():
         p.error('domain IDs must be between 0 and 232')
     a.output.mkdir(parents=True, exist_ok=False)
     import rclpy
+    from rclpy.executors import SingleThreadedExecutor
     from rclpy.qos import qos_profile_sensor_data
     from rosidl_runtime_py.convert import message_to_ordereddict
     from rosidl_runtime_py.utilities import get_message
     from haru_recorder_msgs.msg import CaptureSelection
     srv = importlib.import_module('haru_recorder_msgs.srv')
-    contexts, nodes, subscriptions = [], {}, []
+    contexts, nodes, executors, subscriptions = [], {}, {}, []
     report = {"profile": a.profile, "domains": a.domains, "status": "running"}
     recording_id = None
     samples, measuring = {}, False
@@ -62,11 +63,13 @@ def main():
         contexts.append(context)
         nodes[domain] = rclpy.create_node('recorder_perf_observer', context=context,
                                         enable_rosout=False, start_parameter_services=False)
+        executors[domain] = SingleThreadedExecutor(context=context)
+        executors[domain].add_node(nodes[domain])
     node = nodes[a.control_domain]
 
     def spin():
-        for n in nodes.values():
-            rclpy.spin_once(n, timeout_sec=0)
+        for executor in executors.values():
+            executor.spin_once(timeout_sec=0)
         time.sleep(.0005)
 
     def call(kind, path, **fields):
@@ -165,6 +168,7 @@ def main():
         raise
     finally:
         if recording_id:
+            finalization_started = time.monotonic()
             try:
                 call('StopRecording', 'stop', recording_id=recording_id, request_id=uuid.uuid4().hex)
                 recording = wait_state({'stopped'})
@@ -174,7 +178,10 @@ def main():
             except Exception as error:
                 report['cleanup_error'] = str(error)
                 report['status'] = 'failed'
+            report['finalization_seconds'] = time.monotonic() - finalization_started
         (a.output / 'measurement.json').write_text(json.dumps(report, indent=2) + '\n')
+        for executor in executors.values():
+            executor.shutdown()
         for n in nodes.values():
             n.destroy_node()
         for context in contexts:
