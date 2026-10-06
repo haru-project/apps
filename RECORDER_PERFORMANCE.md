@@ -67,8 +67,10 @@ HARU_VIZ_LAUNCH_RECORDER=false bash scripts/compose.sh all --profile recorder up
 
 `scripts/measure_recorder.py` runs inside the recorder image with the ROS overlay
 sourced. Mount this checkout read-only and a dedicated output directory writable.
-For `off`, run just the observer in a temporary image container with no recorder
-runtime; for the other conditions, exec it in the recorder container:
+Run the observer in a separate temporary container for **every** condition,
+using host networking/IPC and the same ROS/RMW settings as the recorder. Start
+or stop the recorder container separately for off/idle/recording windows. This
+keeps observer CPU/RAM out of the recorder container's resource counters:
 
 ```bash
 python3 /repo/scripts/measure_recorder.py --profile full_perception \
@@ -80,6 +82,15 @@ gaps, and the finalized recording summary. Use `vmstat`, `iostat`, `docker stats
 and `nvidia-smi` alongside it for time series. Observer subscriptions are identical
 across conditions, but add load and can activate lazy sensor encoders. Topic
 discovery happens before the window: validate the saved graph for each tier.
+
+Report host CPU and recorder-container CPU separately; 100% Docker CPU represents
+one logical CPU. Record observer-container CPU as its own counter. Attribute GPU
+processes to the recorder by matching host PIDs from `docker top haru-recorder-recorder-1 -eo pid` to
+`nvidia-smi pmon -s um`. Retain whole-GPU
+utilization and encoder/decoder load separately to capture upstream sensor costs.
+A `-` GPU counter means unavailable, not zero; distinguish no recorder-owned GPU
+process from unsupported per-process utilization. Capture per-process GPU memory
+when available. Finalization/compression remains a separate measured phase.
 
 Save dated evidence under `.codex-artifacts/`, not as deployment configuration.
 On this host, stop a recording if free disk falls below 10 GiB, GPU memory is
