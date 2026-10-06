@@ -106,7 +106,8 @@ def main():
             if row and row.capture_state in wanted:
                 return row
             if row and (row.capture_state in ('failed', 'error')
-                        or (row.capture_state == 'degraded' and 'recording' in wanted)):
+                        or (row.capture_state == 'degraded' and not row.coverage_complete
+                            and 'recording' in wanted)):
                 raise RuntimeError(str(row))
             spin()
         raise RuntimeError('Timed out waiting for recording state ' + str(wanted))
