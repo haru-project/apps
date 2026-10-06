@@ -1,6 +1,12 @@
 name: haru-all
 
 services:
+  recorder:
+    extends:
+      file: docker-compose-recorder.yaml
+      service: recorder
+    profiles: ["recorder"]
+
   # ROS domain bridge
   domain-bridge:
     extends:

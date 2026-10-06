@@ -145,6 +145,7 @@ services:
     environment:
       <<: *perception-domain-env
       HARU_VIZ_DEV_AUTOSTART: "true"
+      HARU_VIZ_LAUNCH_RECORDER: ${HARU_VIZ_LAUNCH_RECORDER:-true}
       HARU_VIZ_REPO_ROOT: ${HARU_VIZ_REPO_ROOT:-/workspace/haru-viz}
       HARU_VIZ_UI_HOST: ${HARU_VIZ_UI_HOST:-0.0.0.0}
       HARU_VIZ_UI_PORT: ${HARU_VIZ_UI_PORT:-5173}

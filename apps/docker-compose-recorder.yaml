@@ -1,0 +1,27 @@
+name: haru-recorder
+
+services:
+  recorder:
+    extends:
+      file: compose.common.yaml
+      service: common-ros
+    image: ${HARU_RECORDER_IMAGE:-ghcr.io/haru-project/haru-recorder:latest}
+    environment:
+      ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
+      HARU_ROBOT_ROS_DOMAIN_ID: ${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
+      HARU_PERCEPTION_ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+      SUPERVISOR_AUTOSTART: none
+    command:
+      - haru-launch
+      - haru_recorder
+      - haru_recorder.launch.py
+      - mode:=combined
+      - domains:=[${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}},${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}]
+      - control_domain:=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}
+      - recording_root:=/recordings
+      - reuse_existing:=false
+    stop_grace_period: 60s
+    volumes:
+      - ${HARU_RECORDER_HOST_RECORDINGS_DIR:-${HOME}/.local/share/haru-recorder}:/recordings:rw
