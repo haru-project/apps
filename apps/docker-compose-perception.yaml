@@ -68,7 +68,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:demo-jiyugaoka_deployment}
     env_file:
       - ../envs/perception.env
     environment:
@@ -93,7 +93,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:demo-jiyugaoka_deployment}
     env_file:
       - ../envs/perception.env
     environment:
@@ -117,7 +117,7 @@ services:
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:feature-asr-improve}
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:demo-jiyugaoka_deployment}
     env_file:
       - ../envs/perception.env
     environment:
@@ -139,7 +139,7 @@ services:
 
   # viz service: haru-viz browser UI + rosbridge runtime
   viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:feature-asr-improve}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:demo-jiyugaoka_deployment}
     env_file:
       - ../envs/perception.env
     environment:

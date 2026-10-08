@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0}
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:demo-jiyugaoka_deployment}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
@@ -22,7 +22,7 @@ services:
     profiles: ["timeline-compat"]
 
   dev:
-    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:sha-d8abcd9-1.0.0}
+    image: ${TIMELINE_PLAYER_IMAGE:-ghcr.io/haru-project/haru-timeline-player:demo-jiyugaoka_deployment}
     network_mode: host
     ipc: host
     env_file: ../envs/timeline-player.env
