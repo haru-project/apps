@@ -333,9 +333,15 @@ The first command should produce no matches.
 
 ### Perception recording
 
-Recording and playback are managed by the `viz` service. Use the recorder
-controls in the haru-viz browser UI rather than launching a standalone
-`haru-recorder` compose stack.
+The standalone multi-domain Haru Recorder is available with
+`bash scripts/compose.sh recorder up -d`, using `ghcr.io/haru-project/haru-recorder:latest`.
+For the all-in-one stack, enable `--profile recorder`. When using the standalone
+recorder, set `HARU_VIZ_LAUNCH_RECORDER=false` when starting HaruViz to avoid a second
+recorder. See [the tiered performance evaluation](RECORDER_PERFORMANCE.md).
+
+The `viz` service also includes its existing recorder and playback controls.
+Choose one recorder runtime per deployment; the standalone stack captures both
+DDS domains for the performance evaluation.
 
 ### Haru Simulator (HS)
 

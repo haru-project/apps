@@ -13,6 +13,7 @@ fi
 requested_stacks=("$@")
 if [[ ${#requested_stacks[@]} -eq 0 ]]; then
     requested_stacks=(
+        recorder
         domain-bridge
         perception
         speech
@@ -30,6 +31,7 @@ if [[ ${#requested_stacks[@]} -eq 0 ]]; then
 fi
 
 declare -A COMPOSE_FILES=(
+    [recorder]="${APPS_DIR}/docker-compose-recorder.yaml"
     [domain-bridge]="${APPS_DIR}/docker-compose-domain-bridge.yaml"
     [perception]="${APPS_DIR}/docker-compose-perception.yaml"
     [speech]="${APPS_DIR}/docker-compose-speech.yaml"
@@ -46,6 +48,7 @@ declare -A COMPOSE_FILES=(
 )
 
 declare -A ENV_FILES=(
+    [recorder]="${ROOT_DIR}/envs/recorder.env"
     [domain-bridge]="${ROOT_DIR}/envs/domain-bridge.env"
     [perception]="${ROOT_DIR}/envs/perception.env"
     [speech]="${ROOT_DIR}/envs/speech.env"

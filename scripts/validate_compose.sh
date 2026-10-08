@@ -13,6 +13,7 @@ unset \
   TO_DOMAIN_ID
 
 stacks=(
+  "recorder:envs/recorder.env:docker-compose-recorder.yaml:"
   "domain-bridge:envs/domain-bridge.env:docker-compose-domain-bridge.yaml:"
   "perception:envs/perception.env:docker-compose-perception.yaml:"
   "speech:envs/speech.env:docker-compose-speech.yaml:"
@@ -73,6 +74,10 @@ if value is None:
 print(value)
 ' "${service}" "${variable}"
 }
+
+assert_equal "0" "$(compose_service_value recorder recorder ROS_DOMAIN_ID)" "Recorder control domain"
+assert_equal "26" "$(HARU_ROBOT_ROS_DOMAIN_ID=26 compose_service_value recorder recorder ROS_DOMAIN_ID)" "Recorder overridden control domain"
+assert_equal "201" "$(HARU_PERCEPTION_ROS_DOMAIN_ID=201 compose_service_value recorder recorder HARU_PERCEPTION_ROS_DOMAIN_ID)" "Recorder overridden perception domain"
 
 # A positional service selector must resolve profiled services without relying
 # on a caller-wide COMPOSE_PROFILES workaround.
