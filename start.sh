@@ -56,11 +56,15 @@ require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
 
+# Bring bridge networks up before ROS nodes compute their Fast DDS host IDs.
+bash scripts/compose.sh llm up redis --force-recreate -d
+bash scripts/compose.sh simulator up web-server --force-recreate -d
+
 # Ipad services
 bash scripts/compose.sh ipad up server --force-recreate -d
 
 # Projector services
-bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
+bash scripts/compose.sh simulator up unity-app --force-recreate -d
 
 # TTS services
 bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d

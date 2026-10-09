@@ -671,3 +671,17 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+### Camera DDS and Docker startup
+
+`start.sh` brings the simulator web-server and LLM Redis bridge networks up
+before starting any ROS nodes. Fast DDS 2.14 computes its host identifier from
+active network addresses; adding a Docker bridge later can make local camera
+and consumer processes look like separate hosts and multiply local deliveries.
+Keep the prepared web-server running when Unity starts, so its bridge stays up.
+
+The camera image must include strawberry-ros-azure-kinect PR #50's single-UDP
+profile. No camera interface name or allowlist is configured: Ethernet, Wi-Fi
+and other DDS-supported interfaces remain available. If network addresses change
+after startup, restart local ROS participants together once the network is stable;
+this startup ordering does not guarantee deduplication across later changes.
