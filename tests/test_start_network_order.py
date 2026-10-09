@@ -25,12 +25,12 @@ class StartupNetworkOrderTest(unittest.TestCase):
                 result = subprocess.run(["bash", "start.sh"], cwd=root, env=env)
                 calls = (root / "calls").read_text().splitlines()
                 up = [call for call in calls if " up " in call]
-                self.assertEqual(up[:2], ["simulator up web-server --force-recreate -d", "llm up redis --force-recreate -d"])
                 if fail:
                     self.assertEqual(result.returncode, 42)
-                    self.assertEqual(len(up), 2)
+                    self.assertEqual(up, ["llm up redis --force-recreate -d"])
                 else:
                     self.assertEqual(result.returncode, 0)
+                    self.assertEqual(up[:2], ["llm up redis --force-recreate -d", "simulator up web-server --force-recreate -d"])
                     self.assertEqual(up[2], "ipad up server --force-recreate -d")
                     self.assertNotIn("simulator up unity-app web-server --force-recreate -d", calls)
 
