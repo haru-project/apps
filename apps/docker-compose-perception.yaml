@@ -38,7 +38,6 @@ services:
       XAUTHORITY: /root/.Xauthority
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
-      AZURE_KINECT_DDS_INTERFACE: ${AZURE_KINECT_DDS_INTERFACE:-eth0}
     network_mode: *network-mode
     ipc: host
     privileged: true
