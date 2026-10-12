@@ -98,19 +98,16 @@ def test_memory_llm_route_survives_provisioning(tmp_path: Path) -> None:
     )
     config.write_text(original)
     _load_configurator().rewrite_llm_route(config)
-    import yaml
-
-    result = yaml.safe_load(config.read_text())
-    route = result["memory_optimization"]
-    assert (route["provider"], route["server_url"], route["model_name"]) == (
-        "openai",
-        "http://127.0.0.1:4050",
-        "haru:canonical",
+    assert config.read_text() == (
+        "other_section:\n  model_name: unrelated\n"
+        "memory_optimization:\n"
+        '  provider: "openai"\n'
+        '  server_url: "http://127.0.0.1:4050"\n'
+        '  model_name: "haru:canonical"\n'
+        "  api_key: unchanged\n"
+        '  user_facts:\n    extraction_model: ""\n'
+        "next_section:\n  provider: unchanged\n"
     )
-    assert route["api_key"] == "unchanged"
-    assert route["user_facts"]["extraction_model"] == ""
-    assert result["other_section"]["model_name"] == "unrelated"
-    assert result["next_section"]["provider"] == "unchanged"
     first = config.read_text()
     _load_configurator().rewrite_llm_route(config)
     assert config.read_text() == first
