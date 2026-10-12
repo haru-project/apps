@@ -7,9 +7,16 @@ In Haru Viz, select **All Topics**, attach domain **19**, then open **Speech**.
 Viz remembers attached domains in that browser's local storage. The Conversation
 panel reads the TTS playback text from the attached robot domain.
 
-The perception images are pinned to released digests in `envs/perception.env`.
+The sensor and inference images are pinned to released digests in `envs/perception.env`.
 Faces uses the released image, not the unmerged performance candidate. Speech,
 reasoner, LLM agents and timeline player use the deployment image tags.
+
+Viz currently uses the locally built `haru-demo-viz:conversation-dedup` image,
+based on the released Viz digest with the UI from `haru-viz` commit `9373d24`
+(`hotfix/conversation-mirrored-asr`). It displays ASR mirrored from domain 200
+into 19 once while retaining robot replies. Refresh existing Viz tabs to load
+the updated UI. This hotfix is not yet published; another host must build it
+before using this deployment's local image reference.
 
 `haru:canonical` routes to Amazon Bedrock Mantle Gemma in `eu-central-1`.
 Credentials belong in the ignored `envs/llm.secrets.env`; no credentials are
