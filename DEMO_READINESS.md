@@ -72,7 +72,8 @@ Amazon route when reprovisioning memory.
 
 Preparation starts services with `scripts/compose.sh`; it does not run `run.sh`
 or either `execute-task-*` service. The configured scenario is
-`episodes/demo_food_tv.json` and has not been launched.
+`episodes/demo_food_tv.json`. It has now been launched; the opening speech
+reported successful playback, with operator confirmation pending.
 
 After powering on the H8 and robot, verify the H8 capture channels, a real ASR
 transcript, robot action servers and audible TTS. Recheck context-manager's
@@ -86,3 +87,16 @@ HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=false bash scripts/compose.sh reasoner restart c
 
 Local verification artifacts and the running image inventory are stored in
 `../apps/.codex-artifacts/demo-single-speaker-prep/` on the preparation host.
+
+Demo launch uncovered an LLM request-preemption race. The local image
+`haru-demo-llm:preemption-fix` applies the one-line fix from `haru-llm` branch
+`hotfix/action-args-preemption`, commit `33d1c02b`; its regression test fails
+against the original implementation and passes with the fix. It is not published.
+
+The robot was missing routine 8000 and other current demo routines. Missing
+entries and their required assets were added from the local updated resource
+library, preserving existing definitions. The original routine file is backed
+up at `/home/haru/test_routines.before-demo-update.routine` on the robot. Two
+unrelated routines with missing source assets (5000, 5001) were not added. The
+crashed routine controller was restored with its original launch parameters;
+normal robot startup will load the updated persistent resource file.
