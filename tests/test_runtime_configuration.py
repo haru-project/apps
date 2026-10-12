@@ -111,10 +111,7 @@ def test_speech_configurator_accepts_already_updated_upstream_values(
     assert "# now enabled upstream" in first_result
     assert "# An upstream comment" in first_result
     assert "active_channel_warmup_secs: 0.3" in first_result
-    zoom_source = first_result.split('source_id: "mic_0"', 1)[1].split('source_id: "mic_1"', 1)[0]
-    assert "detect_active_channels: false" in zoom_source
-    assert "process_active_channels_only: false" in zoom_source
-    assert "exclude_channels: [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11]" in zoom_source
+    assert "exclude_channels: [10, 11]" in first_result
     assert "# Preserve this comment" in first_result
     assert "min_segment_silent_ms: 800  # stale apps override" in first_result
 

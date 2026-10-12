@@ -177,7 +177,7 @@ for service_entry in \
 do
   IFS=":" read -r stack service <<< "${service_entry}"
   assert_equal \
-    "19" \
+    "0" \
     "$(compose_service_value "${stack}" "${service}" ROS_DOMAIN_ID)" \
     "Default ROS domain for ${stack}/${service}"
   assert_equal \

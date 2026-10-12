@@ -47,8 +47,6 @@ services:
       <<: *perception-domain-env
       DISPLAY: ""
       XAUTHORITY: ""
-      K4A_ENABLE_GPU_DEPTH_ENGINE: "0"
-      LIBGL_ALWAYS_SOFTWARE: "1"
       HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"

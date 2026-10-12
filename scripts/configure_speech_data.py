@@ -100,14 +100,13 @@ def configure(path: Path) -> None:
     speech_stack = section_bounds(lines, "speech_stack")
 
     zoom_h8 = source_bounds(lines, speech_stack, "mic_0")
-    # This single-speaker demo uses H8 input 6; keep it enabled through silence.
     for key, value in (
-        ("detect_active_channels", "false"),
-        ("process_active_channels_only", "false"),
+        ("detect_active_channels", "true"),
+        ("process_active_channels_only", "true"),
         ("dynamic_capture_controlled", "true"),
         ("active_channel_rms_threshold", "0.003"),
         ("active_channel_warmup_secs", "0.3"),
-        ("exclude_channels", "[0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11]"),
+        ("exclude_channels", "[10, 11]"),
     ):
         set_key(lines, zoom_h8, key, value, "speech_stack source mic_0")
 
