@@ -15,9 +15,12 @@ display. It needs no host X11 socket or Xauthority mount. Its ROS command is
 explicit because overriding an entrypoint clears the image's default command.
 
 The prepared local speech configuration enables Zoom H8 capture, disables the
-Kinect microphone, excludes H8 channels 10/11 and detects active input channels.
-The ASR model loads successfully. Capture selections and Viz recordings use this
+Kinect microphone and selects H8 input 6 for the single speaker. Automatic input
+selection is disabled so pauses do not close the ASR input gate. The ASR model
+loads successfully. Capture selections and Viz recordings use this
 checkout's private data directories. Keep the H8 selected when powering it on.
+Use the standalone `audio` service; the optional `audio-capture-manager` service
+is for a deployment with separate workers and must remain stopped here.
 
 The prepared local memory configuration uses provider `openai`, server URL
 `http://127.0.0.1:4050` and model `haru:canonical`. Downloaded configurations live
