@@ -1,16 +1,8 @@
-# model_list:
-#   - model_name: haru:canonical
-#     litellm_params:
-#       model: bedrock_mantle/google.gemma-4-26b-a4b
-#       api_key: os.environ/BEDROCK_MANTLE_API_KEY
-#       temperature: 1.0
-#       top_p: 0.95
-model_list: # hri host
+model_list:
   - model_name: haru:canonical
     litellm_params:
-      model: openai/gemma-4-26b
-      api_base: http://172.24.36.28:4000/v1
-      api_key: unused          # the dgx02 proxy is keyless; litellm still wants the field
+      model: bedrock_mantle/google.gemma-4-26b-a4b
+      api_key: os.environ/BEDROCK_MANTLE_API_KEY
       temperature: 1.0
       top_p: 0.95
 litellm_settings:

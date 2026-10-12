@@ -17,7 +17,10 @@ def _load_trim_function():
 
 
 def test_canonical_model_is_bedrock_mantle() -> None:
-    config = (ROOT / "config/llm/litellm_server.yaml").read_text(encoding="utf-8")
+    config = "\n".join(
+        line for line in (ROOT / "config/llm/litellm_server.yaml").read_text(encoding="utf-8").splitlines()
+        if not line.lstrip().startswith("#")
+    )
     assert "model_name: haru:canonical" in config
     assert "model: bedrock_mantle/google.gemma-4-26b-a4b" in config
     assert "api_key: os.environ/BEDROCK_MANTLE_API_KEY" in config

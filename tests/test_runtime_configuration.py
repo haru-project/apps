@@ -1,11 +1,27 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_kinect_uses_headless_wrapper_without_host_display() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/compose.sh", "perception", "config", "--format", "json", "azure-kinect"],
+        cwd=ROOT, check=True, capture_output=True, text=True,
+    )
+    service = json.loads(result.stdout)["services"]["azure-kinect"]
+    assert service["entrypoint"] == ["/usr/local/bin/haru-kinect-entrypoint"]
+    assert service["command"] == [
+        "haru-launch", "strawberry_ros_azure_kinect", "azure_kinect_camera.launch.py"
+    ]
+    assert service["environment"]["DISPLAY"] == ""
+    assert not any(volume["target"] in ("/tmp/.X11-unix", "/root/.Xauthority")
+                   for volume in service["volumes"])
 
 
 def test_robot_domain_is_wired_through_canonical_override() -> None:
