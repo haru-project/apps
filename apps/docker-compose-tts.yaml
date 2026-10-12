@@ -57,7 +57,26 @@ services:
       file: compose.common.yaml
       service: common-ros-gpu
     image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa}
-    command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
+    command:
+      - /ros2_ws/src/strawberry_tts/.venv/bin/python3
+      - /ros2_ws/install/strawberry_tts_ros/lib/strawberry_tts_ros/ros_client.py
+      - --ros-args
+      - -r
+      - __node:=strawberry_tts_node
+      - --params-file
+      - /ros2_ws/src/strawberry_tts/configs/strawberry_tts.yaml
+      - -r
+      - /strawberry/action_tts/_action/send_goal:=/haru2/action_tts/_action/send_goal
+      - -r
+      - /strawberry/action_tts/_action/get_result:=/haru2/action_tts/_action/get_result
+      - -r
+      - /strawberry/action_tts/_action/cancel_goal:=/haru2/action_tts/_action/cancel_goal
+      - -r
+      - /strawberry/action_tts/_action/feedback:=/haru2/action_tts/_action/feedback
+      - -r
+      - /strawberry/action_tts/_action/status:=/haru2/action_tts/_action/status
+      - -r
+      - /strawberry/tts_status:=/haru2/tts_status
     env_file: ../envs/tts.env
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs

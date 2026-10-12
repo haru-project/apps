@@ -2,6 +2,11 @@
 
 Branch: `feature/demo-single-speaker-ready`, based on `demo/jiyugaoka_deployment`.
 
+Robot-facing services use ROS domain 19; perception stays on domain 200.
+In Haru Viz, select **All Topics**, attach domain **19**, then open **Speech**.
+Viz remembers attached domains in that browser's local storage. The Conversation
+panel reads the TTS playback text from the attached robot domain.
+
 The perception images are pinned to released digests in `envs/perception.env`.
 Faces uses the released image, not the unmerged performance candidate. Speech,
 reasoner, LLM agents and timeline player use the deployment image tags.
@@ -21,6 +26,15 @@ loads successfully. Capture selections and Viz recordings use this
 checkout's private data directories. Keep the H8 selected when powering it on.
 Use the standalone `audio` service; the optional `audio-capture-manager` service
 is for a deployment with separate workers and must remain stopped here.
+
+The released TTS ROS client runs with remaps for `/haru2/action_tts` and
+`/haru2/tts_status`. The action's five internal endpoints are remapped explicitly;
+the shipped ROS runtime does not implement wildcard remapping. No TTS source
+patch or custom image is required.
+
+Verified on the preparation host: a spoken H8 test phrase produced an ASR result;
+the robot played the TTS test clearly; a second TTS goal returned `SUCCEEDED` and
+`played: true`, and its text appeared as **Haru** in the Conversation panel.
 
 The prepared local memory configuration uses provider `openai`, server URL
 `http://127.0.0.1:4050` and model `haru:canonical`. Downloaded configurations live
