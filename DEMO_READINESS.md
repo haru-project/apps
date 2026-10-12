@@ -1,6 +1,6 @@
 # Single-speaker demo preparation
 
-Branch: `feature/demo-single-speaker-ready`, based on `demo/jiyugaoka_deployment`.
+Branch: `hotfix/demo-runtime-readiness`, based on `demo/jiyugaoka_deployment`.
 
 Robot-facing services use ROS domain 19; perception stays on domain 200.
 In Haru Viz, select **All Topics**, attach domain **19**, then open **Speech**.
@@ -63,12 +63,13 @@ Restarting the demo BT forest after robot recovery loaded both controllers
 without the earlier timeouts or look-at discovery errors. The controllers
 default to disabled until requested, so their idle `FAILURE` status alone is not
 a readiness test. The suspected robot network startup race has not been fixed
-in its image and may recur after a reboot.
+in its image. The persistent host-launcher fix is tracked in
+https://github.com/haru-project/haru_setup/pull/44; cold-boot validation is pending.
 
 The prepared local memory configuration uses provider `openai`, server URL
 `http://127.0.0.1:4050` and model `haru:canonical`. Downloaded configurations live
-in ignored `data/`; downloading them again resets local adjustments. Keep the
-Amazon route when reprovisioning memory.
+in ignored `data/`; the provisioning script now applies the same LLM route
+after copying image defaults, so downloading memory data preserves the Amazon route.
 
 Preparation starts services with `scripts/compose.sh`; it does not run `run.sh`
 or either `execute-task-*` service. The configured scenario is
@@ -94,7 +95,10 @@ Local verification artifacts and the running image inventory are stored in
 Demo launch uncovered an LLM request-preemption race. The local image
 `haru-demo-llm:preemption-fix` applies the one-line fix from `haru-llm` branch
 `hotfix/action-args-preemption`, commit `33d1c02b`; its regression test fails
-against the original implementation and passes with the fix. It is not published.
+against the original implementation and passes with the fix. It is not published. Its source fix is PR
+https://github.com/haru-project/haru-llm/pull/95 into `demo/jiyugaoka_deployment`.
+This branch keeps the deployment image tag; merge that PR and rebuild its image
+before relying on the preemption fix on another host.
 
 The robot was missing routine 8000 and other current demo routines. Missing
 entries and their required assets were added from the local updated resource
@@ -103,3 +107,19 @@ up at `/home/haru/test_routines.before-demo-update.routine` on the robot. Two
 unrelated routines with missing source assets (5000, 5001) were not added. The
 crashed routine controller was restored with its original launch parameters;
 normal robot startup will load the updated persistent resource file.
+
+The routine assets are distributed through the existing Dropbox bundle, not a
+Git repository. Provision them with the robot's standard
+`haru_setup/scripts/download_resources.sh` before using the updated demo. The
+robot-source protection in https://github.com/haru-project/haru2_skills/pull/16
+keeps invalid service requests from killing the controller; it does not supply
+missing assets. The robot image used package version 2.0.31, so rebuilding or
+updating that package is required to pick up source protections.
+
+The status-only feedback logging fix is
+https://github.com/haru-project/agent_reasoner/pull/43, targeting
+`demo/jiyugaoka_deployment`. The LLM PR targets the same branch. Kinect and Viz
+use released images whose entrypoint and Conversation fixes are already merged
+into master. Manual gaze tests used detection IDs; they are not deployment
+configuration and are not persisted by this branch. Identity-based automatic
+reacquisition remains a separate unimplemented improvement.

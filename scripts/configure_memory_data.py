@@ -45,6 +45,27 @@ def rewrite_weaviate_connection(
     config_path.write_text(text, encoding="utf-8")
 
 
+def rewrite_llm_route(config_path: Path) -> None:
+    text = config_path.read_text(encoding="utf-8")
+    section = re.search(
+        r"(?ms)^memory_optimization:\n.*?(?=^[a-zA-Z_][a-zA-Z_0-9]*:|\Z)", text
+    )
+    if section is None:
+        raise ValueError("expected memory_optimization section")
+    body = section.group()
+    for key, value in {
+        "provider": "openai",
+        "server_url": "http://127.0.0.1:4050",
+        "model_name": "haru:canonical",
+    }.items():
+        pattern = re.compile(rf"^(  {key}:[ \t]*).*$", re.MULTILINE)
+        if len(list(pattern.finditer(body))) != 1:
+            raise ValueError(f"expected exactly one memory_optimization {key!r}")
+        body = pattern.sub(lambda match: match.group(1) + json.dumps(value), body)
+    text = text[: section.start()] + body + text[section.end() :]
+    config_path.write_text(text, encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("config_path", type=Path)
@@ -58,6 +79,7 @@ def main() -> None:
         args.http_port,
         args.grpc_port,
     )
+    rewrite_llm_route(args.config_path)
 
 
 if __name__ == "__main__":

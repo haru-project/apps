@@ -82,3 +82,49 @@ def test_rewrite_rejects_invalid_ports(tmp_path: Path, port: str) -> None:
         _load_configurator().rewrite_weaviate_connection(
             config, "localhost", port, "50052"
         )
+
+
+def test_memory_llm_route_survives_provisioning(tmp_path: Path) -> None:
+    config = tmp_path / "agent_memory.yaml"
+    original = (
+        "other_section:\n  model_name: unrelated\n"
+        "memory_optimization:\n"
+        "  provider: ollama\n"
+        "  server_url: http://old-host:11434\n"
+        "  model_name: old-model\n"
+        "  api_key: unchanged\n"
+        '  user_facts:\n    extraction_model: ""\n'
+        "next_section:\n  provider: unchanged\n"
+    )
+    config.write_text(original)
+    _load_configurator().rewrite_llm_route(config)
+    import yaml
+
+    result = yaml.safe_load(config.read_text())
+    route = result["memory_optimization"]
+    assert (route["provider"], route["server_url"], route["model_name"]) == (
+        "openai",
+        "http://127.0.0.1:4050",
+        "haru:canonical",
+    )
+    assert route["api_key"] == "unchanged"
+    assert route["user_facts"]["extraction_model"] == ""
+    assert result["other_section"]["model_name"] == "unrelated"
+    assert result["next_section"]["provider"] == "unchanged"
+    first = config.read_text()
+    _load_configurator().rewrite_llm_route(config)
+    assert config.read_text() == first
+
+
+@pytest.mark.parametrize(
+    "body", ["provider: ollama", "  provider: ollama\n  provider: duplicate"]
+)
+def test_memory_llm_route_rejects_incomplete_config_without_writing(
+    tmp_path: Path, body: str
+) -> None:
+    config = tmp_path / "agent_memory.yaml"
+    original = "memory_optimization:\n" + body + "\n"
+    config.write_text(original)
+    with pytest.raises(ValueError):
+        _load_configurator().rewrite_llm_route(config)
+    assert config.read_text() == original
