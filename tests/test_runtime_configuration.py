@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_kinect_uses_headless_wrapper_without_host_display() -> None:
+def test_kinect_uses_image_wrapper_with_gpu_access() -> None:
     result = subprocess.run(
         ["bash", "scripts/compose.sh", "perception", "config", "--format", "json", "azure-kinect"],
         cwd=ROOT, check=True, capture_output=True, text=True,
@@ -17,9 +17,12 @@ def test_kinect_uses_headless_wrapper_without_host_display() -> None:
     service = json.loads(result.stdout)["services"]["azure-kinect"]
     assert service.get("entrypoint") is None
     assert service.get("command") is None
-    assert service["environment"]["DISPLAY"] == ""
-    assert not any(volume["target"] in ("/tmp/.X11-unix", "/root/.Xauthority")
-                   for volume in service["volumes"])
+    assert service["environment"]["DISPLAY"] == os.environ.get("DISPLAY", "")
+    assert service["environment"]["NVIDIA_DRIVER_CAPABILITIES"] == "all"
+    devices = service["deploy"]["resources"]["reservations"]["devices"]
+    assert devices == [{"driver": "nvidia", "count": -1, "capabilities": ["gpu"]}]
+    assert "LIBGL_ALWAYS_SOFTWARE" not in service["environment"]
+    assert "K4A_ENABLE_GPU_DEPTH_ENGINE" not in service["environment"]
 
 
 def test_robot_domain_is_wired_through_canonical_override() -> None:

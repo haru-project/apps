@@ -40,13 +40,13 @@ services:
   # `PERCEPTION_USE_SIM_TIME=true`. Replay still requires recorded `/tf` and
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
-    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
+    image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:latest}
     env_file:
       - ../envs/perception.env
     environment:
       <<: *perception-domain-env
-      DISPLAY: ""
-      XAUTHORITY: ""
+      DISPLAY: ${DISPLAY:-}
+      XAUTHORITY: /root/.Xauthority
       HARU_TOPIC_PREFIX: ${HARU_TOPIC_PREFIX:-}
       HARU_PARAM_AUTO_PREFIXES: AZURE_KINECT
       AZURE_KINECT_DEV_AUTOSTART: "true"
@@ -59,6 +59,8 @@ services:
     privileged: true
     restart: unless-stopped
     volumes:
+      - *common-x11
+      - *common-root-xauth
       - *kinect-usb-dev
       - *common-run
     <<: *common-ros
@@ -66,7 +68,7 @@ services:
 
   # Skeleton pipeline
   skeletons:
-    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:demo-jiyugaoka_deployment}
+    image: ${SKELETONS_IMAGE:-ghcr.io/haru-project/strawberry-ros-skeletons:latest}
     env_file:
       - ../envs/perception.env
     environment:
@@ -91,7 +93,7 @@ services:
 
   # Faces (InsightFace + fusion node)
   faces:
-    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:demo-jiyugaoka_deployment}
+    image: ${FACES_IMAGE:-ghcr.io/haru-project/strawberry-ros-faces-module:latest}
     env_file:
       - ../envs/perception.env
     environment:
@@ -115,7 +117,7 @@ services:
     deploy: *gpu-reservations
   # Belief authority (default perception fusion output)
   belief:
-    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:demo-jiyugaoka_deployment}
+    image: ${HARU_BELIEF_IMAGE:-ghcr.io/haru-project/haru-belief:latest}
     env_file:
       - ../envs/perception.env
     environment:
@@ -137,7 +139,7 @@ services:
 
   # viz service: haru-viz browser UI + rosbridge runtime
   viz:
-    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:demo-jiyugaoka_deployment}
+    image: ${HARU_VIZ_IMAGE:-ghcr.io/haru-project/haru-viz:latest}
     env_file:
       - ../envs/perception.env
     environment:
