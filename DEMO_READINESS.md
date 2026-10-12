@@ -45,11 +45,21 @@ the robot played the TTS test clearly; a second TTS goal returned `SUCCEEDED` an
 After refreshing Viz, the operator confirmed that a spoken phrase appeared once
 with both domains attached.
 
-Controller readiness is incomplete: both trees load, but the lifecycle manager
-reports load timeouts. A direct domain-19 client cannot connect to
-`/haru2/look_at`, and no server owner was discovered. The controllers default to
-disabled until requested, so their idle `FAILURE` status alone is not a readiness
-test. Resolve the look-at endpoint before claiming gaze control is ready.
+Robot gaze was verified on `haru-19.local`, domain 19. Initially the look-at and
+motor nodes were reachable only inside the robot container. They started before
+Wi-Fi finished acquiring its address; restarting `haru_container` after operator
+clearance restored remote discovery and completed motor calibration. A local
+eyes-only test moved both displayed pupils and returned them to their starting
+coordinates. Remote look-at commands moved the base about 2.4 degrees and the
+neck about 2.3 degrees, confirmed by position feedback. The base returned near
+neutral and the neck was restored to its original zero position. No new motor
+errors appeared during these tests.
+
+Restarting the demo BT forest after robot recovery loaded both controllers
+without the earlier timeouts or look-at discovery errors. The controllers
+default to disabled until requested, so their idle `FAILURE` status alone is not
+a readiness test. The suspected robot network startup race has not been fixed
+in its image and may recur after a reboot.
 
 The prepared local memory configuration uses provider `openai`, server URL
 `http://127.0.0.1:4050` and model `haru:canonical`. Downloaded configurations live
