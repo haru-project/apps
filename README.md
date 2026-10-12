@@ -163,11 +163,11 @@ docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
 docker pull ghcr.io/haru-project/haru-belief:latest
 docker pull ghcr.io/haru-project/haru-viz:latest
 docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
-docker pull ghcr.io/haru-project/haru-speech-base:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-speech-verification:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-speech-localization:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-speech-base:latest
+docker pull ghcr.io/haru-project/haru-speech-audio:latest
+docker pull ghcr.io/haru-project/haru-speech-recognition:latest
+docker pull ghcr.io/haru-project/haru-speech-verification:latest
+docker pull ghcr.io/haru-project/haru-speech-localization:latest
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
 docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
