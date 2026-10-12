@@ -11,20 +11,24 @@ The sensor and inference images are pinned to released digests in `envs/percepti
 Faces uses the released image, not the unmerged performance candidate. Speech,
 reasoner, LLM agents and timeline player use the deployment image tags.
 
-Viz currently uses the locally built `haru-demo-viz:conversation-dedup` image,
-based on the released Viz digest with the UI from `haru-viz` commit `9373d24`
-(`hotfix/conversation-mirrored-asr`). It displays ASR mirrored from domain 200
-into 19 once while retaining robot replies. Refresh existing Viz tabs to load
-the updated UI. This hotfix is not yet published; another host must build it
-before using this deployment's local image reference.
+Viz uses the released image pinned to digest
+`sha256:90cc51728a30988a743e195e92269d21ce0a5ab497c14a4bafc7660ff53b685d`.
+It contains the Conversation fix for ASR mirrored across domains. Refresh existing
+Viz tabs to load the updated UI.
 
 `haru:canonical` routes to Amazon Bedrock Mantle Gemma in `eu-central-1`.
 Credentials belong in the ignored `envs/llm.secrets.env`; no credentials are
 committed. The local proxy listens on port 4050.
 
-The Kinect uses its shipped `haru-kinect-entrypoint`, which starts a virtual
-display. It needs no host X11 socket or Xauthority mount. Its ROS command is
-explicit because overriding an entrypoint clears the image's default command.
+The Kinect uses the released image pinned to digest
+`sha256:ded31ee78fb4d40eaf45e98a848a62bc816570946b97c43dad298c598fc120b4`.
+Its default `haru-kinect-entrypoint` starts a virtual display and delegates to
+`haru-entrypoint`. No Compose entrypoint or command override is needed. It uses
+no host X11 socket or Xauthority mount.
+Both released containers were recreated successfully. Kinect initially entered
+USB/capture recovery after recreation; a clean stop/start restored RGB and
+aligned depth at 30 FPS in a 20-second probe. Viz returned HTTP 200 and loaded
+without browser errors. All 24 deployment tests passed.
 
 The prepared local speech configuration enables Zoom H8 capture, disables the
 Kinect microphone and selects H8 input 6 for the single speaker. Automatic input

@@ -15,10 +15,8 @@ def test_kinect_uses_headless_wrapper_without_host_display() -> None:
         cwd=ROOT, check=True, capture_output=True, text=True,
     )
     service = json.loads(result.stdout)["services"]["azure-kinect"]
-    assert service["entrypoint"] == ["/usr/local/bin/haru-kinect-entrypoint"]
-    assert service["command"] == [
-        "haru-launch", "strawberry_ros_azure_kinect", "azure_kinect_camera.launch.py"
-    ]
+    assert service.get("entrypoint") is None
+    assert service.get("command") is None
     assert service["environment"]["DISPLAY"] == ""
     assert not any(volume["target"] in ("/tmp/.X11-unix", "/root/.Xauthority")
                    for volume in service["volumes"])

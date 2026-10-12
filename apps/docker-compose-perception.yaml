@@ -41,9 +41,6 @@ services:
   # `/tf_static` so belief can reconstruct world/camera transforms.
   azure-kinect:
     image: ${AZURE_KINECT_IMAGE:-ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve}
-    # The ROS image overrides the base image's automatic headless entrypoint.
-    entrypoint: /usr/local/bin/haru-kinect-entrypoint
-    command: [haru-launch, strawberry_ros_azure_kinect, azure_kinect_camera.launch.py]
     env_file:
       - ../envs/perception.env
     environment:
