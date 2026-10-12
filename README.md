@@ -157,11 +157,11 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
-docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
+docker pull ghcr.io/haru-project/haru-belief:latest
+docker pull ghcr.io/haru-project/haru-viz:latest
 docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 docker pull ghcr.io/haru-project/haru-speech-base:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
@@ -192,18 +192,20 @@ bash scripts/validate_compose.sh
 
 ### Perception image matrix
 
-The default perception stack follows the branch and tag image lines used by this deployment:
+The default perception stack uses the latest released images:
 
 ```text
-azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
-skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
-faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
-belief            ghcr.io/haru-project/haru-belief:feature-asr-improve
-viz               ghcr.io/haru-project/haru-viz:feature-asr-improve
+azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:latest
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:latest
+belief            ghcr.io/haru-project/haru-belief:latest
+viz               ghcr.io/haru-project/haru-viz:latest
 domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
 ```
 
 Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+
+Kinect reserves the NVIDIA GPU and uses the host `DISPLAY` and Xauthority for accelerated OpenGL when available. Leave `DISPLAY` unset on headless hosts to use the image’s virtual display; that fallback uses software OpenGL.
 
 `domain-bridge` uses a dedicated prebuilt image. This `apps` repository mounts `config/domain_bridge.yaml` and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper starts the dedicated bridge project before standalone `perception` or `speech` stacks. The all-in-one stack owns its embedded bridge directly, which prevents a second Compose project from duplicating it. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
 

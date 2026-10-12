@@ -4,20 +4,25 @@ import json
 import os
 import subprocess
 import sys
+
+import pytest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_kinect_uses_image_wrapper_with_gpu_access() -> None:
+@pytest.mark.parametrize("stack", ["perception", "all"])
+@pytest.mark.parametrize("display", ["", ":42"])
+def test_kinect_uses_image_wrapper_with_gpu_access(stack: str, display: str) -> None:
     result = subprocess.run(
-        ["bash", "scripts/compose.sh", "perception", "config", "--format", "json", "azure-kinect"],
+        ["bash", "scripts/compose.sh", stack, "config", "--format", "json", "azure-kinect"],
         cwd=ROOT, check=True, capture_output=True, text=True,
+        env={**os.environ, "DISPLAY": display},
     )
     service = json.loads(result.stdout)["services"]["azure-kinect"]
     assert service.get("entrypoint") is None
     assert service.get("command") is None
-    assert service["environment"]["DISPLAY"] == os.environ.get("DISPLAY", "")
+    assert service["environment"]["DISPLAY"] == display
     assert service["environment"]["NVIDIA_DRIVER_CAPABILITIES"] == "all"
     devices = service["deploy"]["resources"]["reservations"]["devices"]
     assert devices == [{"driver": "nvidia", "count": -1, "capabilities": ["gpu"]}]
