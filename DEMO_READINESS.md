@@ -72,8 +72,11 @@ Amazon route when reprovisioning memory.
 
 Preparation starts services with `scripts/compose.sh`; it does not run `run.sh`
 or either `execute-task-*` service. The configured scenario is
-`episodes/demo_food_tv.json`. It has now been launched; the opening speech
-reported successful playback, with operator confirmation pending.
+`episodes/demo_food_tv.json`. It completed with action status `SUCCEEDED` and launcher exit code 0.
+All 14 scenario actions reached `SUCCESS`. The operator confirmed audible
+speech and Conversation messages. Empty-content parsing errors occurred during
+some generated updates; successful completion does not establish an error-free
+run. Those errors and identity-based gaze reacquisition remain unresolved.
 
 After powering on the H8 and robot, verify the H8 capture channels, a real ASR
 transcript, robot action servers and audible TTS. Recheck context-manager's
