@@ -42,6 +42,14 @@ patch or custom image is required.
 Verified on the preparation host: a spoken H8 test phrase produced an ASR result;
 the robot played the TTS test clearly; a second TTS goal returned `SUCCEEDED` and
 `played: true`, and its text appeared as **Haru** in the Conversation panel.
+After refreshing Viz, the operator confirmed that a spoken phrase appeared once
+with both domains attached.
+
+Controller readiness is incomplete: both trees load, but the lifecycle manager
+reports load timeouts. A direct domain-19 client cannot connect to
+`/haru2/look_at`, and no server owner was discovered. The controllers default to
+disabled until requested, so their idle `FAILURE` status alone is not a readiness
+test. Resolve the look-at endpoint before claiming gaze control is ready.
 
 The prepared local memory configuration uses provider `openai`, server URL
 `http://127.0.0.1:4050` and model `haru:canonical`. Downloaded configurations live
