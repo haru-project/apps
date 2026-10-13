@@ -17,6 +17,9 @@ copy_with_tar ghcr.io/haru-project/strawberry-tts:ros2 \
 copy_with_tar ghcr.io/haru-project/strawberry-tts:ros2 \
   /ros2_ws/src/strawberry_tts/ref_audio \
   "$DATA_FOLDER/ref_audio"
+copy_with_tar "${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:multilingual-develop}" \
+  /ros2_ws/src/strawberry_tts/voice_gestures \
+  "$DATA_FOLDER/voice_gestures"
 
 # Give permissions
 chmod -R a+rwX "$DATA_FOLDER"
