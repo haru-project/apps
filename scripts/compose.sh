@@ -63,28 +63,7 @@ case "${stack}" in
     ;;
 esac
 
-language="${HARU_DEMO_LANGUAGE:-}"
-if [[ "${1:-}" == "--language" ]]; then
-    language="${2:?--language requires a locale}"
-    shift 2
-fi
-if [[ -z "${language}" ]]; then
-    while IFS='=' read -r key value; do
-        if [[ "${key}" == "HARU_DEMO_LANGUAGE" ]]; then
-            language="${value}"
-            break
-        fi
-    done < "${env_file}"
-fi
-case "${language:-en-US}" in
-    en|en-US|en-us|en_US) export HARU_DEMO_LANGUAGE=en-US ;;
-    es|es-ES|es-es|es_ES) export HARU_DEMO_LANGUAGE=es-ES ;;
-    ja|ja-JP|ja-jp|ja_JP) export HARU_DEMO_LANGUAGE=ja-JP ;;
-    uk|uk-UA|uk-ua|uk_UA) export HARU_DEMO_LANGUAGE=uk-UA ;;
-    *) echo "Unsupported HARU_DEMO_LANGUAGE: ${language}. Use en-US, es-ES, ja-JP or uk-UA." >&2; exit 1 ;;
-esac
-cmd=(docker compose -f "${stack_file}")
-if [[ ( "${stack}" == "tts" || "${stack}" == "all" ) && "${HARU_DEMO_LANGUAGE}" == "uk-UA" ]]; then
-    cmd+=(-f "${APPS_DIR}/docker-compose-tts-ukrainian.yaml")
-fi
-exec "${cmd[@]}" --env-file "${env_file}" "$@"
+exec docker compose \
+-f "${stack_file}" \
+--env-file "${env_file}" \
+"$@"

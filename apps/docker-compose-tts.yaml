@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:multilingual-develop}
+    image: ghcr.io/haru-project/strawberry-tts:ros2
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -28,8 +28,8 @@ services:
       "--gptsovits_url", "http://127.0.0.1:9880",
       "--cerevoice_url", "http://127.0.0.1:8015",
       "--timeout", "2.5",
-      "--languages", "en-US", "ja-JP", "es-ES",
-      "--default_language_code", "${HARU_DEMO_LANGUAGE:-en-US}",
+      "--languages", "en-US", "ja-JP",
+      "--default_language_code", "en-US",
       "--cerevoice_langs", "en-US",
       "--base_model_dir", "/ros2_ws/src/strawberry_tts/base_models",
       "--lipsync_window_size", "32",
@@ -39,8 +39,6 @@ services:
       "--extended_code_switching"
     ]
     env_file: ../envs/tts.env
-    environment:
-      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     depends_on:
       gpt-sovits:
         condition: service_healthy
@@ -58,11 +56,9 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:multilingual-develop}
-    command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py", "demo_language:=${HARU_DEMO_LANGUAGE:-en-US}"]
+    image: ghcr.io/haru-project/strawberry-tts:ros2
+    command: ["ros2", "launch", "strawberry_tts_ros", "strawberry_ros_tts_img_lite_launch.py"]
     env_file: ../envs/tts.env
-    environment:
-      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
       - ../data/tts/ref_audio:/ros2_ws/src/strawberry_tts/ref_audio
