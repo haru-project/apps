@@ -55,13 +55,17 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ghcr.io/haru-project/haru-speech:ros2
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:develop}
     command: [
-      "ros2", "launch", "haru_speech_ros", "speech_to_text.launch.py",
+      "ros2", "launch", "haru_speech", "speech_to_text.launch.py",
       "config_file:=${SPEECH_RECOGNITION_CONFIG_FILE}",
       "dev_autostart:=true",
+      "demo_language:=${HARU_DEMO_LANGUAGE:-en-US}",
+      "asr_model:=auto",
     ]
     env_file: ../envs/speech.env
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ~/haru-speech-cache/models:${HARU_SPEECH_MODELS_DIR}:rw

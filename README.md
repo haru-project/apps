@@ -672,3 +672,57 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Multilingual demo speech
+
+The demo locale is selected by `HARU_DEMO_LANGUAGE` (`en-US` by default), or by
+`--language` immediately after the stack name. `en`, `es`, `ja`, `uk` and their
+canonical locales are accepted. CLI overrides the shell environment; the shell
+then overrides `HARU_DEMO_LANGUAGE` in the selected `envs/*.env` file.
+
+```bash
+scripts/compose.sh speech --language ja up -d recognition
+scripts/compose.sh tts --language ja --profile tts --profile ros up -d
+HARU_DEMO_LANGUAGE=uk-UA scripts/compose.sh speech up -d recognition
+HARU_DEMO_LANGUAGE=uk-UA scripts/compose.sh tts --profile tts --profile ros up -d
+```
+
+Use the same setting for both stacks. With `asr_model:=auto`, English retains the
+current distilled `large-v3` model; Spanish, Japanese and Ukrainian load the
+larger multilingual `large-v3` model with the selected transcription language.
+Existing explicit TTS request languages take precedence over the configured
+fallback; callers should omit the language to use the demo setting. This change
+does not translate the LLM prompts/scenarios or override explicit English requests.
+
+English, Spanish and Japanese use the existing Strawberry TTS engine. Ukrainian
+uses local GPU StyleTTS2 with Анастасія Павленко by default; select another
+provisioned voice with `HARU_UK_TTS_VOICE`. The script adds the Ukrainian Compose
+overlay automatically and disables GPT-SoVITS/CereVoice dependencies for it.
+Direct `docker compose` users must add `apps/docker-compose-tts-ukrainian.yaml`
+when choosing Ukrainian. Compose 2.24.4+ is required for `!override`/`!reset`.
+
+Provision data before offline startup:
+
+```bash
+scripts/download_tts_data.sh  # Includes local vocal-gesture assets
+scripts/download_ukrainian_tts_data.sh
+```
+
+Ukrainian assets default to `~/haru-tts-cache/ukrainian`; override that host path
+with `HARU_UK_TTS_DATA_DIR`. Setup downloads pinned checkpoint, voice profiles and
+frontend resources; synthesis runs with HF offline mode. The larger ASR checkpoint
+must also be cached before an offline non-English startup.
+
+The feature requires the merged `haru-speech/develop` recognition image and the
+new `strawberry-tts/develop` images. Build pipelines publish
+`haru-speech-recognition:develop`, `strawberry-tts:multilingual-develop` and
+`strawberry-tts:ukrainian-develop`. Local image overrides are
+`HARU_SPEECH_RECOGNITION_IMAGE`, `STRAWBERRY_TTS_IMAGE`, and `HARU_UK_TTS_IMAGE`.
+Run `python scripts/test_multilingual.py` to check language routing and CLI
+precedence without starting any services.
+
+Ukrainian number conversion has bounded grammatical coverage. Emotional genre
+presets preserve natural speech; explicit speed/pause/volume controls are retained.
+Its mouth timing is approximate and routine events are inspection metadata, not
+robot dispatch. Native pronunciation, emotional delivery and real robot playback
+still require review before treating Ukrainian as a production demo language.
