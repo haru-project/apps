@@ -102,7 +102,15 @@ and provider configuration, independent Spanish component checks passed: H8 inpu
 produced a Spanish transcript, the LLM returned a Spanish reply, and Haru completed
 playback of a generated greeting that the listener confirmed was clear Spanish.
 ASR misheard "Haru" as "Jaro" and "dibujar" as "llorar" in the test phrase.
-The LLM check used the intended phrase, rather than the erroneous ASR transcript;
-this was not an end-to-end conversation test. Full conversation, native pronunciation
-review and per-language turn-taking calibration remain unverified. Ukrainian delivery,
+A subsequent live Spanish scenario passed one complete dialog round trip: the
+listener heard the greeting/question, ASR captured "Me gusta escuchar música."
+exactly on H8 input 6, context attributed it to Levko, and the listener heard the
+Spanish reply and thank-you. This used the English deployment's microphone,
+provider, agent and postprocessor settings with the feature images.
+
+Replay limitation: resetting conversation history alone can leave the scheduler's
+cached content indices for the same task/action IDs. For the video replay, restarting
+`action-args` and `reasoner` as well as resetting conversation produced a fresh
+successful greeting/question. Longer conversations, automatic completion,
+native pronunciation review and per-language turn-taking calibration remain unverified. Ukrainian delivery,
 number inflection and mouth timing retain the TTS feature's documented limits.
