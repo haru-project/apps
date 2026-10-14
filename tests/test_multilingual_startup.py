@@ -69,3 +69,13 @@ def test_user_supplied_proxy_master_key_is_preserved(tmp_path):
     subprocess.run(['python3', str(ROOT / 'scripts/configure_llm_auth.py'), str(path)], check=True)
     assert f'LITELLM_MASTER_KEY={key}' in path.read_text()
     assert f'LLM_SERVER_API_KEY={key}' in path.read_text()
+
+
+def test_cerevoice_language_tracks_selected_demo(tmp_path):
+    (tmp_path / 'envs').mkdir()
+    (tmp_path / 'envs/demo.env').write_text('HARU_DEMO_LANGUAGE=en-US\n')
+    for language, expected in [('es', 'es-ES'), ('en', 'en-US'), ('ja', 'en-US')]:
+        env = dict(os.environ, HARU_DEMO_LANGUAGE=language, ROOT_DIR=str(tmp_path))
+        command = f'source "{ROOT / "scripts/demo_language.sh"}"; echo "$HARU_CEREVOICE_LANGUAGE"'
+        result = subprocess.run(['bash', '-c', command], env=env, check=True, capture_output=True, text=True)
+        assert result.stdout.strip() == expected

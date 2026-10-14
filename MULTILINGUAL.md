@@ -130,3 +130,21 @@ and 3.51s after. All three updated responses contained valid mouth cue names.
 These are small-sample warm-backend measurements; whole-dialog latency includes
 ASR, LLM tagging and playback scheduling. Physical LED behavior still needs a
 visual robot check.
+
+## Spanish CereVoice default
+
+Selecting `HARU_DEMO_LANGUAGE=es-ES` now loads `haruchild_spanish.voice`
+(`HaruSpanish`, 24 kHz) and its matching license in the local PC CereVoice
+server. Spanish utterances use CereVoice directly, bypassing Nacho generation
+and neural MOS retries. Audio is resampled to the existing 32 kHz playback
+format, with the same genre tags, prerecorded gestures, and approximate mouth
+cues. The earlier live Spanish results above used Nacho.
+
+The voice and license are already included in the pinned base TTS image.
+GPT-SoVITS still starts with the shared service stack; it remains available
+for other languages. The CereVoice server loads one voice at startup, so its
+supported fallback language is derived from the selected demo language.
+
+An offline PC check loaded `HaruSpanish` and generated three phrases in
+0.35–0.69 seconds (2.8–5.4 seconds of speech). Robot playback and visual mouth
+synchronization have not yet been checked with this voice.

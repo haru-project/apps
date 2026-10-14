@@ -30,7 +30,7 @@ services:
       "--timeout", "15.0",
       "--languages", "en-US", "ja-JP", "es-ES",
       "--default_language_code", "${HARU_DEMO_LANGUAGE:-en-US}",
-      "--cerevoice_langs", "en-US",
+      "--cerevoice_langs", "${HARU_CEREVOICE_LANGUAGE:-en-US}",
       "--base_model_dir", "/workspace/GPT-SoVITS/GPT_SoVITS/pretrained_models",
       "--lipsync_window_size", "32",
       "--lipsync_threshold_percentile", "90",

@@ -13,3 +13,6 @@ case "${language:-en-US}" in
     uk|uk-UA|uk-ua|uk_UA) export HARU_DEMO_LANGUAGE=uk-UA ;;
     *) echo "Unsupported HARU_DEMO_LANGUAGE: ${language}. Use en-US, es-ES, ja-JP or uk-UA." >&2; return 1 ;;
 esac
+# The CereVoice server loads one voice for the selected demo language.
+export HARU_CEREVOICE_LANGUAGE=en-US
+if [[ "$HARU_DEMO_LANGUAGE" == es-ES ]]; then export HARU_CEREVOICE_LANGUAGE=es-ES; fi
