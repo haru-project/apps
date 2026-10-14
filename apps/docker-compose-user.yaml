@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${HARU_EPISODE_BUILDER_IMAGE:-ghcr.io/haru-project/haru-episode-builder@sha256:0d9e9a4be093623ad50e24963ffdc1a877b4dfc9a48b134132f739c6fe22d736}
+    image: ${HARU_EPISODE_BUILDER_IMAGE:-ghcr.io/haru-project/haru-episode-builder:feature-multilingual}
     env_file: ../envs/user.env
     environment:
       - HARU_DEMO_LANGUAGE=${HARU_DEMO_LANGUAGE:-en-US}

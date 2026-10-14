@@ -8,10 +8,13 @@ with short `en`, `es`, `ja`, `uk` aliases. Shell overrides and the stack wrapper
 
 ## Images and preparation
 
-Compose pins the tested feature images by GHCR digest. The images include all
+Compose selects `feature-multilingual` tags for the multilingual service images. The images include all
 required service changes, including the matching reasoner/behavior plugins.
 There are no local Docker builds, sibling source checkouts, source-pin env files,
-or machine-specific launch overrides required by this branch.
+or language-specific Compose overlays required by this branch. The standard TTS
+image chooses its backend from the language setting; Ukrainian uses an isolated
+frontend environment and omits the unused GPT-SoVITS/CereVoice services. Feature
+tags are updated as the branch changes; pull images again before upgrading.
 
 | Service | Registry package |
 | --- | --- |
@@ -19,7 +22,6 @@ or machine-specific launch overrides required by this branch.
 | LLM | `ghcr.io/haru-project/haru-llm` |
 | Reasoner and behavior plugins | `ghcr.io/haru-project/haru-agent-reasoner` |
 | Strawberry TTS and ROS bridge | `ghcr.io/haru-project/strawberry-tts` |
-| Ukrainian StyleTTS2 | `ghcr.io/haru-project/strawberry-tts` |
 | Episode builder | `ghcr.io/haru-project/haru-episode-builder` |
 
 On a fresh installation, use the existing preparation scripts:

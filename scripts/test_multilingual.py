@@ -44,13 +44,13 @@ class MultilingualComposeTests(unittest.TestCase):
                 if language == 'uk':
                     self.assertNotIn('gpt-sovits', tts)
                     self.assertNotIn('cerevoice-api', tts)
-                    self.assertNotIn('depends_on', tts['tts-client'])
-                    self.assertIn('strawberry_tts.ukrainian.server', tts['tts-client']['command'])
+                    self.assertTrue(all(not dependency['required'] for dependency in tts['tts-client']['depends_on'].values()))
+                    self.assertEqual(tts['tts-client']['command'][0], '/usr/local/bin/start-tts')
                 else:
                     self.assertIn(locale, tts['tts-client']['command'])
                     self.assertIn('gpt-sovits', tts)
                 asr = self.config('speech', language)['recognition']
-                self.assertEqual(asr['image'], 'ghcr.io/haru-project/haru-speech-recognition@sha256:c88db10353736ea8cb9cdd27c0c6877c4d691233498855497f40289e4a490f81')
+                self.assertEqual(asr['image'], 'ghcr.io/haru-project/haru-speech-recognition:feature-multilingual')
                 self.assertEqual(asr['environment']['HARU_PARAM__DEMO_LANGUAGE'], locale)
                 self.assertEqual(asr['environment']['HARU_PARAM__ASR_MODEL'], 'auto')
 
@@ -58,7 +58,7 @@ class MultilingualComposeTests(unittest.TestCase):
         services = self.config('all', 'en', cli='uk')
         self.assertEqual(services['recognition']['environment']['HARU_PARAM__DEMO_LANGUAGE'], 'uk-UA')
         self.assertIn('default_language_code:=uk-UA', services['ros-node']['command'])
-        self.assertIn('strawberry_tts.ukrainian.server', services['tts-client']['command'])
+        self.assertEqual(services['tts-client']['command'][0], '/usr/local/bin/start-tts')
         self.assertNotIn('gpt-sovits', services)
         mounts = {v['target']: v for v in services['reasoner']['volumes']}
         self.assertIn('/demo', mounts)

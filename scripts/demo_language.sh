@@ -16,3 +16,6 @@ esac
 # The CereVoice server loads one voice for the selected demo language.
 export HARU_CEREVOICE_LANGUAGE=en-US
 if [[ "$HARU_DEMO_LANGUAGE" == es-ES ]]; then export HARU_CEREVOICE_LANGUAGE=es-ES; fi
+# Keep unused backend models out of the Ukrainian deployment.
+export HARU_TTS_BACKEND_PROFILE=tts
+if [[ "$HARU_DEMO_LANGUAGE" == uk-UA ]]; then export HARU_TTS_BACKEND_PROFILE=tts-inactive; fi

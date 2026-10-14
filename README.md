@@ -835,7 +835,7 @@ Use the usual image/data preparation, then run `./start.sh`. It starts ASR, LLM,
 TTS, reasoner and the builder in that language and submits the matching demo.
 English (`en-US`) is the default; Spanish (`es-ES`), Japanese (`ja-JP`) and Ukrainian
 (`uk-UA`) are supported. All required feature images are published to GHCR and
-pinned by digest in Compose. No source checkouts or local image builds are needed.
+selected with `feature-multilingual` tags in Compose. No source checkouts or local image builds are needed.
 
 ```bash
 # For a fresh installation; data download replaces existing data bundles.

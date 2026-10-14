@@ -146,14 +146,14 @@ if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
         up -d --force-recreate "${wait_flags[@]}"
 fi
 
-if [[ ( "$stack" == tts || "$stack" == all ) && "$HARU_DEMO_LANGUAGE" == uk-UA ]]; then
-    stack_files+=("${APPS_DIR}/docker-compose-tts-ukrainian.yaml")
-fi
 cmd=(docker compose)
 for stack_file in "${stack_files[@]}"; do
     cmd+=(-f "${stack_file}")
 done
 cmd+=(--env-file "${env_file}")
+if [[ "$stack" == tts || "$stack" == all ]]; then
+    cmd+=(--profile tts)
+fi
 if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
     cmd+=(--profile "${nlp_profile}")
 fi
