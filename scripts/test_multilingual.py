@@ -36,7 +36,7 @@ class MultilingualComposeTests(unittest.TestCase):
         return json.loads(result.stdout)['services']
 
     def test_language_and_backend_selection(self):
-        for language, locale in [(None, 'en-US'), ('es', 'es-ES'), ('ja', 'ja-JP'), ('uk', 'uk-UA')]:
+        for language, locale in [('en', 'en-US'), ('es', 'es-ES'), ('ja', 'ja-JP'), ('uk', 'uk-UA')]:
             with self.subTest(language=language):
                 tts = self.config('tts', language)
                 self.assertIn('default_language_code:=' + locale, tts['ros-node']['command'])
@@ -72,9 +72,9 @@ class MultilingualComposeTests(unittest.TestCase):
         builder = self.config('user', 'uk')['episode-builder']
         self.assertEqual(builder['environment']['HARU_DEMO_LANGUAGE'], 'uk-UA')
 
-    def test_remaining_stacks_default_to_english(self):
+    def test_remaining_stacks_can_select_english(self):
         for stack, service in (("llm", "action-args"), ("reasoner", "reasoner"), ("user", "episode-builder")):
-            self.assertEqual(self.config(stack)[service]["environment"]["HARU_DEMO_LANGUAGE"], "en-US")
+            self.assertEqual(self.config(stack, "en")[service]["environment"]["HARU_DEMO_LANGUAGE"], "en-US")
 
     def test_single_file_selects_entire_demo(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -90,6 +90,10 @@ class MultilingualComposeTests(unittest.TestCase):
             result = subprocess.run([str(root / 'scripts/compose.sh'), 'reasoner', '--profile', 'scenario', 'config', '--format', 'json'], capture_output=True, text=True, check=True)
             scenario = json.loads(result.stdout)['services']['execute-task-scenario']
             self.assertTrue(any('/demo/MultilingualDemo_es-ES.json' in arg for arg in scenario['command']))
+            # The default remains English when the setting is absent.
+            (root / 'envs/all.env').write_text('')
+            for stack, service in (('llm', 'action-args'), ('reasoner', 'reasoner'), ('user', 'episode-builder')):
+                self.assertEqual(self.config(stack, root=root)[service]['environment']['HARU_DEMO_LANGUAGE'], 'en-US')
 
     def test_invalid_language_fails_before_docker(self):
         result = subprocess.run([str(ROOT/'scripts/compose.sh'), 'tts', '--language', 'xx', 'config'], capture_output=True)
