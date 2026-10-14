@@ -114,3 +114,19 @@ cached content indices for the same task/action IDs. For the video replay, resta
 successful greeting/question. Longer conversations, automatic completion,
 native pronunciation review and per-language turn-taking calibration remain unverified. Ukrainian delivery,
 number inflection and mouth timing retain the TTS feature's documented limits.
+
+## TTS timing and mouth cues
+
+The GPT-SoVITS call previously swapped positional sampling arguments: `top_k=5`
+was passed as `temperature=5`. Synthesis now passes these arguments by name in
+both normal and fallback paths. Non-English mouth cues now retain valid complete
+phoneme tokens and deterministic nested structure, rather than splitting randomly
+selected tokens into unsupported characters. These are approximate mouth cues,
+not language-specific forced phoneme alignment.
+
+A paired local Spanish check of three short phrases measured median generation
+latency of 1.82s before and 1.04s after, and median audio duration of 9.37s before
+and 3.51s after. All three updated responses contained valid mouth cue names.
+These are small-sample warm-backend measurements; whole-dialog latency includes
+ASR, LLM tagging and playback scheduling. Physical LED behavior still needs a
+visual robot check.
