@@ -97,9 +97,12 @@ scenarios are localized; existing custom literal scripts still need translation.
 - Earlier LLM/regression and reasoner tests still apply. The legacy LLM NLP test
   file's 12 failures are present on the unchanged base; it is excluded there.
 
-On Haru-19, a Spanish clip completed physical playback and the listener confirmed
-hearing Spanish. Live testing also exposed a missing scenario mount and failure
-handling for timed-out synthesis; both are fixed on the feature branches. Full
-conversation, native pronunciation review and per-language turn-taking calibration
-remain unverified. Ukrainian delivery,
+With the rebuilt feature images and the working English deployment's microphone
+and provider configuration, independent Spanish component checks passed: H8 input 6
+produced a Spanish transcript, the LLM returned a Spanish reply, and Haru completed
+playback of a generated greeting that the listener confirmed was clear Spanish.
+ASR misheard "Haru" as "Jaro" and "dibujar" as "llorar" in the test phrase.
+The LLM check used the intended phrase, rather than the erroneous ASR transcript;
+this was not an end-to-end conversation test. Full conversation, native pronunciation
+review and per-language turn-taking calibration remain unverified. Ukrainian delivery,
 number inflection and mouth timing retain the TTS feature's documented limits.
