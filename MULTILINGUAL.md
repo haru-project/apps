@@ -170,3 +170,7 @@ approximate Ukrainian vowel/consonant mouth shapes timed to voiced audio, with
 closed-mouth cues during pauses. Streamed speech re-enables lip-sync before every
 phrase. Latin `Honda` is spoken as `Хонда`; unknown A–Z words are spelled using
 Ukrainian letter names. URLs and email addresses still require a spoken form.
+
+The Ukrainian LLM policy requires Cyrillic-only generated speech, including
+brands, names and quoted words (`Honda` → `Хонда`). Protocol keys, identifiers,
+SSML attributes and original names in non-spoken metadata remain intact.
