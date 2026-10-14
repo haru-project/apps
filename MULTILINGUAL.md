@@ -6,13 +6,13 @@ service restart to load the correct ASR/TTS model. No develop merges are include
 
 | Repository | Feature branch | Change |
 | --- | --- | --- |
-| apps | feature/multilingual | Shared Compose setting, Ukrainian overlay, image overrides |
-| haru-speech | feature/multilingual | Existing English model; large-v3 for other locales |
-| strawberry-tts | feature/multilingual | Locale fallback and local Ukrainian StyleTTS2 |
-| haru-llm | feature/multilingual | Native-language prompt policy, Ukrainian speech metadata, NLP fallback |
-| agent_reasoner | feature/multilingual | Startup parameter and dialog blackboard language |
-| behavior_tree_plugins | feature/multilingual | Empty request ports inherit environment; explicit languages preserved |
-| simple-haru-episode-builder | feature/multilingual | Sidebar selector, language-aware exports, four localized templates |
+| apps | [feature/multilingual](https://github.com/haru-project/apps/pull/51) | Shared Compose setting, Ukrainian overlay, image overrides |
+| haru-speech | [feature/multilingual](https://github.com/haru-project/haru-speech/pull/55) | Existing English model; large-v3 for other locales |
+| strawberry-tts | [feature/multilingual](https://github.com/haru-project/strawberry-tts/pull/9) | Locale fallback and local Ukrainian StyleTTS2 |
+| haru-llm | [feature/multilingual](https://github.com/haru-project/haru-llm/pull/96) | Native-language prompt policy, Ukrainian speech metadata, NLP fallback |
+| agent_reasoner | [feature/multilingual](https://github.com/haru-project/agent_reasoner/pull/44) | Startup parameter and dialog blackboard language |
+| behavior_tree_plugins | [feature/multilingual](https://github.com/haru-project/behavior_tree_plugins/pull/56) | Empty request ports inherit environment; explicit languages preserved |
+| simple-haru-episode-builder | [feature/multilingual](https://github.com/haru-project/simple-haru-episode-builder/pull/2) | Sidebar selector, language-aware exports, four localized templates |
 
 The bases match the images configured in `/home/levko/demo_ws/src/apps-demo-prep`:
 apps starts from `hotfix/demo-runtime-readiness` (`29a9d38`), LLM from
@@ -21,8 +21,8 @@ speech and builder from `master`, and behavior plugins from `hotfix/demo-issues`
 (`c2229f55`, the revision pinned by the reasoner image).
 
 TTS uses the `hotfix/demo-issues` source embedded in the deployed image
-(`e1218736`). That branch is no longer advertised by origin. Its imported history
-excludes `install/.secrets`; all other baseline files match the deployed checkout.
+(`e1218736`). The base branch was restored on origin with `install/.secrets` excluded from
+its entire history; all other baseline files match the deployed checkout.
 The reasoner dependency manifests select `feature/multilingual` behavior plugins.
 
 ## One setting, one startup command
