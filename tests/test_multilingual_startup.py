@@ -79,3 +79,44 @@ def test_cerevoice_language_tracks_selected_demo(tmp_path):
         command = f'source "{ROOT / "scripts/demo_language.sh"}"; echo "$HARU_CEREVOICE_LANGUAGE"'
         result = subprocess.run(['bash', '-c', command], env=env, check=True, capture_output=True, text=True)
         assert result.stdout.strip() == expected
+
+
+def test_localized_demo_preserves_food_tv_flow_and_goal_contract():
+    import json
+    import re
+
+    def load(locale):
+        return json.loads((ROOT / f'config/demo/MultilingualDemo_{locale}.json').read_text())
+
+    def contract(value, key=None):
+        if isinstance(value, dict):
+            return {k: contract(v, k) for k, v in value.items()}
+        if isinstance(value, list):
+            return [contract(v, key) for v in value]
+        if key == 'action_goal' and value:
+            return contract(json.loads(value))
+        if isinstance(value, str) and key in {'description', 'additional_instructions', 'metainfo'}:
+            return re.findall(r'\{[a-z_]+\}', value)
+        return value
+
+    english = load('en-US')
+    goals = [json.loads(a['action_goal']) for a in english['actions'] if a.get('action_goal')]
+    assert [g['id'] for g in goals] == [
+        'greet', 'ask_about_food', 'haru_share_ice_cream',
+        'ask_about_favorite_movie_or_tv_show', 'haru_share_star_wars', 'closing',
+    ]
+    assert len(english['actions']) == 14
+    assert all(a.get('action_content') == [] for a in english['actions'] if a.get('action_goal'))
+    assert [r['routine'] for r in english['actions'][-1]['action_content'][0]['value']] == [2046, 2045]
+    assert 'chocolate mint' in goals[2]['description']
+    assert 'Star Wars' in goals[4]['description']
+    for locale in ('es-ES', 'ja-JP', 'uk-UA'):
+        localized = load(locale)
+        localized['demo_language'] = 'en-US'
+        # Text varies; dependencies, criteria, placeholder counts/order and timeouts must not.
+        assert contract(localized) == contract(english)
+        for a, b in zip(localized['actions'], english['actions'], strict=True):
+            if a.get('action_goal'):
+                g, reference = json.loads(a['action_goal']), json.loads(b['action_goal'])
+                assert g['description'] != reference['description']
+                assert g['additional_instructions'][-1] != reference['additional_instructions'][-1]

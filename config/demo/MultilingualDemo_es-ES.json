@@ -7,20 +7,70 @@
   "ready": false,
   "mute": true,
   "teleconference_on": true,
-  "description": "Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.",
+  "description": "Episodio con dos temas: comida y televisión",
   "actions": [
     {
       "action_id": 1,
       "action_type": "HARU_CONVERSATE",
-      "action_goal": "{\"id\": \"group_question\", \"description\": \"Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Habla con los participantes exclusivamente en español.\"], \"disable_summarize\": false}",
+      "action_goal": "{\"id\": \"greet\", \"description\": \"Preséntate como Haru, el nuevo amigo robot de Honda. Después saluda a los participantes como grupo y pregunta si todos pueden presentarse.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} saluda a los participantes como grupo.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"Los {participants_count} participantes dicen su nombre.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"Está ABSOLUTAMENTE PROHIBIDO repetirte. Asegúrate de que cada frase que digas sea distinta.\", \"Expresa lo feliz que estás de conocer a todos.\", \"Dirígete al grupo en conjunto; por ejemplo, todos, amigos o amigas.\", \"NO te dirijas a las personas por su nombre, especialmente antes de que se hayan presentado.\", \"Haz una presentación breve.\", \"Habla con los participantes exclusivamente en español.\"]}",
       "action_content": []
     },
     {
       "action_id": 2,
+      "action_type": "HARU_GAZE",
       "bond_action_ids": [
         1
       ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 3,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "action_goal": "{\"id\": \"ask_about_food\", \"description\": \"Conoce los gustos de cada participante sobre la comida.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} conoce los gustos de {participant} sobre la comida.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} hace a {participant} una pregunta de seguimiento sobre la comida.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} responde a la pregunta de seguimiento sobre la comida.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} reconoce la respuesta de {participant}.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Completa todos los criterios de un participante antes de pasar al siguiente.\", \"Sigue el orden de los criterios.\", \"Dirígete a los participantes por su nombre.\", \"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"Mantén la conversación natural, amena y divertida.\", \"NO hagas más de una pregunta por turno.\", \"Habla con los participantes exclusivamente en español.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 4,
       "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "bond_action_ids": [
+        3
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 5,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "action_goal": "{\"id\": \"haru_share_ice_cream\", \"description\": \"Comparte tu sabor de helado favorito, chocolate con menta, y pregunta si a alguien más le gusta.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} comparte que, si pudiera comer helado, su favorito sería el de chocolate con menta.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} recibe {participants_count} respuestas.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Dirígete al grupo en conjunto.\", \"Nunca te dirijas a los participantes por su nombre.\", \"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"¡Muestra curiosidad por sus preferencias!\", \"Reacciona a sus respuestas con entusiasmo.\", \"Habla con los participantes exclusivamente en español.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 6,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "bond_action_ids": [
+        5
+      ],
       "action_arguments": {
         "gaze_arguments": {
           "gaze_mode": "GROUP"
@@ -28,6 +78,128 @@
       },
       "action_content": [
         {}
+      ]
+    },
+    {
+      "action_id": 7,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "action_goal": "{\"id\": \"ask_about_favorite_movie_or_tv_show\", \"description\": \"Conoce la película o serie de televisión favorita de cada participante.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} conoce la película o serie de televisión favorita de {participant}.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} hace a {participant} una pregunta de seguimiento sobre su película o serie de televisión favorita.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} responde a la pregunta de seguimiento sobre su película o serie de televisión favorita.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} reconoce la respuesta de {participant}.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Completa todos los criterios de un participante antes de pasar al siguiente.\", \"Sigue el orden de los criterios.\", \"Dirígete a los participantes por su nombre.\", \"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"Mantén la conversación natural, amena y divertida.\", \"NO hagas más de una pregunta por turno.\", \"Habla con los participantes exclusivamente en español.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 8,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "bond_action_ids": [
+        7
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 9,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "action_goal": "{\"id\": \"haru_share_star_wars\", \"description\": \"Comparte tu película favorita, Star Wars, y pregunta si a alguien más le gusta.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} comparte que su película favorita de todas es Star Wars.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} recibe {participants_count} respuestas.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Dirígete al grupo en conjunto.\", \"Nunca te dirijas a los participantes por su nombre.\", \"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"¡Muestra curiosidad por sus preferencias!\", \"Reacciona a sus respuestas con entusiasmo.\", \"Habla con los participantes exclusivamente en español.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 10,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "bond_action_ids": [
+        9
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 11,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "action_goal": "{\"id\": \"closing\", \"description\": \"Concluye la sesión y despídete de los participantes.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} expresa que disfrutó del tiempo con el grupo.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} se despide del grupo.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"Al menos un participante responde a la despedida de {robot_name}.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 2, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Dirígete a los participantes como grupo; por ejemplo, todos o amigos.\", \"Sigue la personalidad de Haru descrita en el mensaje del sistema.\", \"Haz una despedida cálida pero breve.\", \"NO continúes la conversación después de despedirte. Reitera que debes descansar.\", \"NO menciones recargar la batería ni enchufarte. Siempre estás conectado a la corriente.\", \"Habla con los participantes exclusivamente en español.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 12,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "bond_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 13,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": [
+        {
+          "value_type": "GAZE_STOP",
+          "metainfo": "Detener el seguimiento de la mirada"
+        }
+      ]
+    },
+    {
+      "action_id": 14,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        13
+      ],
+      "action_content": [
+        {
+          "value": [
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2046
+            },
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2045
+            }
+          ],
+          "value_type": "JSON_CONVERSATE_MULTITTS",
+          "metainfo": "Preparándose para dormir"
+        }
       ]
     }
   ],

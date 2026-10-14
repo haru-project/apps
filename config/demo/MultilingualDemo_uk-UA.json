@@ -7,20 +7,70 @@
   "ready": false,
   "mute": true,
   "teleconference_on": true,
-  "description": "Привітайся з групою та запитай, яке в них улюблене хобі. Вислухай відповіді та подякуй.",
+  "description": "Епізод із двома темами: їжа та телебачення",
   "actions": [
     {
       "action_id": 1,
       "action_type": "HARU_CONVERSATE",
-      "action_goal": "{\"id\": \"group_question\", \"description\": \"Привітайся з групою та запитай, яке в них улюблене хобі. Вислухай відповіді та подякуй.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"Привітайся з групою та запитай, яке в них улюблене хобі. Вислухай відповіді та подякуй.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Говори з учасниками лише природною українською мовою.\"], \"disable_summarize\": false}",
+      "action_goal": "{\"id\": \"greet\", \"description\": \"Представся як Хару, новий робот-друг від Honda. Потім привітай усіх учасників як групу та попроси кожного представитися.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} вітає всіх учасників як групу.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"Усі {participants_count} учасників називають свої імена.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Повторюватися СУВОРО ЗАБОРОНЕНО. Кожне твоє речення має бути унікальним.\", \"Вислови радість від знайомства з усіма.\", \"Звертайся до групи загалом, наприклад «усі», «друзі» або «друзі й подруги».\", \"НЕ звертайся до окремих учасників на ім’я, особливо до того, як вони представилися.\", \"Представся коротко.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
       "action_content": []
     },
     {
       "action_id": 2,
+      "action_type": "HARU_GAZE",
       "bond_action_ids": [
         1
       ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 3,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "action_goal": "{\"id\": \"ask_about_food\", \"description\": \"Дізнайся про харчові вподобання кожного учасника.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} дізнається про харчові вподобання {participant}.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} ставить {participant} уточнювальне запитання про їжу.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} відповідає на уточнювальне запитання про їжу.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} реагує на відповідь {participant}.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Виконай усі критерії для одного учасника, перш ніж переходити до наступного.\", \"Дотримуйся порядку критеріїв.\", \"Звертайся до учасників на ім’я.\", \"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Підтримуй природну, невимушену та веселу розмову.\", \"НЕ став більше одного запитання за одну репліку.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 4,
       "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "bond_action_ids": [
+        3
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 5,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "action_goal": "{\"id\": \"haru_share_ice_cream\", \"description\": \"Розкажи про свій улюблений смак морозива, шоколад із м’ятою, та запитай, чи подобається він ще комусь.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} розповідає, що якби міг їсти морозиво, то найбільше любив би шоколадне з м’ятою.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} отримує {participants_count} відповідей.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Звертайся до групи загалом.\", \"Ніколи не звертайся до учасників на ім’я.\", \"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Цікався їхніми вподобаннями!\", \"Реагуй на їхні відповіді із захопленням.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 6,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "bond_action_ids": [
+        5
+      ],
       "action_arguments": {
         "gaze_arguments": {
           "gaze_mode": "GROUP"
@@ -28,6 +78,128 @@
       },
       "action_content": [
         {}
+      ]
+    },
+    {
+      "action_id": 7,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "action_goal": "{\"id\": \"ask_about_favorite_movie_or_tv_show\", \"description\": \"Дізнайся про улюблений фільм або телесеріал кожного учасника.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} дізнається про улюблений фільм або телесеріал {participant}.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} ставить {participant} уточнювальне запитання про улюблений фільм або телесеріал.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} відповідає на уточнювальне запитання про улюблений фільм або телесеріал.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} реагує на відповідь {participant}.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Виконай усі критерії для одного учасника, перш ніж переходити до наступного.\", \"Дотримуйся порядку критеріїв.\", \"Звертайся до учасників на ім’я.\", \"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Підтримуй природну, невимушену та веселу розмову.\", \"НЕ став більше одного запитання за одну репліку.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 8,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "bond_action_ids": [
+        7
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 9,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "action_goal": "{\"id\": \"haru_share_star_wars\", \"description\": \"Розкажи про свій улюблений фільм, «Зоряні війни», та запитай, чи подобається він ще комусь.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} розповідає, що його найулюбленіший фільм — «Зоряні війни».\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} отримує {participants_count} відповідей.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Звертайся до групи загалом.\", \"Ніколи не звертайся до учасників на ім’я.\", \"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Цікався їхніми вподобаннями!\", \"Реагуй на їхні відповіді із захопленням.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 10,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "bond_action_ids": [
+        9
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 11,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "action_goal": "{\"id\": \"closing\", \"description\": \"Заверши зустріч і попрощайся з учасниками.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} розповідає, що йому сподобався час, проведений із групою.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} прощається з групою.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"Щонайменше один учасник відповідає на прощання {robot_name}.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 2, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Звертайся до учасників як до групи, наприклад «усі ви» або «друзі».\", \"Дотримуйся характеру Хару, описаного в системному повідомленні.\", \"Попрощайся тепло, але коротко.\", \"НЕ продовжуй розмову після прощання. Повтори, що тобі потрібно відпочити.\", \"НЕ згадуй підзаряджання або підключення до розетки. Ти завжди підключений до електромережі.\", \"Спілкуйся з учасниками лише українською мовою.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 12,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "bond_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 13,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": [
+        {
+          "value_type": "GAZE_STOP",
+          "metainfo": "Зупинити стеження поглядом"
+        }
+      ]
+    },
+    {
+      "action_id": 14,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        13
+      ],
+      "action_content": [
+        {
+          "value": [
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2046
+            },
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2045
+            }
+          ],
+          "value_type": "JSON_CONVERSATE_MULTITTS",
+          "metainfo": "Підготовка до сну"
+        }
       ]
     }
   ],

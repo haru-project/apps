@@ -45,6 +45,18 @@ Before switching a running demo, run `./stop.sh`, change the setting, then run
 `./start.sh` again. ASR/TTS models are startup settings, not live switches.
 `./run.sh` submits the matching scenario again without rebuilding the pipeline.
 
+All four language files now follow the English deployment's
+`episodes/demo_food_tv.json`: introduce Haru and collect names, discuss food
+with individual follow-up questions, share Haru's chocolate-mint ice cream
+preference, discuss favorite movies/TV with follow-ups, share Star Wars, then
+say goodbye and run the original sleep routines. The 14-action dependency
+graph, participant criteria expansion, gaze modes, and per-stage timeouts are
+preserved. Only the human-readable content and language instruction differ.
+This replaces the earlier short hobby-only multilingual test. The complete
+scenario keeps the English stage limits (up to 21 minutes in total), so it
+does not automatically stop after the first human answer.
+
+
 This assumes the existing demo hardware, data bundles and provider credentials
 are configured and Haru's control stack is running on the normal ROS domain.
 Setup preserves `envs/llm.secrets.env`, creates a matching private proxy/client

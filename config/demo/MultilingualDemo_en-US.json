@@ -7,20 +7,70 @@
   "ready": false,
   "mute": true,
   "teleconference_on": true,
-  "description": "Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.",
+  "description": "Episode with 2 themes: Food and TV",
   "actions": [
     {
       "action_id": 1,
       "action_type": "HARU_CONVERSATE",
-      "action_goal": "{\"id\": \"group_question\", \"description\": \"Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Speak to participants only in English.\"], \"disable_summarize\": false}",
+      "action_goal": "{\"id\": \"greet\", \"description\": \"Introduce yourself as Haru, Honda's newest robot friend. Then greet the participants as a group and ask if everybody could introduce themselves.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} greets the participants as a group.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"All {participants_count} participants say their name.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Make sure you follow the personality of Haru as expressed in the system prompt\", \"It is ABSOLUTELY FORBIDDEN to repeat yourself. Make sure each sentence you say is unique.\", \"Express how happy you are to meet everyone.\", \"Address the group as a whole. e.g., everyone, everybody, friends \", \"DO NOT refer to individuals by name; especially before they have introduced themselves.\", \"Keep the introduction brief.\", \"Speak to participants only in English.\"]}",
       "action_content": []
     },
     {
       "action_id": 2,
+      "action_type": "HARU_GAZE",
       "bond_action_ids": [
         1
       ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 3,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "action_goal": "{\"id\": \"ask_about_food\", \"description\": \"Learn about each participant's food.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} learns {participant}'s food.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} asks {participant} a follow-up question about their food.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} responds to the follow-up question about their food.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} acknowledges {participant}'s response.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Complete all criteria for one participant before moving to the next.\", \"Follow the criteria order.\", \"Address participants by name.\", \"Make sure you follow the personality of Haru as expressed in the system prompt\", \"Keep the conversation natural, light and fun.\", \"DO NOT ask more than one question per turn\", \"Speak to participants only in English.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 4,
       "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "bond_action_ids": [
+        3
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 5,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "action_goal": "{\"id\": \"haru_share_ice_cream\", \"description\": \"Share your favorite ice cream flavor (chocolate mint) and ask if anybody else likes it.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} shares that if it could eat ice cream, its favorite would be chocolate mint.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} gets {participants_count} responses.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Address the group as a whole.\", \"Never refer to participants by name.\", \"Make sure you follow the personality of Haru as expressed in the system prompt\", \"Be curious about their preferences!\", \"React to their answers with excitement.\", \"Speak to participants only in English.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 6,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "bond_action_ids": [
+        5
+      ],
       "action_arguments": {
         "gaze_arguments": {
           "gaze_mode": "GROUP"
@@ -28,6 +78,128 @@
       },
       "action_content": [
         {}
+      ]
+    },
+    {
+      "action_id": 7,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "action_goal": "{\"id\": \"ask_about_favorite_movie_or_tv_show\", \"description\": \"Learn about each participant's favorite movie or TV show.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} learns {participant}'s favorite movie or TV show.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} asks {participant} a follow-up question about their favorite movie or TV show.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant} responds to the follow-up question about their favorite movie or TV show.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name} acknowledges {participant}'s response.\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"Complete all criteria for one participant before moving to the next.\", \"Follow the criteria order.\", \"Address participants by name.\", \"Make sure you follow the personality of Haru as expressed in the system prompt\", \"Keep the conversation natural, light and fun.\", \"DO NOT ask more than one question per turn\", \"Speak to participants only in English.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 8,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "bond_action_ids": [
+        7
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 9,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "action_goal": "{\"id\": \"haru_share_star_wars\", \"description\": \"Share your favorite movie (Star Wars) and ask if anybody else likes it.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} shares that its absolute favorite movie is Star Wars.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} gets {participants_count} responses.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Address the group as a whole.\", \"Never refer to participants by name.\", \"Make sure you follow the personality of Haru as expressed in the system prompt\", \"Be curious about their preferences!\", \"React to their answers with excitement.\", \"Speak to participants only in English.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 10,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "bond_action_ids": [
+        9
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 11,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "action_goal": "{\"id\": \"closing\", \"description\": \"Wrap up the session and say goodbye to participants.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name} expresses that it enjoyed the time with the group.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name} says goodbye to the group.\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"At least one participant responds to {robot_name}'s goodbye.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 2, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Address participants as a group (e.g., 'you all', 'everyone').\", \"Make sure you follow the personality of Haru as expressed in the system prompt\", \"Keep the goodbye warm but brief.\", \"DO NOT continue the conversation after you have said goodbye. Reiterate that you must rest.\", \"DO NOT mention recharging or plugging in. You are plugged into the wall at all times.\", \"Speak to participants only in English.\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 12,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "bond_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 13,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": [
+        {
+          "value_type": "GAZE_STOP",
+          "metainfo": "Stop gaze tracking"
+        }
+      ]
+    },
+    {
+      "action_id": 14,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        13
+      ],
+      "action_content": [
+        {
+          "value": [
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2046
+            },
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2045
+            }
+          ],
+          "value_type": "JSON_CONVERSATE_MULTITTS",
+          "metainfo": "Going to sleep"
+        }
       ]
     }
   ],
