@@ -160,3 +160,10 @@ supported fallback language is derived from the selected demo language.
 An offline PC check loaded `HaruSpanish` and generated three phrases in
 0.35–0.69 seconds (2.8–5.4 seconds of speech). Robot playback and visual mouth
 synchronization have not yet been checked with this voice.
+
+Haru uses masculine grammatical forms by default (including with the Ukrainian
+female voice); explicitly stated participant gender takes precedence. Spanish
+uses a restrained Sevillian persona and Ukrainian a Lviv persona, while keeping
+the same food and movie/TV scenario. These policies affect generated wording,
+not the voice model’s accent. Ukrainian playback uses headerless PCM16 and
+approximate energy-based open/closed mouth cues.
