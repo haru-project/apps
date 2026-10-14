@@ -3,6 +3,9 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/tts
+ROOT_DIR="$(cd "$DIR/.." && pwd)"
+export ROOT_DIR
+source "$DIR/demo_language.sh"
 
 source "${DIR}/download_helpers.sh"
 cleanup_data_dir "$DATA_FOLDER"
@@ -37,10 +40,19 @@ copy_with_tar "$IMAGE_TAG" \
   /ros2_ws/src/strawberry_tts/weight_refs_mixed.json \
   "$DATA_FOLDER/"
 
+copy_with_tar "$IMAGE_TAG" /ros2_ws/src/strawberry_tts/voice_gestures "$DATA_FOLDER/voice_gestures"
+
+# Ukrainian uses its own model cache instead of the GPT-SoVITS weights below.
+if [[ "$HARU_DEMO_LANGUAGE" == uk-UA ]]; then
+  bash "$DIR/download_ukrainian_tts_data.sh"
+  chmod -R a+rwX "$DATA_FOLDER"
+  exit 0
+fi
+
 curl -L --fail -o "$DATA_FOLDER/GPT_weights_mixed/haru_default_v2_Pro-e20.ckpt" \
     "https://www.dropbox.com/scl/fi/hy8lfa46tc7zvkdkuz5w8/haru_default_v2_Pro-e20.ckpt?rlkey=ir82s0ovvvs7ldcnc36ywj9id&st=g29r7b4g&dl=1" \
     || { echo "Download failed: haru_default_v2_Pro-e20.ckpt"; exit 1; }
-    
+
 curl -L --fail -o "$DATA_FOLDER/GPT_weights_mixed/es_nacho_v2_pro-e15.ckpt" \
     "https://www.dropbox.com/scl/fi/y7ygc2b6991y8bnqoldk4/es_nacho_v2_pro-e15.ckpt?rlkey=vd9hhhijdus04p8dl7vui1r54&st=68kzv4av&dl=1" \
     || { echo "Download failed: haru_default_v2_Pro-e20.ckpt"; exit 1; }
@@ -48,7 +60,7 @@ curl -L --fail -o "$DATA_FOLDER/GPT_weights_mixed/es_nacho_v2_pro-e15.ckpt" \
 curl -L --fail -o "$DATA_FOLDER/SoVITS_weights_mixed/haru_default_v2_ProPlus_e12_s492.pth" \
     "https://www.dropbox.com/scl/fi/t7tvg5h6cnpiz6vsf9io0/haru_default_v2_ProPlus_e12_s492.pth?rlkey=gbt0ldrz6ejw7rywi89ewziu3&st=0w3p20cz&dl=1" \
     || { echo "Download failed: haru_default_v2_ProPlus_e12_s492.pth"; exit 1; }
-    
+
 curl -L --fail -o "$DATA_FOLDER/SoVITS_weights_mixed/es_nacho_v2_pro_e8_s34752.pth" \
     "https://www.dropbox.com/scl/fi/ddttkv5mjt1625ca3rs1h/es_nacho_v2_pro_e8_s34752.pth?rlkey=uhzeanqxzzorm2hdqc5sfukcv&st=v0upet65&dl=1" \
     || { echo "Download failed: haru_default_v2_ProPlus_e12_s492.pth"; exit 1; }

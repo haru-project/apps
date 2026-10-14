@@ -822,3 +822,35 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Multilingual demo
+
+On `feature/multilingual`, set the language in the existing `envs/all.env`:
+
+```dotenv
+HARU_DEMO_LANGUAGE=es-ES
+```
+
+Use the usual image/data preparation, then run `./start.sh`. It starts ASR, LLM,
+TTS, reasoner and the builder in that language and submits the matching demo.
+English (`en-US`) is the default; Spanish (`es-ES`), Japanese (`ja-JP`) and Ukrainian
+(`uk-UA`) are supported. All required feature images are published to GHCR and
+selected with `feature-multilingual` tags in Compose. No source checkouts or local image builds are needed.
+
+```bash
+# For a fresh installation; data download replaces existing data bundles.
+./scripts/download_all_images.sh domain-bridge perception speech llm reasoner tts user timeline-player memory
+./scripts/download_all_data.sh
+./start.sh
+```
+
+Keep the ordinary hardware settings, LLM endpoint/credentials and Haru control
+stack configured for your site. GitHub package access is needed to pull private
+images. Initial model-data downloads need network access; speech synthesis runs
+locally. Ukrainian data preparation selects StyleTTS2 automatically.
+
+Stop with `./stop.sh` before changing language. `./run.sh` repeats the selected
+scenario. A shell setting such as `HARU_DEMO_LANGUAGE=es-ES ./start.sh` overrides
+`envs/all.env`; use the same override when downloading language-specific data.
+Existing scripted speech needs translation; generated replies follow the locale.
+See [multilingual deployment details](MULTILINGUAL.md).

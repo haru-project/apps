@@ -8,13 +8,8 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STRAWBERRY_TTS_IMAGE = (
-    "ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@"
-    "sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa"
-)
-REASONER_IMAGE = (
-    "ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment"
-)
+STRAWBERRY_TTS_IMAGE = 'ghcr.io/haru-project/strawberry-tts:feature-multilingual'
+REASONER_IMAGE = 'ghcr.io/haru-project/haru-agent-reasoner:feature-multilingual'
 STRAWBERRY_TTS_API_IMAGE = (
     "ghcr.io/haru-project/strawberry-tts-api:v0.3.2-cu126"
 )
@@ -48,7 +43,7 @@ def compose_image(
 
 
 @pytest.mark.parametrize("service", ("tts-client", "ros-node", "cerevoice-api"))
-def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
+def test_strawberry_services_use_multilingual_image(service: str) -> None:
     assert (
         compose_image(
             "apps/docker-compose-tts.yaml",
@@ -64,7 +59,7 @@ def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
     "service",
     ("bt-forest", "reasoner", "context-manager", "execute-task-scenario", "execute-task-test"),
 )
-def test_reasoner_services_use_deployment_image(service: str) -> None:
+def test_reasoner_services_use_multilingual_image(service: str) -> None:
     assert (
         compose_image(
             "apps/docker-compose-reasoner.yaml",
@@ -86,3 +81,18 @@ def test_strawberry_api_stays_on_validated_v032_image() -> None:
         )
         == STRAWBERRY_TTS_API_IMAGE
     )
+
+
+def test_multilingual_images_are_pullable_refs_and_no_local_builds_remain():
+    assert not (ROOT / 'docker/multilingual').exists()
+    assert not (ROOT / 'scripts/build_multilingual.sh').exists()
+    assert not (ROOT / 'envs/demo.env').exists()
+    assert not (ROOT / 'apps/docker-compose-tts-ukrainian.yaml').exists()
+    for language in ('es', 'uk'):
+        command = ['bash', str(ROOT / 'scripts/compose.sh'), 'all', '--language', language,
+                   '--profile', '*', 'config', '--format', 'json']
+        services = json.loads(subprocess.check_output(command, text=True))['services']
+        for name in ('recognition', 'tts-client', 'ros-node', 'action-args', 'reasoner', 'episode-builder'):
+            assert services[name]['image'].startswith('ghcr.io/haru-project/')
+            assert services[name]['image'].endswith(':feature-multilingual')
+            assert 'build' not in services[name]

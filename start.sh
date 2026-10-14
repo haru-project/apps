@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+cd "$(dirname "$0")"
+ROOT_DIR="$(pwd)"
+source "${ROOT_DIR}/scripts/demo_language.sh"
 
 # Keep every standalone robot-side stack on one configurable ROS domain. The
 # HARU-specific name is canonical; ROS_DOMAIN_ID remains a compatible fallback.
@@ -17,10 +20,16 @@ require_stack_down() {
 # Ensure GUI services target the remote host display by default.
 # Allow overrides from the environment if explicitly set.
 if [[ -z "${XAUTHORITY:-}" ]]; then
-  if [[ -r /run/user/1000/gdm/Xauthority ]]; then
+  if [[ -f /run/user/1000/gdm/Xauthority && -r /run/user/1000/gdm/Xauthority ]]; then
     export XAUTHORITY="/run/user/1000/gdm/Xauthority"
   else
     export XAUTHORITY="${HOME}/.Xauthority"
+    for authority in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/.mutter-Xwaylandauth.*; do
+      if [[ -f "$authority" && -r "$authority" ]]; then
+        export XAUTHORITY="$authority"
+        break
+      fi
+    done
   fi
 fi
 if [[ -z "${DISPLAY:-}" ]]; then
@@ -60,6 +69,8 @@ require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
 require_stack_down timeline-player
+require_stack_down user
+require_stack_down memory
 
 # Ipad services
 # bash scripts/compose.sh ipad up server --force-recreate -d
@@ -68,7 +79,7 @@ require_stack_down timeline-player
 # bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
 echo "===== [1/7] TTS ====="
-bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
+bash scripts/compose.sh tts --profile tts --profile ros up tts-client ros-node --force-recreate -d
 
 echo "===== [2/7] Perception ====="
 HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh perception up --force-recreate -d
@@ -92,5 +103,12 @@ bash scripts/compose.sh memory up --force-recreate -d
 echo "===== [7/7] Reasoner ====="
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
 
-echo "===== All stacks up and healthy ====="
 
+# Start dialog/context services and the builder after the speech pipeline is ready.
+bash scripts/compose.sh reasoner up reasoner context-manager --force-recreate -d
+bash scripts/compose.sh user up episode-builder --force-recreate -d
+
+echo "===== Pipeline services started; submitting the selected-language demo ====="
+
+# Submit the localized demo once all services are ready.
+bash ./run.sh

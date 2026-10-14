@@ -186,13 +186,11 @@ services:
     extends:
       file: docker-compose-tts.yaml
       service: gpt-sovits
-    profiles: []
 
   cerevoice-api:
     extends:
       file: docker-compose-tts.yaml
       service: cerevoice-api
-    profiles: []
 
   tts-client:
     extends:
@@ -201,8 +199,10 @@ services:
     depends_on:
       gpt-sovits:
         condition: service_healthy
+        required: false
       cerevoice-api:
         condition: service_healthy
+        required: false
       action-args:
         condition: service_started
     profiles: []

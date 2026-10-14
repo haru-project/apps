@@ -61,13 +61,16 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:latest}
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition:feature-multilingual}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}
       HARU_PARAM__CONFIG_FILE: ${SPEECH_RECOGNITION_CONFIG_FILE}
       HARU_PARAM__DEV_AUTOSTART: "true"
       HARU_PARAM__ENABLE_VERIF: "false"
+      HARU_PARAM__DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
+      HARU_PARAM__ASR_MODEL: auto
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     volumes:
       - ../data/speech/configs:/shared/configs:rw
       - ${HARU_SPEECH_MODELS_HOST_DIR:-${HOME}/haru-speech-cache/models}:${HARU_SPEECH_MODELS_DIR}:rw

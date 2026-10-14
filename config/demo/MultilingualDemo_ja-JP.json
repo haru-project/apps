@@ -1,0 +1,210 @@
+{
+  "app_id": "multilingual_demo",
+  "episode_id": "1",
+  "haru_id": "haru-jp",
+  "stage_id": 1,
+  "task_id": 1,
+  "ready": false,
+  "mute": true,
+  "teleconference_on": true,
+  "description": "食べ物とテレビをテーマにしたエピソード",
+  "actions": [
+    {
+      "action_id": 1,
+      "action_type": "HARU_CONVERSATE",
+      "action_goal": "{\"id\": \"greet\", \"description\": \"ホンダの新しいロボットの友達、ハルとして自己紹介してください。その後、参加者全員に挨拶し、みんなに自己紹介をお願いしてください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}が参加者全員に挨拶する。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{participants_count}人の参加者全員が自分の名前を言う。\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"システムプロンプトに示されたハルの性格に従ってください。\", \"同じことを繰り返すのは絶対に禁止です。毎回違う表現で話してください。\", \"みんなに会えてうれしい気持ちを伝えてください。\", \"「みなさん」「みんな」「お友達」など、グループ全体に呼びかけてください。\", \"参加者が自己紹介する前は特に、個人を名前で呼ばないでください。\", \"自己紹介は短くしてください。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 2,
+      "action_type": "HARU_GAZE",
+      "bond_action_ids": [
+        1
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 3,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "action_goal": "{\"id\": \"ask_about_food\", \"description\": \"各参加者の食べ物の好みを知ってください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}が{participant}の食べ物の好みを知る。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name}が{participant}に食べ物について追加の質問をする。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant}が食べ物についての追加の質問に答える。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name}が{participant}の答えに反応する。\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"一人の参加者についてすべての条件を満たしてから、次の参加者に進んでください。\", \"条件の順番に従ってください。\", \"参加者を名前で呼んでください。\", \"システムプロンプトに示されたハルの性格に従ってください。\", \"自然で気軽な、楽しい会話をしてください。\", \"一度の発言で二つ以上の質問をしないでください。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 4,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        1
+      ],
+      "bond_action_ids": [
+        3
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 5,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "action_goal": "{\"id\": \"haru_share_ice_cream\", \"description\": \"好きなアイスクリームの味がチョコミントであることを伝え、ほかにも好きな人がいるか聞いてください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}が、もしアイスクリームを食べられるならチョコミントが一番好きだと伝える。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name}が{participants_count}人から返答を受け取る。\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"グループ全体に呼びかけてください。\", \"参加者を個別に名前で呼ばないでください。\", \"システムプロンプトに示されたハルの性格に従ってください。\", \"参加者の好みに興味を示してください。\", \"参加者の答えにわくわくした様子で反応してください。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 6,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        3
+      ],
+      "bond_action_ids": [
+        5
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 7,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "action_goal": "{\"id\": \"ask_about_favorite_movie_or_tv_show\", \"description\": \"各参加者の好きな映画やテレビ番組を知ってください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}が{participant}の好きな映画やテレビ番組を知る。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name}が{participant}に好きな映画やテレビ番組について追加の質問をする。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"{participant}が好きな映画やテレビ番組についての追加の質問に答える。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c4\", \"description\": \"{robot_name}が{participant}の答えに反応する。\", \"reached\": false, \"evidence\": null}], \"criteria_expand\": [{\"ids\": [\"c1\", \"c2\", \"c3\", \"c4\"], \"mappings\": [{\"source\": \"participants_start_right\", \"target\": \"participant\"}]}], \"timeout\": {\"max_time\": {\"minutes\": 5, \"seconds\": 0}}, \"additional_instructions\": [\"一人の参加者についてすべての条件を満たしてから、次の参加者に進んでください。\", \"条件の順番に従ってください。\", \"参加者を名前で呼んでください。\", \"システムプロンプトに示されたハルの性格に従ってください。\", \"自然で気軽な、楽しい会話をしてください。\", \"一度の発言で二つ以上の質問をしないでください。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 8,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        5
+      ],
+      "bond_action_ids": [
+        7
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": []
+    },
+    {
+      "action_id": 9,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "action_goal": "{\"id\": \"haru_share_star_wars\", \"description\": \"好きな映画がスター・ウォーズであることを伝え、ほかにも好きな人がいるか聞いてください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}が一番好きな映画はスター・ウォーズだと伝える。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name}が{participants_count}人から返答を受け取る。\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"グループ全体に呼びかけてください。\", \"参加者を個別に名前で呼ばないでください。\", \"システムプロンプトに示されたハルの性格に従ってください。\", \"参加者の好みに興味を示してください。\", \"参加者の答えにわくわくした様子で反応してください。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 10,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        7
+      ],
+      "bond_action_ids": [
+        9
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 11,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "action_goal": "{\"id\": \"closing\", \"description\": \"会話を締めくくり、参加者に別れの挨拶をしてください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"{robot_name}がグループと過ごした時間が楽しかったと伝える。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c2\", \"description\": \"{robot_name}がグループに別れの挨拶をする。\", \"reached\": false, \"evidence\": null}, {\"id\": \"c3\", \"description\": \"少なくとも一人の参加者が{robot_name}の別れの挨拶に応える。\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 2, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"「みなさん」「みんな」など、参加者全員に呼びかけてください。\", \"システムプロンプトに示されたハルの性格に従ってください。\", \"温かく短い別れの挨拶をしてください。\", \"別れの挨拶をした後は会話を続けないでください。休む必要があることを改めて伝えてください。\", \"充電したり電源につないだりすることには触れないでください。あなたは常にコンセントにつながっています。\", \"参加者には日本語だけで話してください。\"]}",
+      "action_content": []
+    },
+    {
+      "action_id": 12,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        9
+      ],
+      "bond_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    },
+    {
+      "action_id": 13,
+      "action_type": "HARU_GAZE",
+      "wait_for_action_ids": [
+        11
+      ],
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "TRACK_PERSON"
+        }
+      },
+      "action_content": [
+        {
+          "value_type": "GAZE_STOP",
+          "metainfo": "視線の追跡を停止"
+        }
+      ]
+    },
+    {
+      "action_id": 14,
+      "action_type": "HARU_CONVERSATE",
+      "wait_for_action_ids": [
+        13
+      ],
+      "action_content": [
+        {
+          "value": [
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2046
+            },
+            {
+              "tts": "",
+              "delay": 0,
+              "routine": 2045
+            }
+          ],
+          "value_type": "JSON_CONVERSATE_MULTITTS",
+          "metainfo": "お休みの準備"
+        }
+      ]
+    }
+  ],
+  "demo_language": "ja-JP",
+  "template": {
+    "parameters": {}
+  }
+}

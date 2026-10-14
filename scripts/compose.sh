@@ -12,6 +12,12 @@ if [[ -z "${stack}" ]]; then
 fi
 shift
 
+if [[ "${1:-}" == "--language" ]]; then
+    export HARU_DEMO_LANGUAGE="${2:?--language requires a locale}"
+    shift 2
+fi
+source "${ROOT_DIR}/scripts/demo_language.sh"
+
 stack_files=()
 nlp_profile="cpu"
 deployment_profile="${HARU_DEPLOYMENT:-}"
@@ -145,6 +151,9 @@ for stack_file in "${stack_files[@]}"; do
     cmd+=(-f "${stack_file}")
 done
 cmd+=(--env-file "${env_file}")
+if [[ "$stack" == tts || "$stack" == all ]]; then
+    cmd+=(--profile tts)
+fi
 if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
     cmd+=(--profile "${nlp_profile}")
 fi

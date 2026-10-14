@@ -4,13 +4,15 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_FOLDER=$DIR/../data/speech
 MODELS_FOLDER="${HARU_SPEECH_MODELS_HOST_DIR:-${HOME}/haru-speech-cache/models}"
-VERIFICATION_IMAGE="${HARU_SPEECH_VERIFICATION_IMAGE:-ghcr.io/haru-project/haru-speech-verification:feature-asr-improve}"
 
 source "${DIR}/download_helpers.sh"
+COMPOSE_FILE="$DIR/../apps/docker-compose-speech.yaml"
+IMAGE_TAG="$(compose_service_image "$COMPOSE_FILE" "$DIR/../envs/speech.env" recognition)"
+VERIFICATION_IMAGE="$(compose_service_image "$COMPOSE_FILE" "$DIR/../envs/speech.env" verification)"
 cleanup_data_dir "$DATA_FOLDER"
 
 # Speech data
-copy_with_tar "${HARU_SPEECH_BASE_IMAGE:-ghcr.io/haru-project/haru-speech-base:feature-asr-improve}" \
+copy_with_tar "$IMAGE_TAG" \
   /opt/ros/jazzy/workspace/install/share/haru_speech/configs \
   "$DATA_FOLDER/configs"
 

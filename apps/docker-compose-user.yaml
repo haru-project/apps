@@ -6,9 +6,10 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${HARU_EPISODE_BUILDER_IMAGE:-ghcr.io/haru-project/haru-episode-builder:latest}
+    image: ${HARU_EPISODE_BUILDER_IMAGE:-ghcr.io/haru-project/haru-episode-builder:feature-multilingual}
     env_file: ../envs/user.env
     environment:
+      - HARU_DEMO_LANGUAGE=${HARU_DEMO_LANGUAGE:-en-US}
       - PORT=${EPISODE_BUILDER_PORT:-8501}
     ports:
       - "${EPISODE_BUILDER_PORT:-8501}:${EPISODE_BUILDER_PORT:-8501}"
