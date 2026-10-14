@@ -6,10 +6,11 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm:demo-jiyugaoka_deployment}
+    image: ${HARU_LLM_IMAGE:-haru-llm:multilingual}
     command: [
       "ros2", "launch", "haru_llm_ros", "action_args.launch.py",
       "config_file:=${ACTION_ARGS_CONFIG_FILE}",
+      "demo_language:=${HARU_DEMO_LANGUAGE:-en-US}",
       "dev_autostart:=true",
     ]
     env_file:
@@ -17,6 +18,7 @@ services:
       - path: ../envs/llm.secrets.env
         required: false
     environment:
+      - HARU_DEMO_LANGUAGE=${HARU_DEMO_LANGUAGE:-en-US}
       - REDIS_HOST=127.0.0.1
       - REDIS_PORT=6379
       - LLM_SERVER_BASE_URL=http://127.0.0.1:${LLM_SERVER_HOST_PORT:-4050}/v1
@@ -34,7 +36,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${HARU_LLM_IMAGE:-ghcr.io/haru-project/haru-llm:demo-jiyugaoka_deployment}
+    image: ${HARU_LLM_IMAGE:-haru-llm:multilingual}
     command: ["/bin/bash", "-c", "$PACKAGE_VENV -c 'from haru_llm.dashboard.app import run; run()'"]
     env_file:
       - ../envs/llm.env
@@ -72,7 +74,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-service
-    image: ${LITELLM_IMAGE:-docker.litellm.ai/berriai/litellm:main-stable}
+    image: ${LITELLM_IMAGE:-docker.litellm.ai/berriai/litellm@sha256:60947db020b57e204823d3fbc8bb295c85be890d7c9adcc77fb4f5fc2fe410b2}
     command:
       - "--config=/app/config.yaml"
     env_file:

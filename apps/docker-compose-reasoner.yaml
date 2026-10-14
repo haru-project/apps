@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
+    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=${EXPRESSIVITY_CONTROLLER_ENABLED:-true}",
@@ -16,6 +16,8 @@ services:
       "groot_monitor_enabled:=${GROOT_MONITOR_ENABLED:-true}",
       "dev_autostart:=true",
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/reasoner.env
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -26,16 +28,20 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
+    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
+      "demo_language:=${HARU_DEMO_LANGUAGE:-en-US}",
       "reactive_rules_file_path:=${REACTIVE_RULES_FILE}",
       "config_file:=${REASONER_CONFIG_FILE:-/opt/ros/jazzy/workspace/install/share/haru_agent_reasoner/examples/configs/ConfigJap0.json}",
       "enable_reactive:=true",
       "dev_autostart:=true",
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/reasoner.env
     volumes:
+      - ../config/demo:/demo:ro
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped
@@ -44,7 +50,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
+    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -55,6 +61,8 @@ services:
       "context_backup_path:='/tmp/haru_agent_reasoner/context.backup'",
       "dev_autostart:=true",
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/reasoner.env
     volumes:
       - ../data/reasoner/tmp:/tmp/haru_agent_reasoner:rw
@@ -64,29 +72,35 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
+    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
-      "{json_filepath: '/shared/tasks/${TASK_SCENARIO_FILE}', task_type: 1}",
+      "{json_filepath: '/demo/MultilingualDemo_${HARU_DEMO_LANGUAGE:-en-US}.json', task_type: 1}",
       "-f",
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/reasoner.env
     depends_on:
       - reasoner
       - context-manager
     restart: "no"
+    volumes:
+      - ../config/demo:/demo:ro
     profiles: ["scenario"]
 
   execute-task-test:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment}
+    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",
       "-f",
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/reasoner.env
     depends_on:
       - reasoner

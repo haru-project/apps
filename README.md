@@ -822,3 +822,33 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Multilingual demo
+
+On `feature/multilingual`, change **one setting** in `envs/demo.env`:
+
+```dotenv
+HARU_DEMO_LANGUAGE=es-ES
+```
+
+Run `./start.sh`. Startup builds the pinned feature images when needed, prepares
+missing language-service data, uses the selected locale across ASR, LLM, TTS,
+reasoner and the builder, and starts the matching localized demo scenario.
+English (`en-US`) is the default; Spanish (`es-ES`), Japanese (`ja-JP`) and Ukrainian
+(`uk-UA`) are supported. Stop the running demo with `./stop.sh` before changing
+language and restarting. `./run.sh` repeats the selected demo scenario.
+
+The usual configured hardware, provider credentials and running Haru control
+stack are prerequisites. `./scripts/setup_multilingual.sh` prepares the language
+services without starting robot actions and preserves existing settings/tasks.
+The first build/download needs network access; synthesis runs locally. No
+`develop` merges are required and no manual image selections are needed.
+
+Existing custom scripted phrases need translation; generated replies follow the
+selected locale. See [integration and validation details](MULTILINGUAL.md).
+
+Run `python scripts/test_multilingual.py`, `python -m pytest -q tests`, and
+`bash scripts/validate_compose.sh` for configuration/startup checks. Spanish ASR,
+LLM, TTS and builder container checks have run. Direct Spanish robot playback was
+confirmed by the listener; full conversation and native-language quality remain
+unverified.

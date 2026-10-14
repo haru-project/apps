@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa}
+    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -19,7 +19,7 @@ services:
       "--max_syllable_dur", "250.0",
       "--sr", "32000",
       "--num_retries", "1",
-      "--global_timeout", "4.0",
+      "--global_timeout", "30.0",
       "--weights_json", "/ros2_ws/src/strawberry_tts/weight_refs_mixed.json",
       "--voice_gesture_dir", "/ros2_ws/src/strawberry_tts/voice_gestures",
       "--retry_mos_thresh", "2.7",
@@ -27,17 +27,18 @@ services:
       "--silence_percentile", "50.0",
       "--gptsovits_url", "http://127.0.0.1:9880",
       "--cerevoice_url", "http://127.0.0.1:8015",
-      "--timeout", "3.0",
-      "--languages", "en-US", "ja-JP",
-      "--default_language_code", "en-US",
+      "--timeout", "15.0",
+      "--languages", "en-US", "ja-JP", "es-ES",
+      "--default_language_code", "${HARU_DEMO_LANGUAGE:-en-US}",
       "--cerevoice_langs", "en-US",
       "--base_model_dir", "/workspace/GPT-SoVITS/GPT_SoVITS/pretrained_models",
       "--lipsync_window_size", "32",
       "--lipsync_threshold_percentile", "90",
       # "--base_weight_fallback",
       "--genre_weights",
-      "--extended_code_switching"
     ]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/tts.env
     depends_on:
       gpt-sovits:
@@ -56,13 +57,15 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa}
+    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
     command:
       - /ros2_ws/src/strawberry_tts/.venv/bin/python3
       - /ros2_ws/install/strawberry_tts_ros/lib/strawberry_tts_ros/ros_client.py
       - --ros-args
       - -r
       - __node:=strawberry_tts_node
+      - -p
+      - default_language_code:=${HARU_DEMO_LANGUAGE:-en-US}
       - --params-file
       - /ros2_ws/src/strawberry_tts/configs/strawberry_tts.yaml
       - -r
@@ -77,6 +80,8 @@ services:
       - /strawberry/action_tts/_action/status:=/haru2/action_tts/_action/status
       - -r
       - /strawberry/tts_status:=/haru2/tts_status
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/tts.env
     volumes:
       - ../data/tts/configs:/ros2_ws/src/strawberry_tts/configs
@@ -98,8 +103,10 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa}
+    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
+    environment:
+      HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}
     env_file: ../envs/tts.env
     ports:
       - "${CEREVOICE_HOST_PORT:-8015}:8015"

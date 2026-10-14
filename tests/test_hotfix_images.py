@@ -8,13 +8,8 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STRAWBERRY_TTS_IMAGE = (
-    "ghcr.io/haru-project/strawberry-tts:hotfix-demo-issues@"
-    "sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa"
-)
-REASONER_IMAGE = (
-    "ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment"
-)
+STRAWBERRY_TTS_IMAGE = "haru-tts:multilingual"
+REASONER_IMAGE = "haru-reasoner:multilingual"
 STRAWBERRY_TTS_API_IMAGE = (
     "ghcr.io/haru-project/strawberry-tts-api:v0.3.2-cu126"
 )
@@ -48,7 +43,7 @@ def compose_image(
 
 
 @pytest.mark.parametrize("service", ("tts-client", "ros-node", "cerevoice-api"))
-def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
+def test_strawberry_services_use_multilingual_image(service: str) -> None:
     assert (
         compose_image(
             "apps/docker-compose-tts.yaml",
@@ -64,7 +59,7 @@ def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
     "service",
     ("bt-forest", "reasoner", "context-manager", "execute-task-scenario", "execute-task-test"),
 )
-def test_reasoner_services_use_deployment_image(service: str) -> None:
+def test_reasoner_services_use_multilingual_image(service: str) -> None:
     assert (
         compose_image(
             "apps/docker-compose-reasoner.yaml",
@@ -86,3 +81,9 @@ def test_strawberry_api_stays_on_validated_v032_image() -> None:
         )
         == STRAWBERRY_TTS_API_IMAGE
     )
+
+
+def test_multilingual_builds_keep_validated_runtime_bases():
+    # The source pin in sources.env identifies the reviewed TTS Dockerfile.
+    assert 'TTS_REVISION=77db500de22b1d5905d35463abf222c279151649' in (ROOT / 'docker/multilingual/sources.env').read_text()
+    assert 'sha256:22b6584e21cee4366614d30ab369b5e710cc720e0ce602a9ca69327d6bee3cc9' in (ROOT / 'docker/multilingual/reasoner.Dockerfile').read_text()

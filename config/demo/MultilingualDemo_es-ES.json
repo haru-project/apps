@@ -1,0 +1,38 @@
+{
+  "app_id": "multilingual_demo",
+  "episode_id": "1",
+  "haru_id": "haru-jp",
+  "stage_id": 1,
+  "task_id": 1,
+  "ready": false,
+  "mute": true,
+  "teleconference_on": true,
+  "description": "Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.",
+  "actions": [
+    {
+      "action_id": 1,
+      "action_type": "HARU_CONVERSATE",
+      "action_goal": "{\"id\": \"group_question\", \"description\": \"Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"Saluda al grupo y pregunta cuál es su pasatiempo favorito. Escucha sus respuestas y dales las gracias.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Habla con los participantes exclusivamente en español.\"], \"disable_summarize\": false}",
+      "action_content": []
+    },
+    {
+      "action_id": 2,
+      "bond_action_ids": [
+        1
+      ],
+      "action_type": "HARU_GAZE",
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    }
+  ],
+  "demo_language": "es-ES",
+  "template": {
+    "parameters": {}
+  }
+}

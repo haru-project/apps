@@ -1,0 +1,38 @@
+{
+  "app_id": "multilingual_demo",
+  "episode_id": "1",
+  "haru_id": "haru-jp",
+  "stage_id": 1,
+  "task_id": 1,
+  "ready": false,
+  "mute": true,
+  "teleconference_on": true,
+  "description": "Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.",
+  "actions": [
+    {
+      "action_id": 1,
+      "action_type": "HARU_CONVERSATE",
+      "action_goal": "{\"id\": \"group_question\", \"description\": \"Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"Greet the group and ask what their favourite hobby is. Listen to their answers and thank them.\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"Speak to participants only in English.\"], \"disable_summarize\": false}",
+      "action_content": []
+    },
+    {
+      "action_id": 2,
+      "bond_action_ids": [
+        1
+      ],
+      "action_type": "HARU_GAZE",
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    }
+  ],
+  "demo_language": "en-US",
+  "template": {
+    "parameters": {}
+  }
+}

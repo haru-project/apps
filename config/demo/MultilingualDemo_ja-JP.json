@@ -1,0 +1,38 @@
+{
+  "app_id": "multilingual_demo",
+  "episode_id": "1",
+  "haru_id": "haru-jp",
+  "stage_id": 1,
+  "task_id": 1,
+  "ready": false,
+  "mute": true,
+  "teleconference_on": true,
+  "description": "グループに挨拶して、好きな趣味を尋ねてください。回答を聞き、お礼を伝えてください。",
+  "actions": [
+    {
+      "action_id": 1,
+      "action_type": "HARU_CONVERSATE",
+      "action_goal": "{\"id\": \"group_question\", \"description\": \"グループに挨拶して、好きな趣味を尋ねてください。回答を聞き、お礼を伝えてください。\", \"success_criteria\": [{\"id\": \"c1\", \"description\": \"グループに挨拶して、好きな趣味を尋ねてください。回答を聞き、お礼を伝えてください。\", \"reached\": false, \"evidence\": null}], \"timeout\": {\"max_time\": {\"minutes\": 3, \"seconds\": 0}, \"max_turns\": null}, \"additional_instructions\": [\"参加者には日本語だけで自然に話してください。\"], \"disable_summarize\": false}",
+      "action_content": []
+    },
+    {
+      "action_id": 2,
+      "bond_action_ids": [
+        1
+      ],
+      "action_type": "HARU_GAZE",
+      "action_arguments": {
+        "gaze_arguments": {
+          "gaze_mode": "GROUP"
+        }
+      },
+      "action_content": [
+        {}
+      ]
+    }
+  ],
+  "demo_language": "ja-JP",
+  "template": {
+    "parameters": {}
+  }
+}

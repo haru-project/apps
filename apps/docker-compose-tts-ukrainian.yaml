@@ -1,0 +1,21 @@
+# Applied by scripts/compose.sh when HARU_DEMO_LANGUAGE selects Ukrainian.
+services:
+  tts-client:
+    image: ${HARU_UK_TTS_IMAGE:-haru-tts:ukrainian-multilingual}
+    entrypoint: !override ["/opt/ros/jazzy/workspace/package_venv/bin/python"]
+    command: !override ["-m", "strawberry_tts.ukrainian.server", "--voice", "${HARU_UK_TTS_VOICE:-Анастасія Павленко}", "--gesture-dir", "/tts/gestures"]
+    depends_on: !reset {}
+    volumes:
+      - ${HARU_UK_TTS_DATA_DIR:-${HOME}/haru-tts-cache/ukrainian}:/tts/ukrainian:rw
+      - ../data/tts/voice_gestures:/tts/gestures:ro
+    environment:
+      HARU_UK_TTS_DATA_DIR: /tts/ukrainian
+      HF_HUB_OFFLINE: "1"
+      HARU_DEMO_LANGUAGE: uk-UA
+    healthcheck:
+      test: !override ["CMD", "/opt/ros/jazzy/workspace/package_venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8022/openapi.json', timeout=3)"]
+      start_period: 90s
+  gpt-sovits:
+    profiles: !override ["legacy-tts"]
+  cerevoice-api:
+    profiles: !override ["legacy-tts"]

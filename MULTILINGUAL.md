@@ -1,0 +1,105 @@
+# Multilingual integration
+
+Supported settings: `en-US` (default), `es-ES`, `ja-JP`, `uk-UA`, or short `en`,
+`es`, `ja`, `uk`. Set one startup locale across services; changing it requires a
+service restart to load the correct ASR/TTS model. No develop merges are included.
+
+| Repository | Feature branch | Change |
+| --- | --- | --- |
+| apps | feature/multilingual | Shared Compose setting, Ukrainian overlay, image overrides |
+| haru-speech | feature/multilingual | Existing English model; large-v3 for other locales |
+| strawberry-tts | feature/multilingual | Locale fallback and local Ukrainian StyleTTS2 |
+| haru-llm | feature/multilingual | Native-language prompt policy, Ukrainian speech metadata, NLP fallback |
+| agent_reasoner | feature/multilingual | Startup parameter and dialog blackboard language |
+| behavior_tree_plugins | feature/multilingual | Empty request ports inherit environment; explicit languages preserved |
+| simple-haru-episode-builder | feature/multilingual | Sidebar selector, language-aware exports, four localized templates |
+
+The bases match the images configured in `/home/levko/demo_ws/src/apps-demo-prep`:
+apps starts from `hotfix/demo-runtime-readiness` (`29a9d38`), LLM from
+`hotfix/action-args-preemption`, reasoner from `hotfix/demo-empty-content-feedback`,
+speech and builder from `master`, and behavior plugins from `hotfix/demo-issues`
+(`c2229f55`, the revision pinned by the reasoner image).
+
+TTS uses the `hotfix/demo-issues` source embedded in the deployed image
+(`e1218736`). That branch is no longer advertised by origin. Its imported history
+excludes `install/.secrets`; all other baseline files match the deployed checkout.
+The reasoner dependency manifests select `feature/multilingual` behavior plugins.
+
+## One setting, one startup command
+
+In this `apps` branch, edit `envs/demo.env`:
+
+```dotenv
+HARU_DEMO_LANGUAGE=es-ES
+```
+
+Then run `./start.sh`. It builds the pinned feature images if needed, initializes
+missing language-service data without replacing existing hardware settings or
+saved tasks, starts the usual demo pipeline and builder, and submits
+`config/demo/MultilingualDemo_es-ES.json` automatically. `en-US` is the default;
+`es-ES`, `ja-JP`, `uk-UA` and short ISO aliases are supported. All stack wrappers
+read this same file. A shell `HARU_DEMO_LANGUAGE` override or wrapper `--language`
+argument takes precedence. There are no per-stack language files to edit.
+
+Before switching a running demo, run `./stop.sh`, change the setting, then run
+`./start.sh` again. ASR/TTS models are startup settings, not live switches.
+`./run.sh` submits the matching scenario again without rebuilding the pipeline.
+
+This assumes the existing demo hardware, data bundles and provider credentials
+are configured and Haru's control stack is running on the normal ROS domain.
+Setup preserves `envs/llm.secrets.env`, creates a matching private proxy/client
+key pair if needed, and uses its existing `BEDROCK_MANTLE_API_KEY`. A fresh
+hardware deployment still needs the ordinary perception/memory data setup in
+README. First use requires GitHub access for pinned sources and model downloads;
+subsequent builds reuse cached sources, layers and model assets.
+
+`./scripts/setup_multilingual.sh` prepares the language services without starting
+robot actions. `./scripts/build_multilingual.sh` builds only the feature images.
+Sources are locked in `docker/multilingual/sources.env`; the reasoner image includes
+the matching behavior plugins. Default Compose images now select these local
+builds, so manual image overrides are unnecessary. Existing image overrides remain
+available for deployment tooling. English/Spanish/Japanese use Strawberry;
+Ukrainian automatically selects local GPU StyleTTS2 and provisions its assets.
+
+Generated speech uses the configured locale. Automatic per-word TTS language
+switching is disabled for this demo, and unsupported voice genres retain the same
+language's default voice. The ASR uses the current distilled English model or
+larger multilingual large-v3 for the other locales.
+
+The builder defaults its sidebar to the same setting and attaches native language
+instructions through the existing `HARU_CONVERSATE` goal field. Exported
+`demo_language` metadata does not switch running models. The four checked-in demo
+scenarios are localized; existing custom literal scripts still need translation.
+
+## Repositories requiring no source changes
+
+- NLP server already detects arbitrary languages. Its emotion endpoints cover
+  English/Spanish/German only: Japanese/Ukrainian now use LLM TTS tagging instead.
+- Core PCM playback, skills, iPad forwarding and web projection pass audio/text
+  or request language through without an English-only routing default.
+- VAD and the local Smart Turn audio model take waveforms, not a configured text
+  language. No routing changes are needed; turn-taking accuracy for each language
+  still needs native-speaker evaluation.
+
+## Validation and limits
+
+- Single-file language propagation, aliases/defaults/precedence and matching
+  scenario selection checked for English, Spanish, Japanese and Ukrainian.
+- Startup tested with command stubs to check locale consistency and automatic
+  backend dependencies; Compose validates for physical and simulator profiles.
+- Feature images built from pinned sources. Spanish ASR and LLM activate with
+  `es-ES`; the configured LLM provider generated a Spanish greeting.
+- Spanish TTS generated PCM audio through the local GPU backend with the selected
+  Spanish checkpoints. A large-v3 round trip recognized Spanish but had word
+  errors, so native listening review is still required.
+- Builder HTTP health passed with the Spanish setting; proxy key setup is checked
+  for preservation of provider credentials, idempotence and private permissions.
+- Earlier LLM/regression and reasoner tests still apply. The legacy LLM NLP test
+  file's 12 failures are present on the unchanged base; it is excluded there.
+
+On Haru-19, a Spanish clip completed physical playback and the listener confirmed
+hearing Spanish. Live testing also exposed a missing scenario mount and failure
+handling for timed-out synthesis; both are fixed on the feature branches. Full
+conversation, native pronunciation review and per-language turn-taking calibration
+remain unverified. Ukrainian delivery,
+number inflection and mouth timing retain the TTS feature's documented limits.
