@@ -166,4 +166,7 @@ female voice); explicitly stated participant gender takes precedence. Spanish
 uses a restrained Sevillian persona and Ukrainian a Lviv persona, while keeping
 the same food and movie/TV scenario. These policies affect generated wording,
 not the voice model’s accent. Ukrainian playback uses headerless PCM16 and
-approximate energy-based open/closed mouth cues.
+approximate Ukrainian vowel/consonant mouth shapes timed to voiced audio, with
+closed-mouth cues during pauses. Streamed speech re-enables lip-sync before every
+phrase. Latin `Honda` is spoken as `Хонда`; unknown A–Z words are spelled using
+Ukrainian letter names. URLs and email addresses still require a spoken form.

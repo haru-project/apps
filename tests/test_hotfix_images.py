@@ -85,5 +85,5 @@ def test_strawberry_api_stays_on_validated_v032_image() -> None:
 
 def test_multilingual_builds_keep_validated_runtime_bases():
     # The source pin in sources.env identifies the reviewed TTS Dockerfile.
-    assert 'TTS_REVISION=b928e6f883b2bf016a04ff037edb04e2c1026f20' in (ROOT / 'docker/multilingual/sources.env').read_text()
+    assert 'TTS_REVISION=d580991eb858238eeaceef4c42f015904a62bf44' in (ROOT / 'docker/multilingual/sources.env').read_text()
     assert 'sha256:22b6584e21cee4366614d30ab369b5e710cc720e0ce602a9ca69327d6bee3cc9' in (ROOT / 'docker/multilingual/reasoner.Dockerfile').read_text()
