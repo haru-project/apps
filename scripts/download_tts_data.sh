@@ -2,7 +2,10 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATA_FOLDER="${HARU_TTS_DATA_DIR:-$DIR/../data/tts}"
+DATA_FOLDER=$DIR/../data/tts
+ROOT_DIR="$(cd "$DIR/.." && pwd)"
+export ROOT_DIR
+source "$DIR/demo_language.sh"
 
 source "${DIR}/download_helpers.sh"
 cleanup_data_dir "$DATA_FOLDER"
@@ -37,6 +40,15 @@ copy_with_tar "$IMAGE_TAG" \
   /ros2_ws/src/strawberry_tts/weight_refs_mixed.json \
   "$DATA_FOLDER/"
 
+copy_with_tar "$IMAGE_TAG" /ros2_ws/src/strawberry_tts/voice_gestures "$DATA_FOLDER/voice_gestures"
+
+# Ukrainian uses its own model cache instead of the GPT-SoVITS weights below.
+if [[ "$HARU_DEMO_LANGUAGE" == uk-UA ]]; then
+  bash "$DIR/download_ukrainian_tts_data.sh"
+  chmod -R a+rwX "$DATA_FOLDER"
+  exit 0
+fi
+
 curl -L --fail -o "$DATA_FOLDER/GPT_weights_mixed/haru_default_v2_Pro-e20.ckpt" \
     "https://www.dropbox.com/scl/fi/hy8lfa46tc7zvkdkuz5w8/haru_default_v2_Pro-e20.ckpt?rlkey=ir82s0ovvvs7ldcnc36ywj9id&st=g29r7b4g&dl=1" \
     || { echo "Download failed: haru_default_v2_Pro-e20.ckpt"; exit 1; }
@@ -55,9 +67,6 @@ curl -L --fail -o "$DATA_FOLDER/SoVITS_weights_mixed/es_nacho_v2_pro_e8_s34752.p
 
 # GPT‑SoVITS phoneme dictionary hotfix
 docker run --rm "$API_IMAGE_TAG" cat /workspace/GPT-SoVITS/GPT_SoVITS/text/engdict-hot.rep > "$DATA_FOLDER/configs/pronunciation_dict.rep"
-
-# Local vocal gestures are needed by the Ukrainian backend too.
-copy_with_tar "$IMAGE_TAG" /ros2_ws/src/strawberry_tts/voice_gestures "$DATA_FOLDER/voice_gestures"
 
 # Give permissions
 chmod -R a+rwX "$DATA_FOLDER"

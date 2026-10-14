@@ -1,176 +1,89 @@
-# Multilingual integration
+# Multilingual demo deployment
 
-Supported settings: `en-US` (default), `es-ES`, `ja-JP`, `uk-UA`, or short `en`,
-`es`, `ja`, `uk`. Set one startup locale across services; changing it requires a
-service restart to load the correct ASR/TTS model. No develop merges are included.
+Set `HARU_DEMO_LANGUAGE` in the existing `envs/all.env`, then use the ordinary
+`./start.sh`, `./run.sh` and `./stop.sh` commands. English (`en-US`) is the default;
+Spanish (`es-ES`), Japanese (`ja-JP`) and Ukrainian (`uk-UA`) are supported, along
+with short `en`, `es`, `ja`, `uk` aliases. Shell overrides and the stack wrapper's
+`--language` argument take precedence. Stop services before changing language.
 
-| Repository | Feature branch | Change |
-| --- | --- | --- |
-| apps | [feature/multilingual](https://github.com/haru-project/apps/pull/51) | Shared Compose setting, Ukrainian overlay, image overrides |
-| haru-speech | [feature/multilingual](https://github.com/haru-project/haru-speech/pull/55) | Existing English model; large-v3 for other locales |
-| strawberry-tts | [feature/multilingual](https://github.com/haru-project/strawberry-tts/pull/9) | Locale fallback and local Ukrainian StyleTTS2 |
-| haru-llm | [feature/multilingual](https://github.com/haru-project/haru-llm/pull/96) | Native-language prompt policy, Ukrainian speech metadata, NLP fallback |
-| agent_reasoner | [feature/multilingual](https://github.com/haru-project/agent_reasoner/pull/44) | Startup parameter and dialog blackboard language |
-| behavior_tree_plugins | [feature/multilingual](https://github.com/haru-project/behavior_tree_plugins/pull/56) | Empty request ports inherit environment; explicit languages preserved |
-| simple-haru-episode-builder | [feature/multilingual](https://github.com/haru-project/simple-haru-episode-builder/pull/2) | Sidebar selector, language-aware exports, four localized templates |
+## Images and preparation
 
-The bases match the images configured in `/home/levko/demo_ws/src/apps-demo-prep`:
-apps starts from `hotfix/demo-runtime-readiness` (`29a9d38`), LLM from
-`hotfix/action-args-preemption`, reasoner from `hotfix/demo-empty-content-feedback`,
-speech and builder from `master`, and behavior plugins from `hotfix/demo-issues`
-(`c2229f55`, the revision pinned by the reasoner image).
+Compose pins the tested feature images by GHCR digest. The images include all
+required service changes, including the matching reasoner/behavior plugins.
+There are no local Docker builds, sibling source checkouts, source-pin env files,
+or machine-specific launch overrides required by this branch.
 
-TTS uses the `hotfix/demo-issues` source embedded in the deployed image
-(`e1218736`). The base branch was restored on origin with `install/.secrets` excluded from
-its entire history; all other baseline files match the deployed checkout.
-The reasoner dependency manifests select `feature/multilingual` behavior plugins.
+| Service | Registry package |
+| --- | --- |
+| ASR | `ghcr.io/haru-project/haru-speech-recognition` |
+| LLM | `ghcr.io/haru-project/haru-llm` |
+| Reasoner and behavior plugins | `ghcr.io/haru-project/haru-agent-reasoner` |
+| Strawberry TTS and ROS bridge | `ghcr.io/haru-project/strawberry-tts` |
+| Ukrainian StyleTTS2 | `ghcr.io/haru-project/strawberry-tts` |
+| Episode builder | `ghcr.io/haru-project/haru-episode-builder` |
 
-## One setting, one startup command
+On a fresh installation, use the existing preparation scripts:
 
-In this `apps` branch, edit `envs/demo.env`:
-
-```dotenv
-HARU_DEMO_LANGUAGE=es-ES
+```bash
+./scripts/download_all_images.sh domain-bridge perception speech llm reasoner tts user timeline-player memory
+./scripts/download_all_data.sh
+./start.sh
 ```
 
-Then run `./start.sh`. It builds the pinned feature images if needed, initializes
-missing language-service data without replacing existing hardware settings or
-saved tasks, starts the usual demo pipeline and builder, and submits
-`config/demo/MultilingualDemo_es-ES.json` automatically. `en-US` is the default;
-`es-ES`, `ja-JP`, `uk-UA` and short ISO aliases are supported. All stack wrappers
-read this same file. A shell `HARU_DEMO_LANGUAGE` override or wrapper `--language`
-argument takes precedence. There are no per-stack language files to edit.
+Data refresh replaces existing `data/` bundles, so preserve your site's hardware
+configuration and saved tasks before refreshing an existing installation. The
+normal data scripts extract configuration from the selected registry images.
+Ukrainian TTS data preparation downloads its verified model/voice assets into
+`${HOME}/haru-tts-cache/ukrainian`, and skips unused GPT-SoVITS weight downloads.
+The cache location can be overridden with `HARU_UK_TTS_DATA_DIR`.
 
-Before switching a running demo, run `./stop.sh`, change the setting, then run
-`./start.sh` again. ASR/TTS models are startup settings, not live switches.
-`./run.sh` submits the matching scenario again without rebuilding the pipeline.
+Use the site's usual ROS domain, microphone/camera configuration, NVIDIA runtime,
+LLM endpoint/provider credentials and robot control stack. GHCR authentication
+and access to the private packages are required. Initial model downloads require
+network access. The actual speech synthesis runs on the demo PC.
 
-All four language files now follow the English deployment's
-`episodes/demo_food_tv.json`: introduce Haru and collect names, discuss food
-with individual follow-up questions, share Haru's chocolate-mint ice cream
-preference, discuss favorite movies/TV with follow-ups, share Star Wars, then
-say goodbye and run the original sleep routines. The 14-action dependency
-graph, participant criteria expansion, gaze modes, and per-stage timeouts are
-preserved. Only the human-readable content and language instruction differ.
-This replaces the earlier short hobby-only multilingual test. The complete
-scenario keeps the English stage limits (up to 21 minutes in total), so it
-does not automatically stop after the first human answer.
+## Scenario and language behavior
 
+All four localized scenarios follow the English food/movie demo: introductions,
+favorite food and follow-ups, chocolate-mint ice cream, favorite movies/TV and
+follow-ups, Star Wars, then goodbye and the original sleep routines. The 14-action
+graph and stage criteria/timeouts are preserved (up to 21 minutes). The demo does
+not automatically stop after the first answer. Custom scripted speech still needs
+translation; exported builder language metadata does not switch running services.
 
-This assumes the existing demo hardware, data bundles and provider credentials
-are configured and Haru's control stack is running on the normal ROS domain.
-Setup preserves `envs/llm.secrets.env`, creates a matching private proxy/client
-key pair if needed, and uses its existing `BEDROCK_MANTLE_API_KEY`. A fresh
-hardware deployment still needs the ordinary perception/memory data setup in
-README. First use requires GitHub access for pinned sources and model downloads;
-subsequent builds reuse cached sources, layers and model assets.
+English ASR loads the existing model; other languages load multilingual large-v3.
+Spanish TTS uses `haruchild_spanish.voice` through CereVoice. Ukrainian uses local
+GPU StyleTTS2 with `Анастасія Павленко` by default. Explicit rate, pause and volume
+controls are supported; unsupported emotional styles retain the natural voice.
 
-`./scripts/setup_multilingual.sh` prepares the language services without starting
-robot actions. `./scripts/build_multilingual.sh` builds only the feature images.
-Sources are locked in `docker/multilingual/sources.env`; the reasoner image includes
-the matching behavior plugins. Default Compose images now select these local
-builds, so manual image overrides are unnecessary. Existing image overrides remain
-available for deployment tooling. English/Spanish/Japanese use Strawberry;
-Ukrainian automatically selects local GPU StyleTTS2 and provisions its assets.
+Haru uses masculine grammatical forms regardless of the selected voice. Unknown
+participant gender defaults to masculine; explicitly stated gender takes
+precedence. Spanish wording uses a restrained Sevillian persona; Ukrainian wording
+uses a Lviv persona. This changes word choices rather than the voice's accent.
+Ukrainian generated speech must use Cyrillic, including names/brands/quotations;
+protocol keys, identifiers and SSML attributes remain intact. The TTS fallback
+speaks `Honda` as `Хонда` and spells unknown A–Z words using Ukrainian letter names.
+URLs/email addresses require an explicit spoken form.
 
-Generated speech uses the configured locale. Automatic per-word TTS language
-switching is disabled for this demo, and unsupported voice genres retain the same
-language's default voice. The ASR uses the current distilled English model or
-larger multilingual large-v3 for the other locales.
+Ukrainian playback sends headerless PCM16 with text-derived mouth shapes distributed
+across voiced audio and closed-mouth cues during pauses. Every streamed phrase
+re-enables lip-sync. Timing is approximate, without word/phoneme alignment.
 
-The builder defaults its sidebar to the same setting and attaches native language
-instructions through the existing `HARU_CONVERSATE` goal field. Exported
-`demo_language` metadata does not switch running models. The four checked-in demo
-scenarios are localized; existing custom literal scripts still need translation.
+## Validation
 
-## Repositories requiring no source changes
+Run `python3 -m pytest tests`, `python3 scripts/test_multilingual.py` and
+`bash scripts/validate_compose.sh`. These check language precedence, registry image
+routing, localized scenario contracts and startup without source builds.
 
-- NLP server already detects arbitrary languages. Its emotion endpoints cover
-  English/Spanish/German only: Japanese/Ukrainian now use LLM TTS tagging instead.
-- Core PCM playback, skills, iPad forwarding and web projection pass audio/text
-  or request language through without an English-only routing default.
-- VAD and the local Smart Turn audio model take waveforms, not a configured text
-  language. No routing changes are needed; turn-taking accuracy for each language
-  still needs native-speaker evaluation.
+Live Spanish conversation and Ukrainian multi-turn speech/ASR were tested on Haru.
+Ukrainian richer mouth animation persisted through replies, clicks were absent,
+and all 19 sampled generated phrases used Cyrillic, including `Хонда`. The full
+21-minute scenario and Japanese live conversation have not been completed.
 
-## Validation and limits
-
-- Single-file language propagation, aliases/defaults/precedence and matching
-  scenario selection checked for English, Spanish, Japanese and Ukrainian.
-- Startup tested with command stubs to check locale consistency and automatic
-  backend dependencies; Compose validates for physical and simulator profiles.
-- Feature images built from pinned sources. Spanish ASR and LLM activate with
-  `es-ES`; the configured LLM provider generated a Spanish greeting.
-- Spanish TTS generated PCM audio through the local GPU backend with the selected
-  Spanish checkpoints. A large-v3 round trip recognized Spanish but had word
-  errors, so native listening review is still required.
-- Builder HTTP health passed with the Spanish setting; proxy key setup is checked
-  for preservation of provider credentials, idempotence and private permissions.
-- Earlier LLM/regression and reasoner tests still apply. The legacy LLM NLP test
-  file's 12 failures are present on the unchanged base; it is excluded there.
-
-With the rebuilt feature images and the working English deployment's microphone
-and provider configuration, independent Spanish component checks passed: H8 input 6
-produced a Spanish transcript, the LLM returned a Spanish reply, and Haru completed
-playback of a generated greeting that the listener confirmed was clear Spanish.
-ASR misheard "Haru" as "Jaro" and "dibujar" as "llorar" in the test phrase.
-A subsequent live Spanish scenario passed one complete dialog round trip: the
-listener heard the greeting/question, ASR captured "Me gusta escuchar música."
-exactly on H8 input 6, context attributed it to Levko, and the listener heard the
-Spanish reply and thank-you. This used the English deployment's microphone,
-provider, agent and postprocessor settings with the feature images.
-
-Replay limitation: resetting conversation history alone can leave the scheduler's
-cached content indices for the same task/action IDs. For the video replay, restarting
-`action-args` and `reasoner` as well as resetting conversation produced a fresh
-successful greeting/question. Longer conversations, automatic completion,
-native pronunciation review and per-language turn-taking calibration remain unverified. Ukrainian delivery,
-number inflection and mouth timing retain the TTS feature's documented limits.
-
-## TTS timing and mouth cues
-
-The GPT-SoVITS call previously swapped positional sampling arguments: `top_k=5`
-was passed as `temperature=5`. Synthesis now passes these arguments by name in
-both normal and fallback paths. Non-English mouth cues now retain valid complete
-phoneme tokens and deterministic nested structure, rather than splitting randomly
-selected tokens into unsupported characters. These are approximate mouth cues,
-not language-specific forced phoneme alignment.
-
-A paired local Spanish check of three short phrases measured median generation
-latency of 1.82s before and 1.04s after, and median audio duration of 9.37s before
-and 3.51s after. All three updated responses contained valid mouth cue names.
-These are small-sample warm-backend measurements; whole-dialog latency includes
-ASR, LLM tagging and playback scheduling. Physical LED behavior still needs a
-visual robot check.
-
-## Spanish CereVoice default
-
-Selecting `HARU_DEMO_LANGUAGE=es-ES` now loads `haruchild_spanish.voice`
-(`HaruSpanish`, 24 kHz) and its matching license in the local PC CereVoice
-server. Spanish utterances use CereVoice directly, bypassing Nacho generation
-and neural MOS retries. Audio is resampled to the existing 32 kHz playback
-format, with the same genre tags, prerecorded gestures, and approximate mouth
-cues. The earlier live Spanish results above used Nacho.
-
-The voice and license are already included in the pinned base TTS image.
-GPT-SoVITS still starts with the shared service stack; it remains available
-for other languages. The CereVoice server loads one voice at startup, so its
-supported fallback language is derived from the selected demo language.
-
-An offline PC check loaded `HaruSpanish` and generated three phrases in
-0.35–0.69 seconds (2.8–5.4 seconds of speech). Robot playback and visual mouth
-synchronization have not yet been checked with this voice.
-
-Haru uses masculine grammatical forms by default (including with the Ukrainian
-female voice); explicitly stated participant gender takes precedence. Spanish
-uses a restrained Sevillian persona and Ukrainian a Lviv persona, while keeping
-the same food and movie/TV scenario. These policies affect generated wording,
-not the voice model’s accent. Ukrainian playback uses headerless PCM16 and
-approximate Ukrainian vowel/consonant mouth shapes timed to voiced audio, with
-closed-mouth cues during pauses. Streamed speech re-enables lip-sync before every
-phrase. Latin `Honda` is spoken as `Хонда`; unknown A–Z words are spelled using
-Ukrainian letter names. URLs and email addresses still require a spoken form.
-
-The Ukrainian LLM policy requires Cyrillic-only generated speech, including
-brands, names and quoted words (`Honda` → `Хонда`). Protocol keys, identifiers,
-SSML attributes and original names in non-spoken metadata remain intact.
+Related PRs: [apps #51](https://github.com/haru-project/apps/pull/51),
+[ASR #55](https://github.com/haru-project/haru-speech/pull/55),
+[TTS #9](https://github.com/haru-project/strawberry-tts/pull/9),
+[LLM #96](https://github.com/haru-project/haru-llm/pull/96),
+[reasoner #44](https://github.com/haru-project/agent_reasoner/pull/44),
+[behavior #56](https://github.com/haru-project/behavior_tree_plugins/pull/56),
+[builder #2](https://github.com/haru-project/simple-haru-episode-builder/pull/2).

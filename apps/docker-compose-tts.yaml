@@ -6,7 +6,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts@sha256:567ed9cdc7507073857add15d35d827fdc09a78908fc3ffd17e6d63f08a14591}
     entrypoint: ["bash", "-c", "source /ros2_ws/src/strawberry_tts/.venv/bin/activate && exec \"$@\""]
     command: [
       "python",
@@ -57,7 +57,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts@sha256:567ed9cdc7507073857add15d35d827fdc09a78908fc3ffd17e6d63f08a14591}
     command:
       - /ros2_ws/src/strawberry_tts/.venv/bin/python3
       - /ros2_ws/install/strawberry_tts_ros/lib/strawberry_tts_ros/ros_client.py
@@ -103,7 +103,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${STRAWBERRY_TTS_IMAGE:-haru-tts:multilingual}
+    image: ${STRAWBERRY_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts@sha256:567ed9cdc7507073857add15d35d827fdc09a78908fc3ffd17e6d63f08a14591}
     command: ["/bin/bash", "-c", "cd /ros2_ws/src/strawberry_tts/src/cerevoice && . .venv/bin/activate && python cerevoice_api_server.py"]
     environment:
       HARU_DEMO_LANGUAGE: ${HARU_DEMO_LANGUAGE:-en-US}

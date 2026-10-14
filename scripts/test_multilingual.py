@@ -50,7 +50,7 @@ class MultilingualComposeTests(unittest.TestCase):
                     self.assertIn(locale, tts['tts-client']['command'])
                     self.assertIn('gpt-sovits', tts)
                 asr = self.config('speech', language)['recognition']
-                self.assertEqual(asr['image'], 'haru-asr:multilingual')
+                self.assertEqual(asr['image'], 'ghcr.io/haru-project/haru-speech-recognition@sha256:c88db10353736ea8cb9cdd27c0c6877c4d691233498855497f40289e4a490f81')
                 self.assertEqual(asr['environment']['HARU_PARAM__DEMO_LANGUAGE'], locale)
                 self.assertEqual(asr['environment']['HARU_PARAM__ASR_MODEL'], 'auto')
 
@@ -84,7 +84,7 @@ class MultilingualComposeTests(unittest.TestCase):
             (root / 'scripts').mkdir()
             for filename in ('compose.sh', 'demo_language.sh'):
                 shutil.copy2(ROOT / 'scripts' / filename, root / 'scripts' / filename)
-            (root / 'envs/demo.env').write_text('HARU_DEMO_LANGUAGE=es')
+            (root / 'envs/all.env').write_text('HARU_DEMO_LANGUAGE=es')
             for stack, service in (('speech', 'recognition'), ('tts', 'tts-client'), ('llm', 'action-args'), ('reasoner', 'reasoner'), ('user', 'episode-builder')):
                 self.assertEqual(self.config(stack, root=root)[service]['environment']['HARU_DEMO_LANGUAGE'], 'es-ES')
             result = subprocess.run([str(root / 'scripts/compose.sh'), 'reasoner', '--profile', 'scenario', 'config', '--format', 'json'], capture_output=True, text=True, check=True)

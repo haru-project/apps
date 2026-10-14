@@ -20,10 +20,16 @@ require_stack_down() {
 # Ensure GUI services target the remote host display by default.
 # Allow overrides from the environment if explicitly set.
 if [[ -z "${XAUTHORITY:-}" ]]; then
-  if [[ -r /run/user/1000/gdm/Xauthority ]]; then
+  if [[ -f /run/user/1000/gdm/Xauthority && -r /run/user/1000/gdm/Xauthority ]]; then
     export XAUTHORITY="/run/user/1000/gdm/Xauthority"
   else
     export XAUTHORITY="${HOME}/.Xauthority"
+    for authority in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/.mutter-Xwaylandauth.*; do
+      if [[ -f "$authority" && -r "$authority" ]]; then
+        export XAUTHORITY="$authority"
+        break
+      fi
+    done
   fi
 fi
 if [[ -z "${DISPLAY:-}" ]]; then
@@ -71,8 +77,6 @@ require_stack_down memory
 
 # Projector services
 # bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
-
-bash scripts/setup_multilingual.sh
 
 echo "===== [1/7] TTS ====="
 bash scripts/compose.sh tts --profile tts --profile ros up tts-client ros-node --force-recreate -d

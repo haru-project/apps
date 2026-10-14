@@ -4,7 +4,7 @@ language="${HARU_DEMO_LANGUAGE:-}"
 if [[ -z "$language" ]]; then
     while IFS='=' read -r key value || [[ -n "${key:-}" ]]; do
         if [[ "$key" == HARU_DEMO_LANGUAGE ]]; then language="$value"; break; fi
-    done < "${ROOT_DIR}/envs/demo.env"
+    done < "${ROOT_DIR}/envs/all.env"
 fi
 case "${language:-en-US}" in
     en|en-US|en-us|en_US) export HARU_DEMO_LANGUAGE=en-US ;;

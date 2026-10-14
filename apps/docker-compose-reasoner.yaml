@@ -5,7 +5,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner@sha256:2028176a021dc3b5f527ef0a3adb4fda42e7333b1189d7b1e93a533900e34e4e}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=${EXPRESSIVITY_CONTROLLER_ENABLED:-true}",
@@ -28,7 +28,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner@sha256:2028176a021dc3b5f527ef0a3adb4fda42e7333b1189d7b1e93a533900e34e4e}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_reasoner.launch.py",
       "demo_language:=${HARU_DEMO_LANGUAGE:-en-US}",
@@ -50,7 +50,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner@sha256:2028176a021dc3b5f527ef0a3adb4fda42e7333b1189d7b1e93a533900e34e4e}
     command: [
       "ros2", "launch", "haru_agent_reasoner", "haru_context.launch.py",
       "model_file:=${WORLD_MODEL_FILE}",
@@ -72,7 +72,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner@sha256:2028176a021dc3b5f527ef0a3adb4fda42e7333b1189d7b1e93a533900e34e4e}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/demo/MultilingualDemo_${HARU_DEMO_LANGUAGE:-en-US}.json', task_type: 1}",
@@ -93,7 +93,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ${HARU_REASONER_IMAGE:-haru-reasoner:multilingual}
+    image: ${HARU_REASONER_IMAGE:-ghcr.io/haru-project/haru-agent-reasoner@sha256:2028176a021dc3b5f527ef0a3adb4fda42e7333b1189d7b1e93a533900e34e4e}
     command: [
       "ros2", "action", "send_goal", "/haru_agent/new_task_raw", "haru_agent_reasoner_msgs/action/TriggerTaskExecutionRaw",
       "{json_filepath: '/shared/tasks/${TASK_TEST_FILE}', task_type: 1}",

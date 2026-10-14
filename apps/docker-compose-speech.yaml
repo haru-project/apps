@@ -61,7 +61,7 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros-gpu
-    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-haru-asr:multilingual}
+    image: ${HARU_SPEECH_RECOGNITION_IMAGE:-ghcr.io/haru-project/haru-speech-recognition@sha256:c88db10353736ea8cb9cdd27c0c6877c4d691233498855497f40289e4a490f81}
     env_file: ../envs/speech.env
     environment:
       ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-200}

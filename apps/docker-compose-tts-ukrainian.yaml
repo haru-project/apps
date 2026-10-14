@@ -1,7 +1,7 @@
 # Applied by scripts/compose.sh when HARU_DEMO_LANGUAGE selects Ukrainian.
 services:
   tts-client:
-    image: ${HARU_UK_TTS_IMAGE:-haru-tts:ukrainian-multilingual}
+    image: ${HARU_UK_TTS_IMAGE:-ghcr.io/haru-project/strawberry-tts@sha256:a11e16806685cb0514702b392d9cbc0ffe5823f089970415bb0e8bd30cd2a020}
     entrypoint: !override ["/opt/ros/jazzy/workspace/package_venv/bin/python"]
     command: !override ["-m", "strawberry_tts.ukrainian.server", "--voice", "${HARU_UK_TTS_VOICE:-Анастасія Павленко}", "--gesture-dir", "/tts/gestures"]
     depends_on: !reset {}
