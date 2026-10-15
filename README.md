@@ -157,12 +157,13 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
-docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
+docker pull ghcr.io/haru-project/haru-belief:feature-topic-normalize
+docker pull ghcr.io/haru-project/haru-viz:feature-topic-normalize
 docker pull ghcr.io/haru-project/strawberry-ros-people:latest
-docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
 docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
 docker pull ghcr.io/haru-project/haru-speech:ros2
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
@@ -187,6 +188,24 @@ To quickly validate all compose files, run:
 bash scripts/validate_compose.sh
 ```
 
+### Perception image matrix
+
+The default perception stack is intended to run as a tested image set rather than a mix of floating branch lines:
+
+```text
+azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-topic-normalize
+skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-topic-normalize
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-topic-normalize
+haru-belief       ghcr.io/haru-project/haru-belief:feature-topic-normalize
+haru-viz          ghcr.io/haru-project/haru-viz:feature-topic-normalize
+hands             ghcr.io/haru-project/strawberry-ros-hands:latest
+resource-monitor  ghcr.io/haru-project/strawberry-resource-monitor:latest
+```
+
+`hands` and `resource-monitor` still default to `latest` because those images are not currently published on the same branch line. Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+
+`haru-belief` and `haru-viz` should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
+
 ### All-in-one compose (single file)
 
 If you want to launch all layers from a single compose file, use:
@@ -198,6 +217,74 @@ This uses `envs/all.env` for compose-time variables. Optional services still res
 ```bash
 bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
 ```
+
+### Isolated perception ROS domain
+
+This branch runs perception on a separate ROS domain by default. Perception
+services use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `20`) and non-perception
+services keep using the existing `ROS_DOMAIN_ID`.
+
+Start the perception stack with:
+
+```bash
+bash scripts/compose.sh perception up --force-recreate -d
+```
+
+or the combined stack with:
+
+```bash
+bash scripts/compose.sh all up --force-recreate -d
+```
+
+The separate `perception-domain-bridge` container is the only ROS bridge between
+the perception and robot/application domains. Docker networking is unchanged in
+this phase.
+
+The bridge allowlist is tracked in `config/perception_domain_bridge.yaml`.
+It bridges only:
+
+- `/perception/fusion/persons`
+- `/strawberry/people`
+- `/tf`
+- `/tf_static`
+- `/haru_speech/speech_to_text/status_array` from the existing domain back to perception
+- `/haru_speech/speech_to_text/result` from the existing domain back to perception
+
+It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, audio, faces,
+skeletons, hands, or debug image topics.
+
+Validation commands:
+
+```bash
+# Existing robot/application domain should not see raw perception topics.
+ROS_DOMAIN_ID=0 ros2 topic list | rg '/perception/sensor/kinect|/perception/proc/(faces|skeletons)|ffmpeg|zdepth|depth_to_rgb|camera_info'
+
+# Existing domain should see bridged semantic outputs.
+ROS_DOMAIN_ID=0 ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=0 ros2 topic echo --once /strawberry/people
+ROS_DOMAIN_ID=0 ros2 topic echo --once /tf
+
+# Perception domain should see speech status/results bridged back in.
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /haru_speech/speech_to_text/status_array
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-20} ros2 topic echo --once /haru_speech/speech_to_text/result
+```
+
+The first command should produce no matches.
+
+### Perception-domain recorder
+
+The recorder is isolated to the perception ROS domain in this branch. It records
+only topics visible on `HARU_PERCEPTION_ROS_DOMAIN_ID`, which includes raw/internal
+perception topics and any speech topics bridged back into perception.
+
+```bash
+HARU_RECORDER_SESSION_ID=trial-001 \
+  bash scripts/compose.sh recorder up --force-recreate -d
+```
+
+Recordings are written under
+`data/perception/haru_recorder/recordings/domains/perception/`. The recorder does
+not attach to the existing robot/application `ROS_DOMAIN_ID`.
 
 ### Haru Simulator (HS)
 
@@ -317,13 +404,13 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces hands haru-belief haru-viz resource-monitor --force-recreate -d
     ```
 
     **Expected output**:
-    - An RViz window appears showing:
-        - Live camera feed
-        - Detected skeletons and tracking markers
+    - Perception, fusion, and monitoring come up on their configured perception tags, while `haru-viz` runs from `ghcr.io/haru-project/haru-viz:develop`
+    - The `haru-viz` web UI is reachable at `http://127.0.0.1:5173`
+    - rosbridge stays co-located with `haru-viz` and continues using ports `9090`, `9091`, and `9092`
 
     **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
 

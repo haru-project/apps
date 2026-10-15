@@ -14,7 +14,8 @@ services:
     ]
     env_file:
       - ../envs/llm.env
-      - ../envs/llm.secrets.env
+      - path: ../envs/llm.secrets.env
+        required: false
     environment:
       - REDIS_HOST=127.0.0.1
       - REDIS_PORT=6379
@@ -36,7 +37,8 @@ services:
     command: ["/bin/bash", "-c", "$PACKAGE_VENV -c 'from haru_llm.dashboard.app import run; run()'"]
     env_file:
       - ../envs/llm.env
-      - ../envs/llm.secrets.env
+      - path: ../envs/llm.secrets.env
+        required: false
     ports:
       - 8501:8501
     depends_on:
@@ -67,7 +69,8 @@ services:
       - "--config=/app/config.yaml"
     env_file:
       - ../envs/llm.env
-      - ../envs/llm.secrets.env
+      - path: ../envs/llm.secrets.env
+        required: false
     ports:
       - 4050:4000
     extra_hosts:
@@ -89,7 +92,8 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     env_file:
       - ../envs/llm.env
-      - ../envs/llm.secrets.env
+      - path: ../envs/llm.secrets.env
+        required: false
     ports:
       - 8080:8080
     volumes:
@@ -120,7 +124,8 @@ services:
       - "--gpu-memory-utilization=0.9"
     env_file:
       - ../envs/llm.env
-      - ../envs/llm.secrets.env
+      - path: ../envs/llm.secrets.env
+        required: false
     ports:
       - 8000:8000
     volumes:

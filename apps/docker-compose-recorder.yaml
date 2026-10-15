@@ -3,12 +3,30 @@ name: haru-recorder
 # Centralized network mode — can be overridden with COMPOSE_NETWORK_MODE env var (e.g. bridge)
 x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 
+x-recorder-command: &recorder-command
+  - /bin/bash
+  - -lc
+  - |
+    set -euo pipefail
+    config="$${RECORDER_CONFIG_FILE}"
+    if [[ -n "$${HARU_RECORDER_SESSION_ID:-}" ]]; then
+      tmp_config="/tmp/haru_recorder_params.yaml"
+      cp "$${RECORDER_CONFIG_FILE}" "$${tmp_config}"
+      sed -i "s|session_id:.*|session_id: \"$${HARU_RECORDER_SESSION_ID}\"|" "$${tmp_config}"
+      config="$${tmp_config}"
+    fi
+    ros2 launch haru_recorder haru_recorder.launch.py config_file:="$${config}"
+
 services:
   haru-recorder:
     image: ${HARU_RECORDER_IMAGE:-ghcr.io/haru-project/haru-recorder:latest}
     network_mode: *network-mode
     env_file:
       - ../envs/recorder.env
+    environment:
+      ROS_DOMAIN_ID: ${HARU_PERCEPTION_ROS_DOMAIN_ID:-20}
+      RECORDER_CONFIG_FILE: /shared/configs/recorder-perception-domain.yaml
+    command: *recorder-command
     ports:
       - "${HARU_RECORDER_WEB_UI_PORT:-8088}:${HARU_RECORDER_WEB_UI_PORT:-8088}"
     volumes:
@@ -16,6 +34,7 @@ services:
         source: ../data/perception/haru_recorder/recordings
         target: /root/.local/share/haru_recorder
       - type: bind
-        source: ../data/perception/haru_recorder/config
-        target: /shared/configs
+        source: ../config/recorder-perception-domain.yaml
+        target: /shared/configs/recorder-perception-domain.yaml
+        read_only: true
     restart: unless-stopped
