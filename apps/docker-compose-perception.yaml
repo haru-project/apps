@@ -30,7 +30,7 @@ x-network-mode: &network-mode ${COMPOSE_NETWORK_MODE:-host}
 services:
   # Azure Kinect bridge - supplies depth + color and is relied on by several modules
   azure-kinect:
-    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
+    image: ghcr.io/haru-project/strawberry-ros-azure-kinect:master-2.2.23-dds-fix
     env_file:
       - ../envs/perception.env
     environment:
