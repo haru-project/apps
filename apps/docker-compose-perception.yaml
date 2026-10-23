@@ -91,7 +91,7 @@ services:
 
   # People module
   people:
-    image: ghcr.io/haru-project/strawberry-ros-people:latest
+    image: ghcr.io/haru-project/strawberry-ros-people:master-0.6.20
     env_file:
       - ../envs/perception.env
     environment:
