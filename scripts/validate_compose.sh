@@ -74,6 +74,35 @@ print(value)
 ' "${service}" "${variable}"
 }
 
+# The memory LLM backend switch has to survive the whole compose.sh -> interpolation path:
+# litellm resolves the proxy endpoint, ollama leaves the overrides empty so agent-memory keeps the
+# mounted YAML, and only ollama brings the GPU container into the project.
+assert_equal \
+  "http://127.0.0.1:4050/v1" \
+  "$(compose_service_value memory agent-memory MEMORY_LLM_SERVER_URL)" \
+  "Default memory LLM endpoint"
+assert_equal \
+  "haru:canonical" \
+  "$(compose_service_value memory agent-memory MEMORY_LLM_MODEL)" \
+  "Default memory LLM model"
+assert_equal \
+  "" \
+  "$(AGENT_MEMORY_LLM_BACKEND=ollama compose_service_value memory agent-memory MEMORY_LLM_SERVER_URL)" \
+  "Ollama backend memory LLM endpoint"
+
+memory_litellm_services="$(bash "${ROOT_DIR}/scripts/compose.sh" memory config --services)"
+if grep -qx agent-memory-ollama <<< "${memory_litellm_services}"; then
+  echo "Default memory backend unexpectedly includes agent-memory-ollama." >&2
+  exit 1
+fi
+memory_ollama_services="$(
+  AGENT_MEMORY_LLM_BACKEND=ollama bash "${ROOT_DIR}/scripts/compose.sh" memory config --services
+)"
+grep -qx agent-memory-ollama <<< "${memory_ollama_services}" || {
+  echo "Ollama memory backend does not include agent-memory-ollama." >&2
+  exit 1
+}
+
 # A positional service selector must resolve profiled services without relying
 # on a caller-wide COMPOSE_PROFILES workaround.
 tts_client_image="$(
