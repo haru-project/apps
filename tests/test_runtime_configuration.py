@@ -149,13 +149,19 @@ def test_microphone_context_bridge_is_profiled_and_reverses_configurable_domains
 
     forward = yaml.safe_load((ROOT / 'config/domain_bridge.yaml').read_text())
     reverse = yaml.safe_load((ROOT / 'config/microphone_context_bridge.yaml').read_text())
-    assert forward['topics']['/perception/proc/speech/control/state']['type'] == 'haru_speech_msgs/msg/SpeechControlState'
+    assert not any(topic.startswith('/perception/proc/speech/asr/') for topic in forward['topics'])
+    assert '/perception/proc/speech/control/state' not in forward['topics']
+    assert '/perception/proc/speech/microphone_policy' not in reverse['topics']
+    types = {route['type'] for config in (forward, reverse) for route in config['topics'].values()}
+    assert not {'haru_speech_msgs/msg/MicrophonePolicy', 'haru_speech_msgs/msg/SpeechControlState'} & types
     assert reverse['name'] != forward['name']
-    assert reverse['topics']['/perception/proc/speech/microphone_policy'] == {
-        'type': 'haru_speech_msgs/msg/MicrophonePolicy',
+    assert reverse['topics']['/haru_agent/attention_scope'] == {
+        'type': 'haru_belief_msgs/msg/AttentionScope',
         'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 1},
     }
     assert reverse['topics']['/haru_agent/microphone_management']['type'] == 'std_msgs/msg/String'
+    assert reverse['topics']['/haru2/tts_status']['type'] == 'haru2_core_msgs/msg/TTSStatus'
+    assert reverse['topics']['/haru2/tts_status']['qos']['durability'] == 'volatile'
     compose = yaml.safe_load((ROOT / 'apps/docker-compose-domain-bridge.yaml').read_text())
     service = compose['services']['microphone-context-bridge']
     assert service['profiles'] == ['demo-microphone-management']

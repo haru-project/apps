@@ -1,11 +1,11 @@
-# Generic permissions and reasoner-owned UI status; no robot semantics enter speech.
+# Person-level attention and playback status enter belief; audio permissions stay in perception.
 name: haru_microphone_context_bridge
 from_domain: 0
 to_domain: 200
 
 topics:
-  /perception/proc/speech/microphone_policy:
-    type: haru_speech_msgs/msg/MicrophonePolicy
+  /haru_agent/attention_scope:
+    type: haru_belief_msgs/msg/AttentionScope
     qos:
       reliability: reliable
       durability: transient_local
@@ -19,3 +19,11 @@ topics:
       durability: transient_local
       history: keep_last
       depth: 1
+
+  /haru2/tts_status:
+    type: haru2_core_msgs/msg/TTSStatus
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
