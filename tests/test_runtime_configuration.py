@@ -151,10 +151,11 @@ def test_microphone_context_bridge_is_profiled_and_reverses_configurable_domains
     reverse = yaml.safe_load((ROOT / 'config/microphone_context_bridge.yaml').read_text())
     assert forward['topics']['/perception/proc/speech/control/state']['type'] == 'haru_speech_msgs/msg/SpeechControlState'
     assert reverse['name'] != forward['name']
-    assert reverse['topics'] == {'/haru_agent/microphone_context': {
-        'type': 'haru_speech_msgs/msg/MicrophoneContext',
+    assert reverse['topics']['/perception/proc/speech/microphone_policy'] == {
+        'type': 'haru_speech_msgs/msg/MicrophonePolicy',
         'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 1},
-    }}
+    }
+    assert reverse['topics']['/haru_agent/microphone_management']['type'] == 'std_msgs/msg/String'
     compose = yaml.safe_load((ROOT / 'apps/docker-compose-domain-bridge.yaml').read_text())
     service = compose['services']['microphone-context-bridge']
     assert service['profiles'] == ['demo-microphone-management']
@@ -182,3 +183,11 @@ def test_feature_image_overrides_are_opt_in() -> None:
     compose = (ROOT / 'apps/docker-compose-reasoner.yaml').read_text()
     assert 'gaze_controller_file:=${GAZE_CONTROLLER_FILE:-simple_gaze_controller.xml}' in compose
     assert 'demo_microphone_gaze_controller.xml:ro' in compose
+
+
+def test_reasoner_microphone_settings_survive_container_recreation() -> None:
+    import yaml
+    compose = yaml.safe_load((ROOT / 'apps/docker-compose-reasoner.yaml').read_text())
+    service = compose['services']['reasoner']
+    assert service['environment']['HARU_MICROPHONE_SETTINGS_FILE'] == '/shared/state/microphone_settings.json'
+    assert '../data/reasoner/state:/shared/state:rw' in service['volumes']

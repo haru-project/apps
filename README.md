@@ -823,7 +823,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
 ## Demo microphone management feature
 
-The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru_speech_msgs` 2.1.0 from the matching branch and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
+The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru_speech_msgs` 2.2.0 from the matching branch and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
 
 The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
 
@@ -835,7 +835,7 @@ source envs/demo-microphone-management.env
 set +a
 ```
 
-Then use the normal `scripts/compose.sh` commands. The `demo-microphone-management` Compose profile adds `/haru_agent/microphone_context` from the configured robot domain to the perception domain. The forward bridge includes `/perception/proc/speech/control/state`. `HARU_ROBOT_ROS_DOMAIN_ID` and `HARU_PERCEPTION_ROS_DOMAIN_ID` control both directions. No raw audio or control services cross this bridge.
+Then use the normal `scripts/compose.sh` commands. The `demo-microphone-management` Compose profile adds `/perception/proc/speech/microphone_policy` and `/haru_agent/microphone_management` from the configured robot domain to the perception domain. The forward bridge includes `/perception/proc/speech/control/state`. `HARU_ROBOT_ROS_DOMAIN_ID` and `HARU_PERCEPTION_ROS_DOMAIN_ID` control both directions. No raw audio or control services cross this bridge. Viz routes the standard reasoner settings service directly to the robot domain advertised in the retained management snapshot. Settings persist under `data/reasoner/state`.
 
 The feature setting also selects the mounted gaze-controller XML. It snapshots `GazeControllerSelectionId` before resolving an automatic closest-person target, then publishes `UUID:person_id` on `/haru_agent/selected_participant`. The reasoner rejects responses for an older selection. The selected person must have an explicit microphone assignment in the environment state; missing or ambiguous mappings leave normally enabled microphones open.
 

@@ -37,7 +37,10 @@ services:
       "dev_autostart:=true",
     ]
     env_file: ../envs/reasoner.env
+    environment:
+      HARU_MICROPHONE_SETTINGS_FILE: /shared/state/microphone_settings.json
     volumes:
+      - ../data/reasoner/state:/shared/state:rw
       - ../data/reasoner/configs:/shared/configs:rw
       - ../data/reasoner/tasks:/shared/tasks:rw
     restart: unless-stopped

@@ -1,11 +1,19 @@
-# Robot-owned focus and speaking state controls perception-domain listening.
+# Generic permissions and reasoner-owned UI status; no robot semantics enter speech.
 name: haru_microphone_context_bridge
 from_domain: 0
 to_domain: 200
 
 topics:
-  /haru_agent/microphone_context:
-    type: haru_speech_msgs/msg/MicrophoneContext
+  /perception/proc/speech/microphone_policy:
+    type: haru_speech_msgs/msg/MicrophonePolicy
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /haru_agent/microphone_management:
+    type: std_msgs/msg/String
     qos:
       reliability: reliable
       durability: transient_local
