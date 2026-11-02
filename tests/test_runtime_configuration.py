@@ -141,3 +141,44 @@ def test_stop_enables_every_compose_profile() -> None:
     assert compose_down_lines
     assert all('--profile "*" down' in line for line in compose_down_lines)
     assert "docker system prune" not in stop_script
+
+
+def test_microphone_context_bridge_is_profiled_and_reverses_configurable_domains() -> None:
+    import xml.etree.ElementTree as ET
+    import yaml
+
+    forward = yaml.safe_load((ROOT / 'config/domain_bridge.yaml').read_text())
+    reverse = yaml.safe_load((ROOT / 'config/microphone_context_bridge.yaml').read_text())
+    assert forward['topics']['/perception/proc/speech/control/state']['type'] == 'haru_speech_msgs/msg/SpeechControlState'
+    assert reverse['name'] != forward['name']
+    assert reverse['topics'] == {'/haru_agent/microphone_context': {
+        'type': 'haru_speech_msgs/msg/MicrophoneContext',
+        'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 1},
+    }}
+    compose = yaml.safe_load((ROOT / 'apps/docker-compose-domain-bridge.yaml').read_text())
+    service = compose['services']['microphone-context-bridge']
+    assert service['profiles'] == ['demo-microphone-management']
+    env = service['environment']
+    assert env['FROM_DOMAIN_ID'].startswith('${HARU_ROBOT_ROS_DOMAIN_ID:')
+    assert env['TO_DOMAIN_ID'].startswith('${HARU_PERCEPTION_ROS_DOMAIN_ID:')
+    assert env['DOMAIN_BRIDGE_CONFIG'].endswith('/microphone_context_bridge.yaml')
+
+    tree = ET.parse(ROOT / 'config/behavior_trees/simple_gaze_controller.xml')
+    sequence = tree.find(".//Sequence[@name='GAZE_INDIVIDUAL']")
+    assert sequence is not None
+    assert sequence[0].attrib == {'output_key': 'selection_id', 'value': '$${GazeControllerSelectionId}'}
+    concat = sequence.find("Action[@ID='Concatenate3Strings']")
+    assert concat is not None and concat.attrib['first'] == '{selection_id}'
+    assert concat.attrib['second'] == ':' and concat.attrib['string_3'] == '{track_person_id}'
+    publish = sequence.find("Condition[@ID='PublishAutoStdString']")
+    assert publish is not None and publish.attrib['topic_name'] == '/haru_agent/selected_participant'
+
+
+def test_feature_image_overrides_are_opt_in() -> None:
+    env = (ROOT / 'envs/demo-microphone-management.env').read_text()
+    assert 'COMPOSE_PROFILES=demo-microphone-management' in env
+    assert 'GAZE_CONTROLLER_FILE=demo_microphone_gaze_controller.xml' in env
+    assert env.count(':feature-demo-microphone-management') == 9
+    compose = (ROOT / 'apps/docker-compose-reasoner.yaml').read_text()
+    assert 'gaze_controller_file:=${GAZE_CONTROLLER_FILE:-simple_gaze_controller.xml}' in compose
+    assert 'demo_microphone_gaze_controller.xml:ro' in compose

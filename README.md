@@ -820,3 +820,32 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Demo microphone management feature
+
+The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru_speech_msgs` 2.1.0 from the matching branch and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
+
+The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
+
+After the feature images are available, load the optional overrides into the shell used by the existing launch commands:
+
+```bash
+set -a
+source envs/demo-microphone-management.env
+set +a
+```
+
+Then use the normal `scripts/compose.sh` commands. The `demo-microphone-management` Compose profile adds `/haru_agent/microphone_context` from the configured robot domain to the perception domain. The forward bridge includes `/perception/proc/speech/control/state`. `HARU_ROBOT_ROS_DOMAIN_ID` and `HARU_PERCEPTION_ROS_DOMAIN_ID` control both directions. No raw audio or control services cross this bridge.
+
+The feature setting also selects the mounted gaze-controller XML. It snapshots `GazeControllerSelectionId` before resolving an automatic closest-person target, then publishes `UUID:person_id` on `/haru_agent/selected_participant`. The reasoner rejects responses for an older selection. The selected person must have an explicit microphone assignment in the environment state; missing or ambiguous mappings leave normally enabled microphones open.
+
+In Haru Viz **Microphone Settings**, use **Listen only to selected participant** and **Mute microphones while robot speaks** independently. The latter takes priority while TTS reports robot speech. Switches display server acknowledgements and are read-only during replay. Returning to group attention restores the normal eligible microphones without rewriting saved capture configuration.
+
+Before a live demo, validate both interface allowlists against the selected image:
+
+```bash
+bash scripts/validate_domain_bridge_image.sh config/domain_bridge.yaml
+bash scripts/validate_domain_bridge_image.sh config/microphone_context_bridge.yaml
+```
+
+These commands inspect interface availability; they do not start the demo. Confirm the mounted controller path in the chosen reasoner image, then verify both domain routes and microphone behavior with the demo hardware. Use a fresh shell without the optional overrides to return to normal deployment settings.

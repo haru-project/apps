@@ -12,6 +12,14 @@ from_domain: 200
 to_domain: 0
 
 topics:
+  /perception/proc/speech/control/state:
+    type: haru_speech_msgs/msg/SpeechControlState
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos:

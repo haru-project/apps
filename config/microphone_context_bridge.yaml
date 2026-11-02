@@ -1,0 +1,13 @@
+# Robot-owned focus and speaking state controls perception-domain listening.
+name: haru_microphone_context_bridge
+from_domain: 0
+to_domain: 200
+
+topics:
+  /haru_agent/microphone_context:
+    type: haru_speech_msgs/msg/MicrophoneContext
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1

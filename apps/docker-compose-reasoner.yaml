@@ -10,6 +10,7 @@ services:
       "ros2", "launch", "haru_agent_reasoner", "haru_controllers.launch.py",
       "expressivity_controller_enabled:=${EXPRESSIVITY_CONTROLLER_ENABLED:-true}",
       "gaze_controller_enabled:=${GAZE_CONTROLLER_ENABLED:-true}",
+      "gaze_controller_file:=${GAZE_CONTROLLER_FILE:-simple_gaze_controller.xml}",
       "ipad_students_controller_enabled:=${IPAD_STUDENTS_CONTROLLER_ENABLED:-false}",
       "ipad_teacher_controller_enabled:=${IPAD_TEACHER_CONTROLLER_ENABLED:-false}",
       "unity_controller_enabled:=${UNITY_CONTROLLER_ENABLED:-false}",
@@ -20,6 +21,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../data/session/:/root/.bt_ros:rw
+      - ../config/behavior_trees/simple_gaze_controller.xml:/opt/ros/jazzy/workspace/install/share/behavior_tree_strawberry/bt_palettes/demo_microphone_gaze_controller.xml:ro
     restart: unless-stopped
 
   reasoner:

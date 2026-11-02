@@ -13,7 +13,7 @@
             <Decorator ID="ForEachLoopJson" break_on_child_failure="false" input="{people}" output_element="{person_element}" output_index="{person_idx}">
                 <Sequence>
                     <SubTree ID="BeliefGetPersonDistance" distance="{new_distance}" frame_id="{people_frame_id}" person="{person_element}"/>
-                    <Condition ID="CompareNumbers" comparison_op="<" first="{new_distance}" second="{min_distance}" throws="false"/>
+                    <Condition ID="CompareNumbers" comparison_op="&lt;" first="{new_distance}" second="{min_distance}" throws="false"/>
                     <Action ID="SetBlackboardEut" output_key="min_distance" value="{new_distance}"/>
                     <Action ID="SetBlackboardEut" output_key="closest_person" value="{person_element}"/>
                     <Action ID="SetBlackboardEut" output_key="found_person" value="true"/>
@@ -61,8 +61,9 @@
                         <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value="oscillating_frame"/>
                     </Sequence>
                     <Sequence name="GAZE_INDIVIDUAL">
+                        <SetBlackboard output_key="selection_id" value="$${GazeControllerSelectionId}"/>
                         <IfThenElse>
-                            <Condition ID="CompareStrings" comparison_op="<" first="$${GazeControllerPersonID}" second="1" throws="false"/>
+                            <Condition ID="CompareStrings" comparison_op="&lt;" first="$${GazeControllerPersonID}" second="1" throws="false"/>
                             <Sequence>
                                 <Condition ID="BeliefMonitorPeople" consume_msgs="true" reinit="false" serialized_output="{people}" topic_name="/perception/fusion/persons"/>
                                 <SubTree ID="BeliefGetClosestPerson" closest_person="{closest_person}" people="{people}"/>
@@ -70,6 +71,8 @@
                             </Sequence>
                             <SetBlackboard output_key="track_person_id" value="$${GazeControllerPersonID}"/>
                         </IfThenElse>
+                        <Action ID="Concatenate3Strings" first="{selection_id}" second=":" string_3="{track_person_id}" output="{selected_participant_response}"/>
+                        <Condition ID="PublishAutoStdString" data="{selected_participant_response}" topic_name="/haru_agent/selected_participant"/>
                         <SubTree ID="GazeIndividualSimpleBelief" _autoremap="false" gaze_op="START" person_id="{track_person_id}" track_frame="{track_frame}"/>
                         <Action ID="SetBlackboardEut" output_key="GazeControllerTrackFrame" value="{track_frame}"/>
                     </Sequence>
