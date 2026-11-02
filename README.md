@@ -855,3 +855,10 @@ Default attention is everyone with interruptions allowed. There is no policy lea
 reasoner/network silence does not release attention or microphone restrictions.
 The reasoner explicitly resets attention at conversation teardown. UI health status
 may still heartbeat independently; deploy matching belief/speech/capture behavior.
+
+The feature profile also deploys matching faces/skeletons images for fixed experiment
+membership. `/haru_agent/participant_scope` crosses robot → perception with the
+existing AttentionScope type. Belief retains stable membership, resolves local audio
+and visual filters, and publishes only accepted people/speech back to the robot.
+Deploy Belief, Viz, reasoner and both vision workers together; older vision workers
+can still be filtered by Belief but do not provide the early-processing savings.

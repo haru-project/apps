@@ -159,6 +159,7 @@ def test_microphone_context_bridge_is_profiled_and_reverses_configurable_domains
         'type': 'haru_belief_msgs/msg/AttentionScope',
         'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 1},
     }
+    assert reverse['topics']['/haru_agent/participant_scope'] == reverse['topics']['/haru_agent/attention_scope']
     assert reverse['topics']['/haru_agent/microphone_management']['type'] == 'std_msgs/msg/String'
     assert reverse['topics']['/haru2/tts_status']['type'] == 'haru2_core_msgs/msg/TTSStatus'
     assert reverse['topics']['/haru2/tts_status']['qos']['durability'] == 'volatile'
@@ -185,7 +186,7 @@ def test_feature_image_overrides_are_opt_in() -> None:
     env = (ROOT / 'envs/demo-microphone-management.env').read_text()
     assert 'COMPOSE_PROFILES=demo-microphone-management' in env
     assert 'GAZE_CONTROLLER_FILE=demo_microphone_gaze_controller.xml' in env
-    assert env.count(':feature-demo-microphone-management') == 9
+    assert env.count(':feature-demo-microphone-management') == 11
     compose = (ROOT / 'apps/docker-compose-reasoner.yaml').read_text()
     assert 'gaze_controller_file:=${GAZE_CONTROLLER_FILE:-simple_gaze_controller.xml}' in compose
     assert 'demo_microphone_gaze_controller.xml:ro' in compose
