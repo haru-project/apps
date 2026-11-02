@@ -849,3 +849,9 @@ bash scripts/validate_domain_bridge_image.sh config/microphone_context_bridge.ya
 ```
 
 These commands inspect interface availability; they do not start the demo. Confirm the mounted controller path in the chosen reasoner image, then verify both domain routes and microphone behavior with the demo hardware. Use a fresh shell without the optional overrides to return to normal deployment settings.
+
+Attention configuration is retained until the reasoner explicitly changes it.
+Default attention is everyone with interruptions allowed. There is no policy lease:
+reasoner/network silence does not release attention or microphone restrictions.
+The reasoner explicitly resets attention at conversation teardown. UI health status
+may still heartbeat independently; deploy matching belief/speech/capture behavior.
