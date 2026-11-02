@@ -9,6 +9,7 @@ if [[ ! -f "${CONFIG_PATH}" ]]; then
   echo "Domain bridge config not found: ${CONFIG_PATH}" >&2
   exit 1
 fi
+CONFIG_PATH="$(realpath "${CONFIG_PATH}")"
 
 docker run --rm \
   -v "${CONFIG_PATH}:/config/domain_bridge.yaml:ro" \
