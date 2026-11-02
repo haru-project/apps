@@ -823,7 +823,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
 ## Demo microphone management feature
 
-The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru_speech_msgs` 2.2.0 from the matching branch and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
+The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with the `feature/person-attention-interfaces` source interfaces and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
 
 The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
 
