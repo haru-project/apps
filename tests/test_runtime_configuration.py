@@ -160,6 +160,10 @@ def test_microphone_context_bridge_is_profiled_and_reverses_configurable_domains
         'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 1},
     }
     assert reverse['topics']['/haru_agent/participant_scope'] == reverse['topics']['/haru_agent/attention_scope']
+    assert forward['topics']['/perception/fusion/participant_scope/result'] == {
+        'type': 'haru_belief_msgs/msg/ParticipantScopeResult',
+        'qos': {'reliability': 'reliable', 'durability': 'transient_local', 'history': 'keep_last', 'depth': 10},
+    }
     assert reverse['topics']['/haru_agent/microphone_management']['type'] == 'std_msgs/msg/String'
     assert reverse['topics']['/haru2/tts_status']['type'] == 'haru2_core_msgs/msg/TTSStatus'
     assert reverse['topics']['/haru2/tts_status']['qos']['durability'] == 'volatile'

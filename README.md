@@ -823,7 +823,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
 ## Demo microphone management feature
 
-The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with the `feature/person-attention-interfaces` source interfaces and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
+The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru-belief-msgs` from `release/1.2.0` and the coordinated speech source interfaces and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
 
 The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
 
@@ -862,3 +862,13 @@ existing AttentionScope type. Belief retains stable membership, resolves local a
 and visual filters, and publishes only accepted people/speech back to the robot.
 Deploy Belief, Viz, reasoner and both vision workers together; older vision workers
 can still be filtered by Belief but do not provide the early-processing savings.
+
+
+Participant commands on `/haru_agent/participant_scope` require a unique `request_id`.
+The forward bridge returns `/perception/fusion/participant_scope/result`
+(`haru_belief_msgs/msg/ParticipantScopeResult`, reliable/transient-local/depth 10)
+from perception to the configured robot domain. `accepted=true` confirms Belief
+validated and persisted the roster, not that all downstream workers have converged.
+Rejections include a reason and the unchanged authoritative roster. Build the
+coordinated `release/1.2.0` Belief interfaces into both bridge directions and all
+consumers; the unreleased AttentionScope layout now includes the request ID.

@@ -12,6 +12,14 @@ from_domain: 200
 to_domain: 0
 
 topics:
+  /perception/fusion/participant_scope/result:
+    type: haru_belief_msgs/msg/ParticipantScopeResult
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 10
+
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos:
