@@ -190,7 +190,8 @@ def test_feature_image_overrides_are_opt_in() -> None:
     env = (ROOT / 'envs/demo-microphone-management.env').read_text()
     assert 'COMPOSE_PROFILES=demo-microphone-management' in env
     assert 'GAZE_CONTROLLER_FILE=demo_microphone_gaze_controller.xml' in env
-    assert env.count(':feature-perception-attention') == 12
+    assert env.count(':feature-perception-attention') == 11
+    assert 'PERCEPTION_DOMAIN_BRIDGE_IMAGE=ghcr.io/haru-project/haru-domain-bridge-jazzy:hotfix-perception-attention-interfaces' in env
     assert 'HARU_LLM_IMAGE=ghcr.io/haru-project/haru-llm:feature-perception-attention' in env
     compose = (ROOT / 'apps/docker-compose-reasoner.yaml').read_text()
     assert 'gaze_controller_file:=${GAZE_CONTROLLER_FILE:-simple_gaze_controller.xml}' in compose

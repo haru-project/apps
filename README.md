@@ -823,7 +823,7 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
 ## Demo microphone management feature
 
-The optional `envs/demo-microphone-management.env` selects the coordinated `feature-perception-attention` images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Consumer `.repos` files on `feature/perception-attention` pin the unreleased message contracts below. Keep the three release PRs unmerged until full-cycle testing with these images passes; no APT release is needed to build or run them.
+The optional `envs/demo-microphone-management.env` selects the coordinated `feature-perception-attention` images plus the domain-bridge `hotfix-perception-attention-interfaces` image and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Consumer `.repos` files on `feature/perception-attention` pin the unreleased message contracts below. Keep the three release PRs unmerged until full-cycle testing with these images passes; no APT release is needed to build or run them.
 
 | Source package | Release review | Exact source commit |
 | --- | --- | --- |
@@ -831,9 +831,11 @@ The optional `envs/demo-microphone-management.env` selects the coordinated `feat
 | `haru_speech_msgs` 3.0.0 | [#15](https://github.com/haru-project/haru-speech-msgs/pull/15) | `dca3b9f0b19f83eafecd5431619aa4f15be1dd1f` |
 | `haru_content_msgs` 1.2.0 | [#11](https://github.com/haru-project/haru-content-msgs/pull/11) | `443855af61478a43a29dc637d1c06bd753abb67c` |
 
-Pushes to the consumer feature branches build and publish test images with source overlays, without publishing Debian packages or registering deployments. Reasoner uses all three pins; Belief, Viz and the domain bridge use Belief and Speech; speech and both vision workers use Speech; LLM uses Content. The vision workers also rebuild `strawberry_ros_msgs` at `eb7b6831aeb65b1314ccc6071283479d390126a4` against the pinned speech types, because its `Speech` message embeds them. Rebuilding only one consumer is insufficient.
+Pushes to the consumer feature branches and the domain-bridge `hotfix/perception-attention-interfaces` branch build and publish test images with source overlays, without publishing Debian packages or registering deployments. Reasoner uses all three pins; Belief, Viz and the domain bridge use Belief and Speech; speech and both vision workers use Speech; LLM uses Content. The vision workers also rebuild `strawberry_ros_msgs` at `eb7b6831aeb65b1314ccc6071283479d390126a4` against the pinned speech types, because its `Speech` message embeds them. Rebuilding only one consumer is insufficient.
 
-The image branch tag is mutable. Before testing, pull all coordinated images and record their resolved digests; do not mix older containers with freshly built ones. If the message contract changes during review, update every affected pin and rebuild before repeating full-cycle tests.
+The domain bridge hotfix is based on current `master` and targets `master`; it retains master’s packaging and service-discovery fixes. Its source overlay is enabled only for hotfix testing; master continues to use Apt interfaces. Keep its PR unmerged until the reviewed message interfaces are published to Apt after full-cycle testing.
+
+The image branch tags are mutable. Before testing, pull all coordinated images and record their resolved digests; do not mix older containers with freshly built ones. If the message contract changes during review, update every affected pin and rebuild before repeating full-cycle tests.
 
 The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
 
