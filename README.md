@@ -823,7 +823,17 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
 
 ## Demo microphone management feature
 
-The optional `envs/demo-microphone-management.env` selects the coordinated feature images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Feature images must be built with `haru-belief-msgs` from `release/1.2.0` and the coordinated speech source interfaces and regenerated legacy `strawberry_ros_msgs` type support; rebuilding only one consumer is insufficient.
+The optional `envs/demo-microphone-management.env` selects the coordinated `feature-perception-attention` images and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Consumer `.repos` files on `feature/perception-attention` pin the unreleased message contracts below. Keep the three release PRs unmerged until full-cycle testing with these images passes; no APT release is needed to build or run them.
+
+| Source package | Release review | Exact source commit |
+| --- | --- | --- |
+| `haru_belief_msgs` 1.2.0 | [#16](https://github.com/haru-project/haru-belief-msgs/pull/16) | `89009f80f69cd864f450bdd3061f324303e354f5` |
+| `haru_speech_msgs` 3.0.0 | [#15](https://github.com/haru-project/haru-speech-msgs/pull/15) | `dca3b9f0b19f83eafecd5431619aa4f15be1dd1f` |
+| `haru_content_msgs` 1.2.0 | [#11](https://github.com/haru-project/haru-content-msgs/pull/11) | `443855af61478a43a29dc637d1c06bd753abb67c` |
+
+Pushes to the consumer feature branches build and publish test images with source overlays, without publishing Debian packages or registering deployments. Reasoner uses all three pins; Belief, Viz and the domain bridge use Belief and Speech; speech and both vision workers use Speech; LLM uses Content. The vision workers also rebuild `strawberry_ros_msgs` at `eb7b6831aeb65b1314ccc6071283479d390126a4` against the pinned speech types, because its `Speech` message embeds them. Rebuilding only one consumer is insufficient.
+
+The image branch tag is mutable. Before testing, pull all coordinated images and record their resolved digests; do not mix older containers with freshly built ones. If the message contract changes during review, update every affected pin and rebuild before repeating full-cycle tests.
 
 The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
 
