@@ -892,3 +892,14 @@ matching LLM and reasoner images built with the coordinated content interfaces;
 this makes a generated group decision release individual attention even inside a
 TRACK_PERSON action. Update both images together. Experiment membership and manual
 mutes/ignores are independent of this conversation-attention change.
+
+### Gaze telemetry for robot visualization
+
+The optional attention gaze-controller override tracks individual and group TF frames on
+`/haru2/cmd_track`, without restarting the previous target during a handoff or repeating START
+on each multi-person wait tick. Routine actuator restrictions still update for the current target.
+Point gaze stops existing tracking, then preserves the existing LookAt service controls.
+The coordinated Reasoner image publishes read-only point intent on
+`/haru_agent/commanded_gaze_point` (`geometry_msgs/msg/PointStamped`, reliable/transient-local,
+depth one): `odom` contains the exact LookAt objective, and an empty frame clears it. Belief's
+robot observer reads this directly in the configured robot domain; no reverse bridge route is needed.

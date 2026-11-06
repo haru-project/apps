@@ -204,3 +204,21 @@ def test_reasoner_microphone_settings_survive_container_recreation() -> None:
     service = compose['services']['reasoner']
     assert service['environment']['HARU_MICROPHONE_SETTINGS_FILE'] == '/shared/state/microphone_settings.json'
     assert '../data/reasoner/state:/shared/state:rw' in service['volumes']
+
+
+def test_gaze_controller_tracks_current_targets_and_keeps_point_controls() -> None:
+    import xml.etree.ElementTree as ET
+
+    tree = ET.parse(ROOT / "config/behavior_trees/simple_gaze_controller.xml")
+    controller = tree.find("BehaviorTree[@ID='GazeControllerSimple']")
+    assert controller is not None
+    assert controller.find(".//Sequence[@name='Update Tracking']") is None
+    assert controller.find(".//Sequence[@name='GROUP']/SubTree").attrib['ID'] == 'GazeTrackFrame'
+    point = controller.find(".//Sequence[@name='POINT']")
+    assert [node.attrib['ID'] for node in point] == ['GazeStopTracking', 'HaruLookAtSimple']
+    waiting = controller.find(".//Sequence[@name='GAZE_MULTI_INDIVIDUAL']//ReactiveSequence")
+    assert waiting[0].attrib['ID'] == 'GazeTrackFrame'
+    assert waiting[1].tag == 'Sleep'
+    look_at = tree.find("BehaviorTree[@ID='HaruLookAtSimple']/SubTree")
+    assert look_at.attrib['disable_head'] == '$${GazeControllerDisableHead}'
+    assert look_at.attrib['base_vel_factor'] == '10.0'
