@@ -122,8 +122,11 @@
         <IfThenElse>
             <Condition ID="CompareStrings" comparison_op="==" first="{gaze_op}" second="START" throws="false"/>
             <Sequence>
-                <Action ID="Concatenate4Strings" first="person_" output="{track_frame}" second="{person_id}" string_3="/" string_4="head_frame"/>
-                <SubTree ID="GazeTrackFrame" _autoremap="false" track_frame="{track_frame}"/>
+                <IfThenElse>
+                    <SubTree ID="BeliefResolveGazeFrame" _autoremap="false" person_id="{person_id}" track_frame="{track_frame}"/>
+                    <SubTree ID="GazeTrackFrame" _autoremap="false" track_frame="{track_frame}"/>
+                    <ForceFailure><SubTree ID="GazeStopTracking"/></ForceFailure>
+                </IfThenElse>
             </Sequence>
             <SubTree ID="GazeStopTracking"/>
         </IfThenElse>
@@ -141,6 +144,42 @@
         <SubTree ID="HaruLookAt" __shared_blackboard="false" _autoremap="false" base_vel_factor="10.0" disable_base="$${GazeControllerDisableBase}" disable_eyes="$${GazeControllerDisableEyes}" disable_head="$${GazeControllerDisableHead}" disable_neck="$${GazeControllerDisableNeck}" high="{pos_x}" horizontal="{pos_y}" proximity="{pos_z}"/>
     </BehaviorTree>
     <!-- ////////// -->
+    <BehaviorTree ID="BeliefResolveGazeFrame">
+        <Sequence>
+            <Script code="matches := 0"/>
+            <Action ID="SetBlackboardEut" output_key="track_frame" value=""/>
+            <Condition ID="BeliefMonitorPeople" consume_msgs="false" reinit="false" serialized_output="{people}" topic_name="/perception/fusion/persons"/>
+            <Action ID="AccessJsonField" field="/persons" input="{people}" output="{people}"/>
+            <Decorator ID="ForEachLoopJson" break_on_child_failure="false" input="{people}" output_element="{person}" output_index="{person_index}">
+                <Sequence>
+                    <Action ID="AccessJsonField" field="/detection/person_id" input="{person}" output="{candidate_id}"/>
+                    <Condition ID="CompareStrings" comparison_op="==" first="{candidate_id}" second="{person_id}" throws="false"/>
+                    <Fallback>
+                        <Sequence>
+                            <Action ID="AccessJsonField" field="/pose/head_frame_id" input="{person}" output="{pose_frame}"/>
+                            <Condition ID="CompareStrings" comparison_op="!=" first="{pose_frame}" second="" throws="false"/>
+                        </Sequence>
+                        <Sequence>
+                            <Action ID="AccessJsonField" field="/pose/body_frame_id" input="{person}" output="{pose_frame}"/>
+                            <Condition ID="CompareStrings" comparison_op="!=" first="{pose_frame}" second="" throws="false"/>
+                        </Sequence>
+                    </Fallback>
+                    <Action ID="AccessJsonField" field="/identity/person_key" input="{person}" output="{identity_key}"/>
+                    <IfThenElse>
+                        <Condition ID="CompareStrings" comparison_op="!=" first="{identity_key}" second="" throws="false"/>
+                        <Action ID="Concatenate4Strings" first="person_identity/" second="{identity_key}" string_3="/" string_4="gaze_frame" output="{track_frame}"/>
+                        <Sequence>
+                            <Action ID="AccessJsonField" field="/uuid" input="{person}" output="{track_uuid}"/>
+                            <Condition ID="CompareStrings" comparison_op="!=" first="{track_uuid}" second="" throws="false"/>
+                            <Action ID="Concatenate4Strings" first="person_identity/" second="{track_uuid}" string_3="/" string_4="gaze_frame" output="{track_frame}"/>
+                        </Sequence>
+                    </IfThenElse>
+                    <Script code="matches = matches + 1"/>
+                </Sequence>
+            </Decorator>
+            <Condition ID="CompareNumbers" comparison_op="==" first="{matches}" second="1" throws="false"/>
+        </Sequence>
+    </BehaviorTree>
     <!-- One command per target/restriction change; the robot follows moving TFs itself. -->
     <BehaviorTree ID="GazeTrackFrame">
         <IfThenElse>
@@ -178,6 +217,10 @@
             <input_port name="person">Target person</input_port>
         </SubTree>
         <SubTree ID="GazeControllerSimple" description=""/>
+        <SubTree ID="BeliefResolveGazeFrame">
+            <input_port name="person_id"/>
+            <output_port name="track_frame"/>
+        </SubTree>
         <SubTree ID="GazeGroupSimple" description="">
             <inout_port default="false" name="_autoremap"> Perform autoremap from father blackboard to child blackboard</inout_port>
             <input_port default="0.3" name="frequency"/>
