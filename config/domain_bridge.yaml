@@ -12,6 +12,14 @@ from_domain: 200
 to_domain: 0
 
 topics:
+  /perception/fusion/participant_scope/result:
+    type: haru_belief_msgs/msg/ParticipantScopeResult
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 10
+
   /tf:
     type: tf2_msgs/msg/TFMessage
     qos:
@@ -28,20 +36,6 @@ topics:
       history: keep_last
       depth: 1
 
-  /perception/proc/speech/asr/status_array:
-    type: haru_speech_msgs/msg/SpeechStatusArray
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/proc/speech/asr/result:
-    type: haru_speech_msgs/msg/SpeechToTextResult
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
   /perception/fusion/speech/asr/status_array:
     type: haru_speech_msgs/msg/SpeechStatusArray
     qos:
@@ -51,13 +45,6 @@ topics:
 
   /perception/fusion/speech/asr/result:
     type: haru_speech_msgs/msg/SpeechToTextResult
-    qos:
-      reliability: reliable
-      history: keep_last
-      depth: 10
-
-  /perception/proc/speech/asr/result_revision:
-    type: haru_speech_msgs/msg/SpeechToTextRevision
     qos:
       reliability: reliable
       history: keep_last

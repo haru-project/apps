@@ -820,3 +820,86 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Demo microphone management feature
+
+The optional `envs/demo-microphone-management.env` selects the coordinated `feature-perception-attention` images plus the domain-bridge `hotfix-perception-attention-interfaces` image and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Consumer `.repos` files on `feature/perception-attention` pin the unreleased message contracts below. Keep the three release PRs unmerged until full-cycle testing with these images passes; no APT release is needed to build or run them.
+
+| Source package | Release review | Exact source commit |
+| --- | --- | --- |
+| `haru_belief_msgs` 1.2.0 | [#16](https://github.com/haru-project/haru-belief-msgs/pull/16) | `89009f80f69cd864f450bdd3061f324303e354f5` |
+| `haru_speech_msgs` 3.0.0 | [#15](https://github.com/haru-project/haru-speech-msgs/pull/15) | `dca3b9f0b19f83eafecd5431619aa4f15be1dd1f` |
+| `haru_content_msgs` 1.2.0 | [#11](https://github.com/haru-project/haru-content-msgs/pull/11) | `443855af61478a43a29dc637d1c06bd753abb67c` |
+
+Pushes to the consumer feature branches and the domain-bridge `hotfix/perception-attention-interfaces` branch build and publish test images with source overlays, without publishing Debian packages or registering deployments. Reasoner uses all three pins; Belief, Viz and the domain bridge use Belief and Speech; speech and both vision workers use Speech; LLM uses Content. The vision workers also rebuild `strawberry_ros_msgs` at `eb7b6831aeb65b1314ccc6071283479d390126a4` against the pinned speech types, because its `Speech` message embeds them. Rebuilding only one consumer is insufficient.
+
+The domain bridge hotfix is based on current `master` and targets `master`; it retains master’s packaging and service-discovery fixes. Its source overlay is enabled only for hotfix testing; master continues to use Apt interfaces. Keep its PR unmerged until the reviewed message interfaces are published to Apt after full-cycle testing.
+
+The image branch tags are mutable. Before testing, pull all coordinated images and record their resolved digests; do not mix older containers with freshly built ones. If the message contract changes during review, update every affected pin and rebuild before repeating full-cycle tests.
+
+The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
+
+After the feature images are available, load the optional overrides into the shell used by the existing launch commands:
+
+```bash
+set -a
+source envs/demo-microphone-management.env
+set +a
+```
+
+Then use the normal `scripts/compose.sh` commands. The `demo-microphone-management` Compose profile adds `/haru_agent/attention_scope`, `/haru_agent/microphone_management`, and authoritative `/haru2/tts_status` from the configured robot domain to perception. Belief resolves person IDs and enforces interruption policy there. Microphone policies and effective speech control state stay local to perception; the reasoner receives accepted fused speech. Raw ASR status/results/revisions remain local for perception diagnostics and are not bridged into the robot domain. `HARU_ROBOT_ROS_DOMAIN_ID` and `HARU_PERCEPTION_ROS_DOMAIN_ID` control both directions. No raw audio or control services cross this bridge. Viz routes the standard reasoner settings service directly to the robot domain advertised in the retained management snapshot. Settings persist under `data/reasoner/state`.
+
+The feature setting also selects the mounted gaze-controller XML. It snapshots `GazeControllerSelectionId` before resolving an automatic closest-person target, then publishes `UUID:person_id` on `/haru_agent/selected_participant`. The reasoner rejects responses for an older selection. The selection contains stable belief person keys and survives microphone reassignment. Belief uses environment assignments to restrict known microphone inputs; missing or ambiguous mappings keep inputs available for identity discovery while belief still filters conversational input by the selected people.
+
+In Haru Viz **Microphone Settings**, use **Listen only to selected participant** and **Mute microphones while robot speaks** independently. The latter sets interruption permission in the reasoner attention scope; belief blocks interruptions while TTS reports actual robot speech. Switches display server acknowledgements and are read-only during replay. Returning to group attention restores the normal eligible microphones without rewriting saved capture configuration.
+
+Before a live demo, validate both interface allowlists against the selected image:
+
+```bash
+bash scripts/validate_domain_bridge_image.sh config/domain_bridge.yaml
+bash scripts/validate_domain_bridge_image.sh config/microphone_context_bridge.yaml
+```
+
+These commands inspect interface availability; they do not start the demo. Confirm the mounted controller path in the chosen reasoner image, then verify both domain routes and microphone behavior with the demo hardware. Use a fresh shell without the optional overrides to return to normal deployment settings.
+
+Attention configuration is retained until the reasoner explicitly changes it.
+Default attention is everyone with interruptions allowed. There is no policy lease:
+reasoner/network silence does not release attention or microphone restrictions.
+The reasoner explicitly resets attention at conversation teardown. UI health status
+may still heartbeat independently; deploy matching belief/speech/capture behavior.
+
+The feature profile also deploys matching faces/skeletons images for fixed experiment
+membership. `/haru_agent/participant_scope` crosses robot → perception with the
+existing AttentionScope type. Belief retains stable membership, resolves local audio
+and visual filters, and publishes only accepted people/speech back to the robot.
+Deploy Belief, Viz, reasoner and both vision workers together; older vision workers
+can still be filtered by Belief but do not provide the early-processing savings.
+
+
+Participant commands on `/haru_agent/participant_scope` require a unique `request_id`.
+The forward bridge returns `/perception/fusion/participant_scope/result`
+(`haru_belief_msgs/msg/ParticipantScopeResult`, reliable/transient-local/depth 10)
+from perception to the configured robot domain. `accepted=true` confirms Belief
+validated and persisted the roster, not that all downstream workers have converged.
+Rejections include a reason and the unchanged authoritative roster. Build the
+coordinated `release/1.2.0` Belief interfaces into both bridge directions and all
+consumers; the unreleased AttentionScope layout now includes the request ID.
+
+
+Group engagement generated by the LLM uses the explicit
+`ActionContent.VALUE_TYPE_GAZE_GROUP` content marker. The feature profile selects
+matching LLM and reasoner images built with the coordinated content interfaces;
+this makes a generated group decision release individual attention even inside a
+TRACK_PERSON action. Update both images together. Experiment membership and manual
+mutes/ignores are independent of this conversation-attention change.
+
+### Gaze telemetry for robot visualization
+
+The optional attention gaze-controller override tracks individual and group TF frames on
+`/haru2/cmd_track`, without restarting the previous target during a handoff or repeating START
+on each multi-person wait tick. Routine actuator restrictions still update for the current target.
+Point gaze stops existing tracking, then preserves the existing LookAt service controls.
+The coordinated Reasoner image publishes read-only point intent on
+`/haru_agent/commanded_gaze_point` (`geometry_msgs/msg/PointStamped`, reliable/transient-local,
+depth one): `odom` contains the exact LookAt objective, and an empty frame clears it. Belief's
+robot observer reads this directly in the configured robot domain; no reverse bridge route is needed.

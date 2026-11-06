@@ -7,6 +7,12 @@ services:
       file: docker-compose-domain-bridge.yaml
       service: domain-bridge
 
+  microphone-context-bridge:
+    extends:
+      file: docker-compose-domain-bridge.yaml
+      service: microphone-context-bridge
+    profiles: ["demo-microphone-management"]
+
   # Perception layer
   azure-kinect:
     extends:

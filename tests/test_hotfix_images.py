@@ -13,7 +13,7 @@ STRAWBERRY_TTS_IMAGE = (
     "sha256:b821969db29250c0b3cb8ed5800d89222c1ee24cdec70591cc3380d406301daa"
 )
 REASONER_IMAGE = (
-    "ghcr.io/haru-project/haru-agent-reasoner:feature-dynamic_group_gaze"
+    "ghcr.io/haru-project/haru-agent-reasoner:demo-jiyugaoka_deployment"
 )
 STRAWBERRY_TTS_API_IMAGE = (
     "ghcr.io/haru-project/strawberry-tts-api:v0.3.2-cu126"
@@ -64,15 +64,27 @@ def test_strawberry_services_use_validated_hotfix_digest(service: str) -> None:
     "service",
     ("bt-forest", "reasoner", "context-manager", "execute-task-scenario", "execute-task-test"),
 )
-def test_reasoner_services_use_dynamic_group_gaze_image(service: str) -> None:
+@pytest.mark.parametrize(
+    ("env_file", "expected_image"),
+    (
+        ("envs/reasoner.env", REASONER_IMAGE),
+        (
+            "envs/demo-microphone-management.env",
+            "ghcr.io/haru-project/haru-agent-reasoner:feature-perception-attention",
+        ),
+    ),
+)
+def test_reasoner_services_share_default_or_feature_image(
+    service: str, env_file: str, expected_image: str
+) -> None:
     assert (
         compose_image(
             "apps/docker-compose-reasoner.yaml",
-            "envs/reasoner.env",
+            env_file,
             service,
             profile="*",
         )
-        == REASONER_IMAGE
+        == expected_image
     )
 
 
