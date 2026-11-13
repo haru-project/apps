@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -17,11 +19,15 @@ def _load_trim_function():
 
 
 def test_canonical_model_is_bedrock_mantle() -> None:
-    config = (ROOT / "config/llm/litellm_server.yaml").read_text(encoding="utf-8")
-    assert "model_name: haru:canonical" in config
-    assert "model: bedrock_mantle/google.gemma-4-26b-a4b" in config
-    assert "api_key: os.environ/BEDROCK_MANTLE_API_KEY" in config
-    assert "langfuse" not in config
+    config = yaml.safe_load((ROOT / "config/llm/litellm_server.yaml").read_text(encoding="utf-8"))
+    canonical = [model for model in config["model_list"]
+                 if model["model_name"] == "haru:canonical"]
+    assert len(canonical) == 1
+    params = canonical[0]["litellm_params"]
+    assert params["model"] == "bedrock_mantle/google.gemma-4-26b-a4b"
+    assert params["api_key"] == "os.environ/BEDROCK_MANTLE_API_KEY"
+    assert "api_base" not in params
+    assert "langfuse" not in str(config)
 
 
 def test_post_fix_trims_only_trailing_json_junk() -> None:
