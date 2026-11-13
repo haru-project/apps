@@ -1,2 +1,7 @@
 data
 envs/*.secrets.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class

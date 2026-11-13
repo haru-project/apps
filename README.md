@@ -157,14 +157,17 @@ It’s made up of several Docker images that work together.
 
 To install it, run:
 ```bash
-docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:latest
-docker pull ghcr.io/haru-project/strawberry-ros-skeletons:latest
-docker pull ghcr.io/haru-project/strawberry-ros-faces-module:latest
-docker pull ghcr.io/haru-project/strawberry-ros-hands:latest
-docker pull ghcr.io/haru-project/strawberry-ros-people:latest
-docker pull ghcr.io/haru-project/strawberry-ros-visualization:latest
-docker pull ghcr.io/haru-project/strawberry-resource-monitor:latest
-docker pull ghcr.io/haru-project/haru-speech:ros2
+docker pull ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
+docker pull ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-belief:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-viz:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
+docker pull ghcr.io/haru-project/haru-speech-base:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-speech-audio:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-speech-recognition:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-speech-verification:feature-asr-improve
+docker pull ghcr.io/haru-project/haru-speech-localization:feature-asr-improve
 docker pull ghcr.io/haru-project/haru-llm:feature-eval-test
 docker pull ghcr.io/haru-project/haru-agent-reasoner:feature-web-projector
 docker pull ghcr.io/haru-project/strawberry-tts-api:latest
@@ -175,7 +178,7 @@ docker pull ghcr.io/haru-project/haru-web-projector:latest
 
 ## Run Applications
 
-Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time.
+Each application has a **download data** step (e.g., `bash scripts/download_*_data.sh`). These scripts extract default configuration files from the Docker images onto your host filesystem (into the `data/` directory). This allows you to **review and edit configuration files before launching the containers** — for example, changing microphone settings, LLM model endpoints, or ROS parameters. You should run these scripts at least once before starting each application for the first time. The Agent Memory downloader also aligns the copied Weaviate host and ports with the rendered Compose service so the mounted YAML cannot override the runtime connection settings with stale defaults.
 
 If you want to refresh every bundle in one shot, run `bash scripts/download_all_data.sh`. That wrapper runs each download script in sequence, removes the existing `data/` tree before copying, and leaves the final permissions in the state that the downstream services expect.
 
@@ -185,6 +188,31 @@ We recommend using the helper script `scripts/compose.sh` for all stacks. It aut
 To quickly validate all compose files, run:
 ```bash
 bash scripts/validate_compose.sh
+```
+
+### Perception image matrix
+
+The default perception stack follows the branch and tag image lines used by this deployment:
+
+```text
+azure-kinect      ghcr.io/haru-project/strawberry-ros-azure-kinect:feature-asr-improve
+skeletons         ghcr.io/haru-project/strawberry-ros-skeletons:feature-asr-improve
+faces             ghcr.io/haru-project/strawberry-ros-faces-module:feature-asr-improve
+belief            ghcr.io/haru-project/haru-belief:feature-asr-improve
+viz               ghcr.io/haru-project/haru-viz:feature-asr-improve
+domain-bridge     ghcr.io/haru-project/haru-domain-bridge-jazzy:latest
+```
+
+Override any service image with `*_IMAGE=...` in `envs/perception.env` or the shell environment when you need a different tested tag or an immutable digest.
+
+`domain-bridge` uses a dedicated prebuilt image. This `apps` repository mounts `config/domain_bridge.yaml` and can validate that the published image contains the interfaces referenced by that config. The `scripts/compose.sh` helper starts the dedicated bridge project before standalone `perception` or `speech` stacks. The all-in-one stack owns its embedded bridge directly, which prevents a second Compose project from duplicating it. Image construction and branch-sensitive message overlays belong in `haru-project/haru-domain-bridge`, which publishes `ghcr.io/haru-project/haru-domain-bridge-jazzy`. Override `PERCEPTION_DOMAIN_BRIDGE_IMAGE` in `envs/domain-bridge.env` or the shell environment when testing a new bridge image tag or digest.
+
+The `belief` and `viz` services should publish image-level healthchecks through `ros2-ci` using `healthcheck-nodes`, `healthcheck-topics`, and `healthcheck-services`. The perception compose file relies on those image healthchecks rather than maintaining repo-local overrides.
+
+Perception model downloads are persisted outside container writable layers. Skeleton models mount at `~/haru-perception-cache/skeletons/models`; faces data, InsightFace cache, and recognition artifacts mount under `apps/data/perception` through `FACES_DATA_ROOT=/ros/strawberry_ros_faces_module`. To migrate existing local caches from older `.ros` paths without deleting the originals, run:
+
+```bash
+bash scripts/migrate_runtime_caches.sh
 ```
 
 ### All-in-one compose (single file)
@@ -198,6 +226,116 @@ This uses `envs/all.env` for compose-time variables. Optional services still res
 ```bash
 bash scripts/compose.sh all --profile tts --profile webui up --force-recreate -d
 ```
+
+### Isolated perception ROS domain
+
+This branch keeps the `/perception/...` namespace in the perception ROS domain
+by default. Camera, image-processing, speech, audio capture, belief, haru-viz,
+and the integrated recorder use `HARU_PERCEPTION_ROS_DOMAIN_ID` (default `200`).
+Robot/application services outside `/perception` continue to use
+`HARU_ROBOT_ROS_DOMAIN_ID` / `ROS_DOMAIN_ID` (default `0`).
+
+Set the robot domain once when a deployment does not use domain `0`; every
+standalone robot-side stack and the bridge target will inherit it:
+
+```bash
+HARU_ROBOT_ROS_DOMAIN_ID=26 ./start.sh
+```
+
+Start the perception stack with:
+
+```bash
+bash scripts/compose.sh perception up --force-recreate -d
+```
+
+For the full belief-fusion integration path that mirrors
+`perception_testing belief_fusion_isolated.launch.py`, also start the dedicated
+speech stack:
+
+```bash
+bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
+```
+
+For graph parity checks against the source launch, disable the apps domain
+bridge auto-start for both commands:
+
+```bash
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=false bash scripts/compose.sh perception up --force-recreate -d
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=false bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
+```
+
+or the combined stack with:
+
+```bash
+bash scripts/compose.sh all up --force-recreate -d
+```
+
+The `domain-bridge` container is the only default bridge between the
+perception and robot/application domains. It mirrors selected low-bandwidth
+speech and belief outputs from domain `200` into the configured robot domain for
+robot-domain consumers. It runs in its own compose project and is started
+automatically by `scripts/compose.sh perception up`, `scripts/compose.sh speech
+up`; the all-in-one stack embeds the same bridge. Docker networking is unchanged.
+The Azure Kinect container mounts only USB devices by default; `/dev/snd` stays
+with the speech stack so the Kinect microphone array is captured by
+`haru-speech`, not by the camera driver.
+
+`/perception/fusion/persons` is bridged directly on its canonical name using its
+reliable, volatile, keep-last depth 1 contract. No robot-domain QoS adapter is
+required.
+
+The bridge allowlist is tracked in `config/domain_bridge.yaml`.
+The topic bridge allowlist bridges only low-bandwidth topics:
+
+- perception domain `200` -> robot domain `0`:
+  `/perception/proc/speech/asr/status_array`,
+  `/perception/proc/speech/asr/result`,
+  `/perception/proc/speech/asr/result_revision`,
+  `/perception/proc/speech/localization`,
+  `/tf`,
+  `/tf_static`,
+  `/perception/fusion/persons`,
+  `/perception/fusion/speech_sources`,
+  `/perception/fusion/context`,
+  `/perception/fusion/robot`,
+  `/perception/fusion/things`,
+  `/perception/fusion/things/tf`,
+  `/perception/fusion/environment`, and `/strawberry/people`
+
+It does not bridge raw Kinect, image, depth, ffmpeg, zdepth, raw audio, speech
+services, belief services, or debug image topics. TF is bridged so
+robot-domain `agent_reasoner` can resolve perception head frames for fusion
+gazing.
+
+Validation commands:
+
+```bash
+# Existing robot/application domain should not see raw perception image topics.
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic list | rg '/perception/sensor/camera/kinect/.*/(rgb|depth|ir)|ffmpeg|zdepth|depth_to_rgb'
+
+# Existing domain should see only the selected low-bandwidth outputs mirrored back.
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/proc/speech/asr/status_array
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/proc/speech/asr/result
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic info /tf
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic info /tf_static
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /perception/fusion/environment
+ROS_DOMAIN_ID=${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}} ros2 topic echo --once /strawberry/people
+
+# Perception domain should own speech, belief, camera, and audio topics.
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/proc/speech/asr/status_array
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/proc/speech/asr/result
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/fusion/persons
+ROS_DOMAIN_ID=${HARU_PERCEPTION_ROS_DOMAIN_ID:-200} ros2 topic echo --once /perception/sensor/audio/capture/state
+```
+
+The first command should produce no matches.
+
+### Perception recording
+
+Recording and playback are managed by the `viz` service. Use the recorder
+controls in the haru-viz browser UI rather than launching a standalone
+`haru-recorder` compose stack.
 
 ### Haru Simulator (HS)
 
@@ -317,15 +455,13 @@ We recommend starting them **one at a time** so you can confirm each one runs co
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh perception up azure-kinect skeletons faces hands people visualization --force-recreate -d
+    bash scripts/compose.sh perception up azure-kinect skeletons faces belief viz --force-recreate -d
     ```
 
     **Expected output**:
-    - An RViz window appears showing:
-        - Live camera feed
-        - Detected skeletons and tracking markers
-
-    **Related repositories for debug**: [strawberry-ros-people](https://github.com/haru-project/strawberry-ros-people/tree/ros2)
+    - Perception, fusion, visualization, and recording services come up on their configured perception tags
+    - The haru-viz web UI is reachable at `http://127.0.0.1:5173`
+    - The native bridge stays co-located with the `viz` service and continues using ports `9090`, `9091`, `9092`, and `9093`
 
 2. Speech layer
 
@@ -336,32 +472,27 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/download_speech_data.sh
     ```
 
-    **Download/Clear models (mandatory before first start)**:
-
-    > **Important:** You **must** download the speech models before starting the speech layer for the first time. Without this step, the `recognition` container will crash on startup.
-
-    ```bash
-    bash scripts/compose.sh speech --profile setup up download-models --force-recreate
-    ```
-
-    To clear and re-download models:
-    ```bash
-    bash scripts/compose.sh speech --profile setup up clear-models --force-recreate
-    ```
+    This also provisions the ReDimNet speaker-verification model into
+    `~/haru-speech-cache/models`. Keep that cache between launches: the
+    verification container mounts it at `/shared/models`, so it starts without
+    downloading model weights from GitHub.
 
     > **Configuration note:**
     > You can change the containers configuration in the `envs/speech.env`.
-    > You can change the ROS nodes configuration in the `data/configs/haru_speech.yaml`.
+    > You can change the ROS nodes configuration in the `data/speech/configs/haru_speech.yaml`.
 
     > **Microphone selection and setup:**
-    > By default, the audio node auto-detects an available microphone (e.g., Azure Kinect Microphone Array), which may not be the device you intend to use.
-    > To select a specific microphone, run `arecord -l` on your host to list available capture devices, then update the `audio.device` parameter in `data/speech/configs/haru_speech.yaml` to match the desired device name (e.g., `ZOOM H8`).
+    > The Zoom H8 source should be activity-gated (`detect_active_channels: true` and `process_active_channels_only: true`), and Kinect should be disabled unless you are explicitly testing its array features. Run `arecord -l` on the host to confirm the device names, then update `data/speech/configs/haru_speech.yaml` if your hardware differs.
     > If you are using a H6/H8/H12 recorder as your microphone input, make sure to set it to **Multi Track mode** on the device itself before connecting it to your computer. This ensures all input channels are available to the system.
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
+    bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
     ```
+
+    The compose helper automatically starts the dedicated `domain-bridge` stack
+    first, so speech can mirror low-bandwidth outputs back to the
+    robot/application domain even when the perception stack is not running.
 
     **LifeCycle commands**:
     Currently, the Speech layers are started (configure + activate) automatically by setting the `dev_autostart:=true` parameter.
@@ -385,34 +516,46 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     > **Configuration note:**
     > `envs/llm.env` is the non-secret source of truth for config.
     > Secrets (API keys, tokens) live in `envs/llm.secrets.env` (untracked).
-    > You can change the LLM server configuration in `data/llm/configs/litellm_server.yaml`.
+    > The canonical LiteLLM mapping is tracked in `config/llm/litellm_server.yaml`
+    > and mounted read-only.
     > You can change the ROS nodes configuration in `data/llm/configs/haru_llm.yaml`.
     > You can change agent configs (prompts, settings) in `data/llm/agents/`.
 
-    > **Setting up API keys (required for cloud models):**
-    > The default configuration uses cloud-hosted models. To use them, you need to provide your API keys:
-    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`
-    > 2. Fill in your API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `HF_TOKEN`)
+    > **Canonical Bedrock Mantle model:**
+    > All agents use the stable `haru:canonical` alias. By default it maps to
+    > Gemma 4 26B on Bedrock Mantle in the region selected by
+    > `BEDROCK_MANTLE_REGION`.
     >
-    > You can change which model each agent uses by editing the `*_MODEL_ID` variables in `envs/llm.env`. The model names must match entries defined in `data/llm/configs/litellm_server.yaml`.
+    > 1. Copy `envs/llm.secrets.env.example` to `envs/llm.secrets.env`.
+    > 2. Set `BEDROCK_MANTLE_API_KEY`.
+    >
+    > The configurator can generate an alternate local mapping for OpenAI,
+    > Anthropic, or a custom OpenAI-compatible endpoint without changing agent
+    > model identifiers.
     >
     > **Using local/self-hosted models:**
-    > If you want to run your own model server (e.g., vLLM, Ollama), add a new model entry to `data/llm/configs/litellm_server.yaml`:
+    > Add or generate a local LiteLLM mapping that preserves the
+    > `haru:canonical` alias:
     > ```yaml
-    > - model_name: custom-model
+    > - model_name: haru:canonical
     >   litellm_params:
     >     model: <provider>/<model-name>
     >     api_base: http://<server-host>:<server-port>/v1
+    >     api_key: "dummy-key"
+
     > ```
-    > Then set the corresponding `*_MODEL_ID` in `envs/llm.env` to `custom-model`.
     > For a full list of supported providers and configuration options, see the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers).
 
     **Start command**:
     ```bash
-    bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
+    bash scripts/compose.sh llm up action-args --force-recreate -d
     ```
 
     **Optional profiles**:
+    - Dashboard:
+      ```bash
+      bash scripts/compose.sh llm --profile dashboard up dashboard --force-recreate -d
+      ```
     - Web UI:
       ```bash
       bash scripts/compose.sh llm --profile webui up webui --force-recreate -d
@@ -429,7 +572,7 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     - Container logs on the `action-args` service confirm:
         - LLM agents are initialized
         - Models are successfully loaded from the server
-    - LLM Dashboard is running at: http://127.0.0.1:8501
+    - LLM Dashboard is running at http://127.0.0.1:8501 only when its profile is started
     - LLM server is running at: http://127.0.0.1:4050
     - LLM Web UI is running at: http://127.0.0.1:8080 (only if the `webui` profile is started)
 
@@ -516,10 +659,15 @@ We recommend starting them **one at a time** so you can confirm each one runs co
     bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
     ```
 
-    **Optional ROS bridge**:
+    **Required ROS bridge for expressive scenarios**:
     ```bash
     bash scripts/compose.sh tts --profile tts --profile ros up ros-node --force-recreate -d
     ```
+
+    > The bridge provides `/strawberry/retrieve_tts_generation`. Without it,
+    > expressive audio may be generated but cannot be retrieved by the reasoner.
+    > Keep this container healthy before starting an expressive scenario.
+    >
 
     > **Configuration note:**  
     > You can change the containers configuration in the `envs/tts.env`.
@@ -672,3 +820,86 @@ Sometimes, you may need to adjust your settings if things don’t work as expect
     ```
     Replace `<container_name>` with the name of your running container (you check running containers with `docker ps`).
     The logs will often include warnings or error messages you can use for troubleshooting.
+
+## Demo microphone management feature
+
+The optional `envs/demo-microphone-management.env` selects the coordinated `feature-perception-attention` images plus the domain-bridge `hotfix-perception-attention-interfaces` image and enables the reverse microphone-context bridge. Default deployment image settings stay unchanged. Consumer `.repos` files on `feature/perception-attention` pin the unreleased message contracts below. Keep the three release PRs unmerged until full-cycle testing with these images passes; no APT release is needed to build or run them.
+
+| Source package | Release review | Exact source commit |
+| --- | --- | --- |
+| `haru_belief_msgs` 1.2.0 | [#16](https://github.com/haru-project/haru-belief-msgs/pull/16) | `89009f80f69cd864f450bdd3061f324303e354f5` |
+| `haru_speech_msgs` 3.0.0 | [#15](https://github.com/haru-project/haru-speech-msgs/pull/15) | `dca3b9f0b19f83eafecd5431619aa4f15be1dd1f` |
+| `haru_content_msgs` 1.2.0 | [#11](https://github.com/haru-project/haru-content-msgs/pull/11) | `443855af61478a43a29dc637d1c06bd753abb67c` |
+
+Pushes to the consumer feature branches and the domain-bridge `hotfix/perception-attention-interfaces` branch build and publish test images with source overlays, without publishing Debian packages or registering deployments. Reasoner uses all three pins; Belief, Viz and the domain bridge use Belief and Speech; speech and both vision workers use Speech; LLM uses Content. The vision workers also rebuild `strawberry_ros_msgs` at `eb7b6831aeb65b1314ccc6071283479d390126a4` against the pinned speech types, because its `Speech` message embeds them. Rebuilding only one consumer is insufficient.
+
+The domain bridge hotfix is based on current `master` and targets `master`; it retains master’s packaging and service-discovery fixes. Its source overlay is enabled only for hotfix testing; master continues to use Apt interfaces. Keep its PR unmerged until the reviewed message interfaces are published to Apt after full-cycle testing.
+
+The image branch tags are mutable. Before testing, pull all coordinated images and record their resolved digests; do not mix older containers with freshly built ones. If the message contract changes during review, update every affected pin and rebuild before repeating full-cycle tests.
+
+The coordinated reasoner feature image starts from `feature/showcase-demo`, as recorded in the workspace's `bases.json`; it is selected explicitly by the optional override rather than changing the normal demo image tag.
+
+After the feature images are available, load the optional overrides into the shell used by the existing launch commands:
+
+```bash
+set -a
+source envs/demo-microphone-management.env
+set +a
+```
+
+Then use the normal `scripts/compose.sh` commands. The `demo-microphone-management` Compose profile adds `/haru_agent/attention_scope`, `/haru_agent/microphone_management`, and authoritative `/haru2/tts_status` from the configured robot domain to perception. Belief resolves person IDs and enforces interruption policy there. Microphone policies and effective speech control state stay local to perception; the reasoner receives accepted fused speech. Raw ASR status/results/revisions remain local for perception diagnostics and are not bridged into the robot domain. `HARU_ROBOT_ROS_DOMAIN_ID` and `HARU_PERCEPTION_ROS_DOMAIN_ID` control both directions. No raw audio or control services cross this bridge. Viz routes the standard reasoner settings service directly to the robot domain advertised in the retained management snapshot. Settings persist under `data/reasoner/state`.
+
+The feature setting also selects the mounted gaze-controller XML. It snapshots `GazeControllerSelectionId` before resolving an automatic closest-person target, then publishes `UUID:person_id` on `/haru_agent/selected_participant`. The reasoner rejects responses for an older selection. The selection contains stable belief person keys and survives microphone reassignment. Belief uses environment assignments to restrict known microphone inputs; missing or ambiguous mappings keep inputs available for identity discovery while belief still filters conversational input by the selected people.
+
+In Haru Viz **Microphone Settings**, use **Listen only to selected participant** and **Mute microphones while robot speaks** independently. The latter sets interruption permission in the reasoner attention scope; belief blocks interruptions while TTS reports actual robot speech. Switches display server acknowledgements and are read-only during replay. Returning to group attention restores the normal eligible microphones without rewriting saved capture configuration.
+
+Before a live demo, validate both interface allowlists against the selected image:
+
+```bash
+bash scripts/validate_domain_bridge_image.sh config/domain_bridge.yaml
+bash scripts/validate_domain_bridge_image.sh config/microphone_context_bridge.yaml
+```
+
+These commands inspect interface availability; they do not start the demo. Confirm the mounted controller path in the chosen reasoner image, then verify both domain routes and microphone behavior with the demo hardware. Use a fresh shell without the optional overrides to return to normal deployment settings.
+
+Attention configuration is retained until the reasoner explicitly changes it.
+Default attention is everyone with interruptions allowed. There is no policy lease:
+reasoner/network silence does not release attention or microphone restrictions.
+The reasoner explicitly resets attention at conversation teardown. UI health status
+may still heartbeat independently; deploy matching belief/speech/capture behavior.
+
+The feature profile also deploys matching faces/skeletons images for fixed experiment
+membership. `/haru_agent/participant_scope` crosses robot → perception with the
+existing AttentionScope type. Belief retains stable membership, resolves local audio
+and visual filters, and publishes only accepted people/speech back to the robot.
+Deploy Belief, Viz, reasoner and both vision workers together; older vision workers
+can still be filtered by Belief but do not provide the early-processing savings.
+
+
+Participant commands on `/haru_agent/participant_scope` require a unique `request_id`.
+The forward bridge returns `/perception/fusion/participant_scope/result`
+(`haru_belief_msgs/msg/ParticipantScopeResult`, reliable/transient-local/depth 10)
+from perception to the configured robot domain. `accepted=true` confirms Belief
+validated and persisted the roster, not that all downstream workers have converged.
+Rejections include a reason and the unchanged authoritative roster. Build the
+coordinated `release/1.2.0` Belief interfaces into both bridge directions and all
+consumers; the unreleased AttentionScope layout now includes the request ID.
+
+
+Group engagement generated by the LLM uses the explicit
+`ActionContent.VALUE_TYPE_GAZE_GROUP` content marker. The feature profile selects
+matching LLM and reasoner images built with the coordinated content interfaces;
+this makes a generated group decision release individual attention even inside a
+TRACK_PERSON action. Update both images together. Experiment membership and manual
+mutes/ignores are independent of this conversation-attention change.
+
+### Gaze telemetry for robot visualization
+
+The optional attention gaze-controller override tracks individual and group TF frames on
+`/haru2/cmd_track`, without restarting the previous target during a handoff or repeating START
+on each multi-person wait tick. Routine actuator restrictions still update for the current target.
+Point gaze stops existing tracking, then preserves the existing LookAt service controls.
+The coordinated Reasoner image publishes read-only point intent on
+`/haru_agent/commanded_gaze_point` (`geometry_msgs/msg/PointStamped`, reliable/transient-local,
+depth one): `odom` contains the exact LookAt objective, and an empty frame clears it. Belief's
+robot observer reads this directly in the configured robot domain; no reverse bridge route is needed.

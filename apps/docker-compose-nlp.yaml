@@ -1,0 +1,78 @@
+name: haru-nlp
+
+services:
+  redis:
+    image: redis:7-alpine
+    environment:
+      REDIS_ARGS: "--appendonly no"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 50
+    profiles: ["cpu", "gpu"]
+
+  haru-nlp-server-cpu:
+    extends:
+      file: compose.common.yaml
+      service: common-service
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
+    env_file:
+      - ../envs/nlp-cpu.env
+    environment:
+      HARU_NLP_SERVER_HOST: "0.0.0.0"
+      HARU_NLP_SERVER_GPU_ENABLED: "false"
+      HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
+      HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
+      HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
+      HARU_NLP_SERVER_WORKERS_COUNT: "1"
+      HARU_NLP_SERVER_RELOAD: "false"
+      HARU_NLP_HOME: /models
+      HARU_NLP_SERVER_REDIS_HOST: redis
+    volumes:
+      - ../data/nlp/models:/models
+    ports:
+      - "${HARU_NLP_SERVER_HOST_PORT:-6565}:6565"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6565), 2).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    profiles: ["cpu"]
+
+  haru-nlp-server-gpu:
+    extends:
+      file: compose.common.yaml
+      service: common-gpu
+    image: ${HARU_NLP_SERVER_IMAGE:-ghcr.io/haru-project/haru-nlp-server:latest}
+    env_file:
+      - ../envs/nlp-gpu.env
+    environment:
+      HARU_NLP_SERVER_HOST: "0.0.0.0"
+      HARU_NLP_SERVER_GPU_ENABLED: "true"
+      HARU_NLP_SERVER_ENABLED_LANGUAGES: '["en"]'
+      HARU_NLP_SERVER_ENABLED_TASKS: '["emotion_classification"]'
+      HARU_NLP_SERVER_DOWNLOAD_MODELS: "false"
+      HARU_NLP_SERVER_WORKERS_COUNT: "1"
+      HARU_NLP_SERVER_RELOAD: "false"
+      HARU_NLP_HOME: /models
+      HARU_NLP_SERVER_REDIS_HOST: redis
+    volumes:
+      - ../data/nlp/models:/models
+      - ../data/nlp/nltk_data:/root/nltk_data
+    ports:
+      - "${HARU_NLP_SERVER_HOST_PORT:-6565}:6565"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6565), 2).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    profiles: ["gpu"]

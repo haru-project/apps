@@ -9,6 +9,8 @@ DOWNLOAD_SCRIPTS=(
     download_reasoner_data.sh
     download_simulator_data.sh
     download_tts_data.sh
+    download_memory_data.sh
+    download_nlp_data.sh
 )
 
 echo "Refreshing all data bundles (this will overwrite existing data/ directories)."

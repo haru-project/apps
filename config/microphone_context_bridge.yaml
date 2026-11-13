@@ -1,0 +1,37 @@
+# Person-level attention and playback status enter belief; audio permissions stay in perception.
+name: haru_microphone_context_bridge
+from_domain: 0
+to_domain: 200
+
+topics:
+  /haru_agent/attention_scope:
+    type: haru_belief_msgs/msg/AttentionScope
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /haru_agent/participant_scope:
+    type: haru_belief_msgs/msg/AttentionScope
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /haru_agent/microphone_management:
+    type: std_msgs/msg/String
+    qos:
+      reliability: reliable
+      durability: transient_local
+      history: keep_last
+      depth: 1
+
+  /haru2/tts_status:
+    type: haru2_core_msgs/msg/TTSStatus
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10

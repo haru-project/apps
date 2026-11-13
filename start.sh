@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Keep every standalone robot-side stack on one configurable ROS domain. The
+# HARU-specific name is canonical; ROS_DOMAIN_ID remains a compatible fallback.
+export HARU_ROBOT_ROS_DOMAIN_ID="${HARU_ROBOT_ROS_DOMAIN_ID:-${ROS_DOMAIN_ID:-0}}"
+
 # Prevent double-starting stacks on the same host.
 require_stack_down() {
   local stack="$1"
@@ -55,24 +59,38 @@ require_stack_down perception
 require_stack_down speech
 require_stack_down llm
 require_stack_down reasoner
+require_stack_down timeline-player
 
 # Ipad services
-bash scripts/compose.sh ipad up server --force-recreate -d
+# bash scripts/compose.sh ipad up server --force-recreate -d
 
 # Projector services
-bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
+# bash scripts/compose.sh simulator up unity-app web-server --force-recreate -d
 
-# TTS services
-bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client --force-recreate -d
+echo "===== [1/7] TTS ====="
+bash scripts/compose.sh tts --profile tts up gpt-sovits cerevoice-api tts-client ros-node --force-recreate -d
 
-# Perception services
-bash scripts/compose.sh perception up azure-kinect faces hands people visualization --force-recreate -d
+echo "===== [2/7] Perception ====="
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh perception up --force-recreate -d
 
-# Speech services
-bash scripts/compose.sh speech up audio configure recognition verification --force-recreate -d
+echo "===== [3/7] Speech ====="
+HARU_COMPOSE_AUTO_DOMAIN_BRIDGE=true bash scripts/compose.sh speech up audio recognition verification localization --force-recreate -d
 
-# LLM services
+# Haru NLP services
+# bash scripts/compose.sh nlp --profile cpu up --force-recreate -d
+# bash scripts/compose.sh nlp --profile gpu up --force-recreate -d
+
+echo "===== [4/7] Timeline Player ====="
+bash scripts/compose.sh timeline-player up --force-recreate -d
+
+echo "===== [5/7] LLM ====="
 bash scripts/compose.sh llm up action-args dashboard --force-recreate -d
 
-# Reasoner services
+echo "===== [6/7] Memory ====="
+bash scripts/compose.sh memory up --force-recreate -d
+
+echo "===== [7/7] Reasoner ====="
 bash scripts/compose.sh reasoner up bt-forest --force-recreate -d
+
+echo "===== All stacks up and healthy ====="
+

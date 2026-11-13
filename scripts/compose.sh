@@ -7,54 +7,89 @@ APPS_DIR="${ROOT_DIR}/apps"
 stack="${1:-}"
 if [[ -z "${stack}" ]]; then
     echo "Usage: $(basename "$0") <stack> <docker compose args...>" >&2
-    echo "Stacks: perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | all" >&2
+    echo "Stacks: domain-bridge | perception | speech | llm | reasoner | tts | simulator | ipad | projector | user | nlp | timeline-player | memory | all" >&2
     exit 1
 fi
 shift
 
+stack_files=()
+nlp_profile="cpu"
+deployment_profile="${HARU_DEPLOYMENT:-}"
+case "${deployment_profile:-physical}" in
+    physical|simulator) ;;
+    *)
+        echo "HARU_DEPLOYMENT must be physical or simulator." >&2
+        exit 1
+    ;;
+esac
+case "${HARU_NLP_SERVER_GPU_ENABLED:-false}" in
+    1|true|TRUE|True|yes|YES|Yes|on|ON|On)
+        nlp_profile="gpu"
+    ;;
+    0|false|FALSE|False|no|NO|No|off|OFF|Off|"")
+        nlp_profile="cpu"
+    ;;
+    *)
+        echo "HARU_NLP_SERVER_GPU_ENABLED must be true or false." >&2
+        exit 1
+    ;;
+esac
+
 case "${stack}" in
+    domain-bridge)
+        stack_files=("${APPS_DIR}/docker-compose-domain-bridge.yaml")
+        env_file="${ROOT_DIR}/envs/domain-bridge.env"
+    ;;
     perception)
-        stack_file="${APPS_DIR}/docker-compose-perception.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-perception.yaml")
         env_file="${ROOT_DIR}/envs/perception.env"
     ;;
     speech)
-        stack_file="${APPS_DIR}/docker-compose-speech.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-speech.yaml")
         env_file="${ROOT_DIR}/envs/speech.env"
     ;;
     llm)
-        stack_file="${APPS_DIR}/docker-compose-llm.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-llm.yaml")
         env_file="${ROOT_DIR}/envs/llm.env"
     ;;
     reasoner)
-        stack_file="${APPS_DIR}/docker-compose-reasoner.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-reasoner.yaml")
         env_file="${ROOT_DIR}/envs/reasoner.env"
     ;;
     tts)
-        stack_file="${APPS_DIR}/docker-compose-tts.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-tts.yaml")
         env_file="${ROOT_DIR}/envs/tts.env"
     ;;
     simulator)
-        stack_file="${APPS_DIR}/docker-compose-simulator.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-simulator.yaml")
         env_file="${ROOT_DIR}/envs/simulator.env"
     ;;
     ipad)
-        stack_file="${APPS_DIR}/docker-compose-ipad.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-ipad.yaml")
         env_file="${ROOT_DIR}/envs/ipad.env"
     ;;
     projector)
-        stack_file="${APPS_DIR}/docker-compose-projector.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-projector.yaml")
         env_file="${ROOT_DIR}/envs/projector.env"
     ;;
     user)
-        stack_file="${APPS_DIR}/docker-compose-user.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-user.yaml")
         env_file="${ROOT_DIR}/envs/user.env"
     ;;
-    all)
-        stack_file="${APPS_DIR}/docker-compose-all.yaml"
-        env_file="${ROOT_DIR}/envs/all.env"
+    nlp)
+        stack_files=("${APPS_DIR}/docker-compose-nlp.yaml")
+        env_file="${ROOT_DIR}/envs/nlp-${nlp_profile}.env"
+    ;;
+    timeline-player)
+        stack_files=("${APPS_DIR}/docker-compose-timeline-player.yaml")
+        env_file="${ROOT_DIR}/envs/timeline-player.env"
+    ;;
+    memory)
+        stack_files=("${APPS_DIR}/docker-compose-memory.yaml")
+        env_file="${ROOT_DIR}/envs/memory.env"
     ;;
     all)
-        stack_file="${APPS_DIR}/docker-compose-all.yaml"
+        stack_files=("${APPS_DIR}/docker-compose-all.yaml")
         env_file="${ROOT_DIR}/envs/all.env"
     ;;
     *)
@@ -63,7 +98,65 @@ case "${stack}" in
     ;;
 esac
 
-exec docker compose \
--f "${stack_file}" \
---env-file "${env_file}" \
-"$@"
+is_up_command=false
+user_passed_wait=false
+user_passed_detach=false
+for arg in "$@"; do
+    if [[ "${arg}" == "up" || "${arg}" == "start" ]]; then
+        is_up_command=true
+    fi
+    if [[ "${arg}" == "--wait" || "${arg}" == "--no-wait" ]]; then
+        user_passed_wait=true
+    fi
+    if [[ "${arg}" == "-d" || "${arg}" == "--detach" ]]; then
+        user_passed_detach=true
+    fi
+done
+
+wait_flags=()
+if [[ "${is_up_command}" == "true" && "${user_passed_detach}" == "true" && "${user_passed_wait}" == "false" && "${HARU_COMPOSE_NO_WAIT:-false}" != "true" ]]; then
+    # Generous default: some services (TTS model loads, faster-whisper, GPU warm-up)
+    # legitimately take minutes on first start. Override with HARU_COMPOSE_WAIT_TIMEOUT
+    # if needed.
+    wait_flags=(--wait --wait-timeout "${HARU_COMPOSE_WAIT_TIMEOUT:-600}")
+fi
+
+should_ensure_domain_bridge=false
+case "${stack}" in
+    perception|speech)
+        if [[ "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "false" && "${HARU_COMPOSE_AUTO_DOMAIN_BRIDGE:-true}" != "0" ]]; then
+            if [[ "${is_up_command}" == "true" ]]; then
+                should_ensure_domain_bridge=true
+            fi
+        fi
+    ;;
+esac
+
+if [[ "${should_ensure_domain_bridge}" == "true" ]]; then
+    echo "==> Ensuring domain-bridge is up and healthy before ${stack}..." >&2
+    docker compose \
+        -f "${APPS_DIR}/docker-compose-domain-bridge.yaml" \
+        --env-file "${ROOT_DIR}/envs/domain-bridge.env" \
+        up -d --force-recreate "${wait_flags[@]}"
+fi
+
+cmd=(docker compose)
+for stack_file in "${stack_files[@]}"; do
+    cmd+=(-f "${stack_file}")
+done
+cmd+=(--env-file "${env_file}")
+if [[ "${stack}" == "nlp" || "${stack}" == "all" ]]; then
+    cmd+=(--profile "${nlp_profile}")
+fi
+if [[ "${stack}" == "timeline-player" ]]; then
+    cmd+=(--profile timeline-compat)
+fi
+if [[ "${stack}" == "all" ]]; then
+    cmd+=(--profile all --profile "${deployment_profile:-physical}")
+fi
+
+if [[ "${is_up_command}" == "true" && ${#wait_flags[@]} -gt 0 ]]; then
+    echo "==> ${stack}: waiting up to ${HARU_COMPOSE_WAIT_TIMEOUT:-600}s for services to be healthy..." >&2
+fi
+
+exec "${cmd[@]}" "$@" "${wait_flags[@]}"
