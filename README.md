@@ -297,6 +297,7 @@ The topic bridge allowlist bridges only low-bandwidth topics:
   `/perception/fusion/persons`,
   `/perception/fusion/speech_sources`,
   `/perception/fusion/context`,
+  `/perception/fusion/relations` (current spatial evidence for HaruViz and dialogue),
   `/perception/fusion/robot`,
   `/perception/fusion/things`,
   `/perception/fusion/things/tf`,

@@ -18,14 +18,14 @@ def test_robot_domain_is_wired_through_canonical_override() -> None:
 
 def test_persons_bridge_matches_reliable_source() -> None:
     bridge_config = (ROOT / "config/domain_bridge.yaml").read_text()
-    persons_config = bridge_config.split(
-        "  /perception/fusion/persons:\n", maxsplit=1
-    )[1].split("\n  /perception/fusion/speech_sources:", maxsplit=1)[0]
-    assert "remap:" not in persons_config
-    assert "reliability: reliable" in persons_config
-    assert "durability: volatile" in persons_config
-    assert "history: keep_last" in persons_config
-    assert "depth: 1" in persons_config
+    for topic, msg in (("persons", "PersonsState"), ("relations", "SpatialRelationsState")):
+        block = bridge_config.split(f"  /perception/fusion/{topic}:\n", 1)[1].split("\n  /", 1)[0]
+        assert f"type: haru_belief_msgs/msg/{msg}" in block
+        assert "remap:" not in block
+        assert "reliability: reliable" in block
+        assert "durability: volatile" in block
+        assert "history: keep_last" in block
+        assert "depth: 1" in block
 
     bridge_compose = (ROOT / "apps/docker-compose-domain-bridge.yaml").read_text()
     all_compose = (ROOT / "apps/docker-compose-all.yaml").read_text()

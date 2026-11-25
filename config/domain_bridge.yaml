@@ -72,6 +72,14 @@ topics:
       history: keep_last
       depth: 10
 
+  /perception/fusion/relations:
+    type: haru_belief_msgs/msg/SpatialRelationsState
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 1
+
   /perception/fusion/context:
     type: haru_belief_msgs/msg/Context
     qos:
