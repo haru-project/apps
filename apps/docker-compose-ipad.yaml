@@ -6,10 +6,10 @@ services:
     extends:
       file: compose.common.yaml
       service: common-ros
-    image: ghcr.io/haru-project/haru-ipad-action-server:ros2
+    image: ${HARU_IPAD_IMAGE:-ghcr.io/haru-project/haru-ipad-action-server:ros2}
     command: [
       "ros2", "launch", "haru_ipad_action_server", "action_interface_launch.py",
-      "ipads_num:=${NUM_IPADS}"
+      "ipads_num:=${NUM_IPADS:-0}"
     ]
     env_file: ../envs/ipad.env
     restart: unless-stopped
